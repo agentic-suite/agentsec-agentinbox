@@ -1,4 +1,4 @@
-# Starter CI for agentsec-ecosystem tools.
+# Starter CI for agentic-suite tools.
 # Replace the placeholder step with the real build/test commands for this tool.
 name: CI
 
