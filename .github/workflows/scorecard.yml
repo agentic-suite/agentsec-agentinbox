@@ -23,7 +23,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Run analysis
-        uses: ossf/scorecard-action@v2.4.0
+        # v2.5.0 — the image moved to ghcr.io; v2.4.0 pulled from gcr.io, whose billing
+        # was disabled upstream (docker pull exits 1 before the analysis even starts).
+        uses: ossf/scorecard-action@46dc3187a971a9febf3aeb7f94ccde489f7bb46a
         with:
           results_file: results.sarif
           results_format: sarif
