@@ -125,6 +125,11 @@ A milestone is **closed** only when all of these hold:
   **Gate:** 268 tests pass · coverage **96.45%** · `ruff` clean · `mypy --strict` clean · DCO signed.
   SC-02/SC-06 proven at the unit level; secrets never reach the store; trust cannot be self-asserted.
   Next: **M3** (`3.D0` lifecycle).
+- **2026-11-06 — M3 Ask record + lifecycle closed.** Issues #136–#146. **Gate:** 300 tests pass · coverage
+  **96.65%** · `ruff` clean · `mypy --strict` clean · DCO signed. One edge table enforces every legal
+  transition; illegal attempts are evidence; terminal is terminal; expiry is derived on read, never written
+  by a reader. Store schema v3 adds `warn_at`/`escalate_at`/`tier`; conformance version 2 adds
+  transitions/delivery reads. Next: **M4** (`4.D0` scheduler).
 
 ## PRD coverage matrix (every doc 00–30)
 

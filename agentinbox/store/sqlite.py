@@ -24,6 +24,7 @@ from agentinbox.store.base import (
     AuditEntry,
     ClaimRecord,
     CreateResult,
+    DeliveryRecord,
     DriverSpec,
     SchemaVersionError,
     SessionExport,
@@ -38,7 +39,7 @@ from agentinbox.store.base import (
     verify_audit_chain,
 )
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 #: from_version -> statements that take the store to ``from_version + 1``.
 MIGRATIONS: dict[int, tuple[str, ...]] = {
@@ -129,6 +130,11 @@ MIGRATIONS: dict[int, tuple[str, ...]] = {
     1: (
         "ALTER TABLE asks ADD COLUMN decided_at TEXT",
         "CREATE INDEX asks_by_dedupe ON asks (dedupe_key)",
+    ),
+    2: (
+        "ALTER TABLE asks ADD COLUMN warn_at TEXT",
+        "ALTER TABLE asks ADD COLUMN escalate_at TEXT",
+        "ALTER TABLE asks ADD COLUMN tier TEXT",
     ),
 }
 
@@ -234,7 +240,8 @@ class SqliteStore:
 
             self._conn.execute(
                 "INSERT INTO asks (ask_id, action_identity, session_id, agent_id, status,"
-                " created_at, expires_at, payload, dedupe_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                " created_at, expires_at, payload, dedupe_key, warn_at, escalate_at, tier)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     ask.ask_id,
                     ask.action_identity,
@@ -245,6 +252,9 @@ class SqliteStore:
                     to_iso(ask.expires_at),
                     canonical_json(dict(ask.payload)),
                     dedupe_key,
+                    None if ask.warn_at is None else to_iso(ask.warn_at),
+                    None if ask.escalate_at is None else to_iso(ask.escalate_at),
+                    ask.tier,
                 ),
             )
             self._append_transition(
@@ -349,6 +359,40 @@ class SqliteStore:
     def append_event(self, transition: TransitionRecord) -> AuditEntry:
         with self._transaction():
             return self._append_transition(transition)
+
+    def transitions_for(self, ask_id: str) -> list[TransitionRecord]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM transitions WHERE ask_id = ? ORDER BY seq ASC", (ask_id,)
+            ).fetchall()
+        return [_row_to_transition(row) for row in rows]
+
+    def record_delivery(self, delivery: DeliveryRecord) -> None:
+        with self._transaction():
+            try:
+                self._conn.execute(
+                    "INSERT INTO deliveries (delivery_id, ask_id, channel, target, attempt,"
+                    " status, at, error) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        delivery.delivery_id,
+                        delivery.ask_id,
+                        delivery.channel,
+                        delivery.target,
+                        delivery.attempt,
+                        delivery.status,
+                        to_iso(delivery.at),
+                        delivery.error,
+                    ),
+                )
+            except sqlite3.IntegrityError as exc:
+                raise StoreError(f"delivery already recorded: {delivery.delivery_id}") from exc
+
+    def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM deliveries WHERE ask_id = ? ORDER BY attempt ASC", (ask_id,)
+            ).fetchall()
+        return [_row_to_delivery(row) for row in rows]
 
     def export_session(self, session_id: str) -> SessionExport:
         with self._lock:
@@ -484,6 +528,9 @@ def _row_to_ask(row: sqlite3.Row) -> AskRecord:
         payload=json.loads(row["payload"]),
         status=AskStatus(row["status"]),
         decided_at=None if row["decided_at"] is None else parse_iso(row["decided_at"]),
+        warn_at=None if row["warn_at"] is None else parse_iso(row["warn_at"]),
+        escalate_at=None if row["escalate_at"] is None else parse_iso(row["escalate_at"]),
+        tier=row["tier"],
     )
 
 
@@ -500,6 +547,19 @@ def _row_to_transition(row: sqlite3.Row) -> TransitionRecord:
         channel=row["channel"],
         claim_id=row["claim_id"],
         reason=row["reason"],
+    )
+
+
+def _row_to_delivery(row: sqlite3.Row) -> DeliveryRecord:
+    return DeliveryRecord(
+        delivery_id=row["delivery_id"],
+        ask_id=row["ask_id"],
+        channel=row["channel"],
+        target=row["target"],
+        attempt=row["attempt"],
+        status=row["status"],
+        at=parse_iso(row["at"]),
+        error=row["error"],
     )
 
 

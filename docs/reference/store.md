@@ -30,6 +30,8 @@ store.append_event(transition)                          # per-ask seq + chained 
 | `issue_claim` / `consume_claim` | hash only; consumption is atomic and single-use |
 | `list_pending` | all pending asks ordered by `expires_at` (overdue included) |
 | `append_event` | per-ask seq and global gapless audit seq, hash-chained |
+| `transitions_for` | append-only history for one ask, ordered by seq |
+| `record_delivery` / `list_deliveries` | one row per channel attempt (E7 accounting) |
 | `export_session` | read-only snapshot of asks, transitions, claims |
 
 Capabilities are declared, not assumed:
@@ -49,7 +51,7 @@ require_capability(store, "multi_writer")   # raises CapabilityError for sqlite/
 
 - Home directory `0700`; database `0600` (tightened on open).
 - SQLite WAL, `synchronous=FULL`, `busy_timeout` for concurrent processes.
-- Schema version 2: `asks`, `transitions`, `claims`, `deliveries`, `floods`, `audit`, `schema_version`.
+- Schema version 3: `asks`, `transitions`, `claims`, `deliveries`, `floods`, `audit`, `schema_version`.
 - Forward migrations run on open; a store **newer** than the build raises `SchemaVersionError` — downgrade is
   refused loudly, never guessed.
 - `entry_hash = sha256(prev_hash | seq | kind | ref_id | at | payload_digest)`; genesis `prev_hash` is 64 zeros.

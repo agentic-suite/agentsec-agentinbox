@@ -80,9 +80,12 @@ as recorded observations; `Transition` append-only with per-ask seq; `Claim` + `
 
 **Exit criteria**
 
-- [ ] Design docs first · tests · coverage ≥95% · lint clean · docs · committed+pushed
-- [ ] All v0.1.0 states reachable via legal edges only; illegal transitions rejected + logged
-- [ ] Transitions are append-only; terminal is terminal; derived expiry reads correctly
+- [x] Design docs first · tests · coverage ≥95% · lint clean · docs · committed+pushed
+- [x] All v0.1.0 states reachable via legal edges only; illegal transitions rejected + logged
+- [x] Transitions are append-only; terminal is terminal; derived expiry reads correctly
+
+**Closed 2026-11-06.** Design: [lifecycle](../design/v0.1.0/lifecycle.md) · Reference:
+[lifecycle](../reference/lifecycle.md) · Gate: recorded in the [index](wbs-v0.1.0-index.md).
 
 ---
 

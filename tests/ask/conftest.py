@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from typing import Any
 
-import pytest
-
 from agentinbox.config import ClassConfig, Config
 from agentinbox.contract import compute_action_identity
-from agentinbox.store.memory import MemoryStore
 
 NOW = datetime(2026, 11, 6, 12, 0, 0, tzinfo=UTC)
 
@@ -70,10 +66,3 @@ def config(ttl_seconds: int = 300, warn_seconds: int | None = 60) -> Config:
     )
 
 
-@pytest.fixture
-def store() -> Iterator[MemoryStore]:
-    driver = MemoryStore()
-    try:
-        yield driver
-    finally:
-        driver.close()

@@ -27,6 +27,9 @@ class AskStore(Protocol):
     def consume_claim(self, claim_id: str, *, ask_id: str, at: datetime) -> bool: ...
     def list_pending(self, *, now: datetime, limit: int = 100) -> list[AskRecord]: ...
     def append_event(self, transition: TransitionRecord) -> AuditEntry: ...
+    def transitions_for(self, ask_id: str) -> list[TransitionRecord]: ...
+    def record_delivery(self, delivery: DeliveryRecord) -> None: ...
+    def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]: ...
     def export_session(self, session_id: str) -> SessionExport: ...
     def close(self) -> None: ...
 ```
@@ -40,6 +43,8 @@ class AskStore(Protocol):
 | `consume_claim` | Atomic single-use: `True` exactly once for `(claim_id, ask_id)`; expired/revoked/already-used → `False`; never raises for a lost race. |
 | `list_pending` | All asks in `pending` ordered by `expires_at`, **including overdue ones** — the scheduler derives due work from persisted instants, and a restart sees exactly the same set. |
 | `append_event` | Appends a transition (per-ask seq) and an audit entry (global gapless seq, hash-chained) atomically. |
+| `transitions_for` | Append-only history for one ask, ordered by `seq`. |
+| `record_delivery` / `list_deliveries` | Per-attempt channel accounting (E7); `DeliveryRecord` has `channel`, `target`, `attempt`, `status`, `at`, `error`. |
 | `export_session` | Read-only snapshot of the session's asks, transitions, and claims. |
 
 `TransitionRecord` fields: `ask_id`, `seq` (assigned by the store; caller passes 0), `at`, `kind`,
@@ -70,7 +75,7 @@ suite — the suite is the admission gate, not a rubber stamp.
 `require_capability(store, "multi_writer")` raises `CapabilityError`; the loader/core calls it **before**
 serving a single request (fail-closed driver selection, never a runtime surprise).
 
-## 4. Schema (SQLite reference, version 2)
+## 4. Schema (SQLite reference, version 3)
 
 ```sql
 schema_version(version INTEGER NOT NULL)
@@ -85,7 +90,10 @@ asks(
   expires_at TEXT NOT NULL,
   payload TEXT NOT NULL,             -- canonical JSON; already redacted (M2)
   dedupe_key TEXT NOT NULL,          -- action_identity + '\n' + session_id
-  decided_at TEXT
+  decided_at TEXT,
+  warn_at TEXT,                      -- v3 (M3/M4 scheduling)
+  escalate_at TEXT,
+  tier TEXT
 )
 INDEX pending-by-expiry (status, expires_at)
 INDEX asks-by-session (session_id)
@@ -133,12 +141,13 @@ open), WAL + `synchronous=FULL`, `foreign_keys=ON`.
 
 ## 5. Migrations & versioning
 
-- `SCHEMA_VERSION = 2` in code. Opening a store **forward-migrates** one version at a time inside a
+- `SCHEMA_VERSION = 3` in code. Opening a store **forward-migrates** one version at a time inside a
   transaction.
 - The version table is written only after all statements of a step succeed.
 - A store whose version is **greater** than the code's raises `SchemaVersionError` ("downgrade is refused
   loudly") — it never guesses and never truncates.
-- v1 → v2 adds `asks.decided_at`; the fixture proves an old row survives the upgrade.
+- v1 → v2 adds `asks.decided_at`; v2 → v3 adds `warn_at`, `escalate_at`, `tier`. The fixtures prove an old
+  row survives both upgrades.
 
 ## 6. Driver admission (entry points)
 

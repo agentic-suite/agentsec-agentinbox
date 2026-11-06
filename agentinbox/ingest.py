@@ -176,6 +176,12 @@ def ingest(
     }
 
     ask_id = contract.ask_id or f"ask_{secrets.token_hex(8)}"
+    ask_class = config.classes[contract.action_class]
+    warn_at = (
+        None
+        if ask_class.warn_seconds is None
+        else contract.expires_at - timedelta(seconds=ask_class.warn_seconds)
+    )
     record = AskRecord(
         ask_id=ask_id,
         action_identity=contract.action_identity,
@@ -184,6 +190,8 @@ def ingest(
         created_at=moment,
         expires_at=contract.expires_at,
         payload=payload,
+        warn_at=warn_at,
+        tier=ask_class.ladder[0] if ask_class.ladder else None,
     )
     result = store.create_or_get_by_identity(record)
     return IngestResult(

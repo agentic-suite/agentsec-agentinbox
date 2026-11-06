@@ -36,6 +36,8 @@ def store(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[AskStore]:
         conformance.check_gapless_audit_seq,
         conformance.check_pending_read_is_deterministic,
         conformance.check_resolved_asks_leave_pending,
+        conformance.check_delivery_accounting,
+        conformance.check_transition_read,
         conformance.check_capabilities_fail_closed,
     ],
     ids=lambda check: check.__name__,

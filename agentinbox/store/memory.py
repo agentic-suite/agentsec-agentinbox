@@ -18,6 +18,7 @@ from agentinbox.store.base import (
     AuditEntry,
     ClaimRecord,
     CreateResult,
+    DeliveryRecord,
     DriverSpec,
     SessionExport,
     StoreCapabilities,
@@ -42,6 +43,7 @@ class MemoryStore:
         self._dedupe: dict[str, str] = {}
         self._transitions: dict[str, list[TransitionRecord]] = {}
         self._claims: dict[str, ClaimRecord] = {}
+        self._deliveries: dict[str, DeliveryRecord] = {}
         self._audit: list[AuditEntry] = []
         self._closed = False
 
@@ -148,6 +150,27 @@ class MemoryStore:
         with self._lock:
             self._require_open()
             return self._append_transition(transition)
+
+    def transitions_for(self, ask_id: str) -> list[TransitionRecord]:
+        with self._lock:
+            self._require_open()
+            return list(self._transitions.get(ask_id, []))
+
+    def record_delivery(self, delivery: DeliveryRecord) -> None:
+        with self._lock:
+            self._require_open()
+            if delivery.delivery_id in self._deliveries:
+                raise StoreError(f"delivery already recorded: {delivery.delivery_id}")
+            self._deliveries[delivery.delivery_id] = delivery
+
+    def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]:
+        with self._lock:
+            self._require_open()
+            rows = [
+                delivery for delivery in self._deliveries.values() if delivery.ask_id == ask_id
+            ]
+        rows.sort(key=lambda delivery: delivery.attempt)
+        return rows
 
     def export_session(self, session_id: str) -> SessionExport:
         with self._lock:

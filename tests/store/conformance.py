@@ -217,6 +217,45 @@ def check_resolved_asks_leave_pending(store) -> None:  # type: ignore[no-untyped
     assert store.list_pending(now=T0) == []
 
 
+# --------------------------------------------------------------------------- 6. entities
+
+
+def check_delivery_accounting(store) -> None:  # type: ignore[no-untyped-def]
+    from agentinbox.store import DeliveryRecord
+
+    ask = sample_ask()
+    store.create_or_get_by_identity(ask)
+    delivery = DeliveryRecord(
+        delivery_id="delivery_conformance",
+        ask_id=ask.ask_id,
+        channel="terminal",
+        attempt=1,
+        status="delivered",
+        at=T0,
+        target="alice",
+    )
+    store.record_delivery(delivery)
+
+    assert store.list_deliveries(ask.ask_id) == [delivery]
+    try:
+        store.record_delivery(delivery)
+    except StoreError:
+        pass
+    else:
+        raise AssertionError("duplicate delivery id was accepted")
+
+
+def check_transition_read(store) -> None:  # type: ignore[no-untyped-def]
+    ask = sample_ask()
+    store.create_or_get_by_identity(ask)
+    store.append_event(transition(ask, "observed"))
+
+    transitions = store.transitions_for(ask.ask_id)
+
+    assert [item.kind for item in transitions] == ["created", "observed"]
+    assert [item.seq for item in transitions] == [1, 2]
+
+
 # --------------------------------------------------------------------------- 7. capabilities
 
 

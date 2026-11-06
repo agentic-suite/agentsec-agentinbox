@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Final, Protocol
 
 #: Version of the conformance suite a driver must declare to be admitted.
-CONFORMANCE_VERSION: Final = "1"
+CONFORMANCE_VERSION: Final = "2"
 
 
 class StoreError(Exception):
@@ -88,6 +88,9 @@ class AskRecord:
     payload: Mapping[str, Any] = field(default_factory=dict)
     status: AskStatus = AskStatus.PENDING
     decided_at: datetime | None = None
+    warn_at: datetime | None = None
+    escalate_at: datetime | None = None
+    tier: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,6 +123,30 @@ class ClaimRecord:
     expires_at: datetime
     consumed_at: datetime | None = None
     revoked_at: datetime | None = None
+
+    def state(self, at: datetime) -> str:
+        """Derived claim state: used > revoked > expired > issued."""
+        if self.consumed_at is not None:
+            return "used"
+        if self.revoked_at is not None:
+            return "revoked"
+        if self.expires_at <= at:
+            return "expired"
+        return "issued"
+
+
+@dataclass(frozen=True, slots=True)
+class DeliveryRecord:
+    """One delivery attempt on one channel (E7 accounting)."""
+
+    delivery_id: str
+    ask_id: str
+    channel: str
+    attempt: int
+    status: str
+    at: datetime
+    target: str | None = None
+    error: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,6 +203,12 @@ class AskStore(Protocol):
     def list_pending(self, *, now: datetime, limit: int = 100) -> list[AskRecord]: ...
 
     def append_event(self, transition: TransitionRecord) -> AuditEntry: ...
+
+    def transitions_for(self, ask_id: str) -> list[TransitionRecord]: ...
+
+    def record_delivery(self, delivery: DeliveryRecord) -> None: ...
+
+    def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]: ...
 
     def export_session(self, session_id: str) -> SessionExport: ...
 
