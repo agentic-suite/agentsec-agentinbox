@@ -33,6 +33,21 @@ acceptance test. No requirement is orphaned; no test exists without a requiremen
 | **E11** | Pluggable store (conformance-gated contract) | US-23, US-24 | CUJ-1, CUJ-13 | SC-02, SC-24, SC-25 | `test_store_conformance.py` (crash/race/redelivery/chain fixtures) |
 | **E12** | Pluggable bus (movement ≠ truth) | US-04, US-12 | CUJ-6, CUJ-9 | SC-13, SC-18, SC-19 | `test_bus_conformance.py`, `test_spool.py` (atomicity/locking/idempotent consumers) |
 
+## M0 foundation (shipped tests, v0.1.0)
+
+The foundation milestone freezes the contracts every later test builds on. Rows below are **green
+today** (they run in CI), not planned:
+
+| Req / NFR | What M0 ships | Acceptance test |
+|---|---|---|
+| **R6** (reserved exit codes) | frozen `0/1/2/3/4/5` enum + CI failure/retry classification | `tests/contract/test_exit_codes.py` |
+| **E9** (fail-closed degradation) | strict config loader; `doctor` exits `4` on any failed check | `tests/config/test_load.py`, `tests/config/test_load_edges.py`, `tests/cli/test_doctor.py` |
+| **E10** (versioning) | single version source; dist `agentsec-agentinbox` | `tests/test_packaging.py` |
+| **N-13** (no external services) | zero runtime dependencies; stdlib-only config/CLI | `tests/test_packaging.py` |
+| **N-16** (`-m` + console script) | both entry points share one parser | `tests/test_packaging.py`, `tests/cli/test_surface.py` |
+| **N-18** (loopback default) | loopback bind enforced in v0.1.0 | `tests/config/test_load.py` |
+| **N-36..N-39** (gates, DCO, in-repo fixtures, versioned docs) | CI runs ruff/mypy/pytest/coverage; DCO check; fixtures in-repo | `tests/ci/test_workflows.py`, `tests/test_identity.py` |
+
 ## Forward slate traceability (R13–R47, PRDs 24–27)
 
 The product-depth requirements are traced **inside their own PRDs** (each carries a

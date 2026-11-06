@@ -44,9 +44,13 @@ exit codes (a compatibility contract the rest of the suite consumes), a fail-clo
 
 **Exit criteria**
 
-- [ ] Design docs first · all tests pass · coverage ≥ 95% · lint strict clean · docs updated · committed+pushed
-- [ ] `pip install -e .` + `make` targets work; `agentinbox --help` lists the full surface
-- [ ] Reserved exit codes frozen + fixture-tested; bad config fails closed; CI green
+- [x] Design docs first · all tests pass · coverage ≥ 95% · lint strict clean · docs updated · committed+pushed
+- [x] `pip install -e .` + `make` targets work; `agentinbox --help` lists the full surface
+- [x] Reserved exit codes frozen + fixture-tested; bad config fails closed; CI green
+
+**Closed 2026-11-06.** Design: [foundation](../design/v0.1.0/foundation.md) · Reference:
+[CLI](../reference/cli.md), [config](../reference/config.md) · Gate: 129 tests, coverage 100%,
+`ruff` clean, `mypy --strict` clean · Checkpoint in the [index](wbs-v0.1.0-index.md).
 
 ---
 

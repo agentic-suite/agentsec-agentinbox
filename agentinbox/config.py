@@ -1,6 +1,6 @@
 """Fail-closed configuration model (TOML).
 
-Design of record: ``docs/design/v0.1.0/foundation.md`` §4–§5. Configuration is a security
+Design of record: ``docs/design/v0.1.0/foundation.md`` §4-§5. Configuration is a security
 surface: unknown keys are errors (a typo must not disable a control), forward-slate keys are
 rejected as unsupported, secrets are references only, and the bind is loopback.
 
@@ -29,7 +29,6 @@ _ENV_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 _STORE_DRIVERS = frozenset({"sqlite", "memory"})
 _BUS_DRIVERS = frozenset({"filesystem", "in-proc"})
 _SELF_REVIEW = frozenset({"deny", "allow", "escalate"})
-_CHANNELS = {"terminal": frozenset(), "desktop": frozenset(), "webhook": frozenset()}
 
 _TOP_LEVEL = frozenset(
     {"classes", "roster", "throttle", "channels", "bus", "store", "limits", "webui"}
@@ -200,7 +199,7 @@ def _check_top_level(data: Mapping[str, Any]) -> None:
         if section in _FORWARD_SLATE:
             raise ConfigError(
                 f"[{section}]: not supported in v0.1.0 "
-                "(forward-slate feature from PRDs 24–30)"
+                "(forward-slate feature from PRDs 24-30)"
             )
         if section not in _TOP_LEVEL:
             raise ConfigError(f"unknown section: [{section}]")
@@ -214,10 +213,10 @@ def _table(value: Any, path: str) -> dict[str, Any]:
 
 def _reject_unknown(table: Mapping[str, Any], allowed: frozenset[str], path: str) -> None:
     for key in table:
-        if key not in allowed:
-            raise ConfigError(f"[{path}].{key}: unknown key")
         if _SECRET_KEY.search(key) and not key.endswith("_ref"):
             raise ConfigError(f"[{path}].{key}: secrets must use a *_ref reference, not a literal")
+        if key not in allowed:
+            raise ConfigError(f"[{path}].{key}: unknown key")
 
 
 def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
