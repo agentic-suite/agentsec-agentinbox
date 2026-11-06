@@ -17,6 +17,12 @@ from collections.abc import Callable, Sequence
 from typing import NoReturn
 
 from agentinbox import __version__
+from agentinbox.config import (
+    ConfigError,
+    init_home,
+    resolve_config_path,
+    resolve_home,
+)
 from agentinbox.exit_codes import ExitCode
 
 PROG = "agentinbox"
@@ -77,6 +83,18 @@ def _stub(command: str) -> Handler:
     return handler
 
 
+def _init(args: argparse.Namespace) -> int:
+    try:
+        home = resolve_home(args.home)
+        config_path = resolve_config_path(home, args.config)
+        init_home(home, config_path, force=bool(args.force))
+    except ConfigError as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+    print(f"{PROG}: wrote {config_path}")
+    return int(ExitCode.APPROVED)
+
+
 def _version(args: argparse.Namespace) -> int:
     if getattr(args, "json", False):
         print(
@@ -117,9 +135,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     for command, help_text in COMMAND_HELP.items():
         sub = subparsers.add_parser(command, help=help_text, description=help_text)
-        sub.set_defaults(
-            handler=_version if command == "version" else _stub(command),
-        )
+        handler: Handler
+        if command == "version":
+            handler = _version
+        elif command == "init":
+            handler = _init
+        else:
+            handler = _stub(command)
+        sub.set_defaults(handler=handler)
+        if command == "init":
+            sub.add_argument(
+                "--force", action="store_true", help="overwrite an existing config file"
+            )
 
     return parser
 
@@ -142,7 +169,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # A stub accepts the flags of the command it will become (and refuses); a real command
     # rejects anything it does not define.
-    if extra and args.command == "version":
+    if extra and args.command in {"version", "init"}:
         parser.print_usage(sys.stderr)
         print(f"{PROG}: error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)
         return int(ExitCode.USAGE)

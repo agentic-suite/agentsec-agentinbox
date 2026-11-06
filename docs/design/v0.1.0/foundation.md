@@ -148,14 +148,16 @@ schema version is readable. Forward migrations and loud downgrade refusal are M1
 ### 5.1 Loading & validation
 
 - Parser: stdlib `tomllib` (read-only; config is never rewritten by the daemon).
-- Validation target: typed, frozen dataclasses (`agentinbox.config`), parsed once at command start except for
-  `--help` and `version`.
+- Validation target: typed, frozen dataclasses (`agentinbox.config`).
+- **Load timing:** commands that consume config (`init`, `doctor`) load it exactly once at start;
+  unimplemented commands refuse before touching config, so a stub can never be mistaken for a
+  config failure. `--help` and `version` never read config.
 - **Fail closed:** any of the following exits `4` with a message naming the file, the key path, and the fix —
   never a silent default, never a partial config:
   - file missing (where the command requires config), unreadable, not valid UTF-8 TOML, duplicate keys;
   - unknown section or key (a typo must not silently disable a control). Keys for the forward slate are
     **known-unsupported** and produce "not supported in v0.1.0" rather than being ignored;
-  - wrong type, negative/zero TTL, empty roster, delay ≥ TTL, invalid port or non-loopback bind, unknown driver
+  - wrong type, negative/zero TTL, `warn_seconds >= ttl_seconds`, empty roster, invalid port, unknown driver
     name;
   - a literal secret where a `*_ref` is required (§5.3).
 - World-writable config files and symlink policy are *deferred* to M20 hardening (`SC-24`, open question §8.3);
@@ -208,7 +210,7 @@ max_thread_entries = 20
 
 [webui]
 enabled = false
-bind = "127.0.0.1:8377"       # loopback only; anything else is a config error + doctor warning
+bind = "127.0.0.1:8377"       # loopback only in v0.1.0; non-loopback is rejected (see §5.4)
 ```
 
 Forward-slate sections from PRD 15 (`[quiet_hours]`, `[incident]`, `[hooks.*]`, `[standing_rules]`,
@@ -229,9 +231,10 @@ the value.
 
 ### 5.4 Loopback default
 
-`webui.bind` defaults to `127.0.0.1`; `serve`'s future HTTP bind follows the same rule. A non-loopback bind is
-accepted only with an explicit config value **and** produces a `doctor` warning (N-18); the design forbids
-widening silently.
+`webui.bind` defaults to `127.0.0.1:8377`. The web UI does not exist in v0.1.0, so both
+`webui.enabled = true` and any non-loopback bind are **validation errors** — v0.1.0 cannot honor them, and
+accepting an inert value would be dishonest. The loud-config-plus-`doctor`-warning path for wider binds
+(N-18) lands with the web UI (v0.1.x), not before it.
 
 ---
 
