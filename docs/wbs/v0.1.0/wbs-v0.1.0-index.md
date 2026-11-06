@@ -108,7 +108,13 @@ A milestone is **closed** only when all of these hold:
 
 ## Progress
 
-*(empty — dated checkpoints with commit refs + gate results are appended here as milestones close)*
+- **2026-11-06 — M0 Foundation & identity closed.** Issues #4–#16. Commits on `feat-0.1.0`:
+  `3f5626a` design · `f1d425f` packaging · `0275552` CLI surface · `7acfc44` exit codes ·
+  `6df485f` config/`init` · `5707635` CI · `0f30b01` doctor · `d7e423e` identity docs ·
+  `199fe66` reference docs + review log.
+  **Gate (run once at milestone end):** 129 tests pass · coverage **100%** (≥95 required) ·
+  `ruff` clean · `mypy --strict` clean · DCO signed. Workflow YAML validated; 8 review findings
+  resolved ([log](codereview-log.md)). Next: **M1** (`1.D0` store design).
 
 ## PRD coverage matrix (every doc 00–30)
 
