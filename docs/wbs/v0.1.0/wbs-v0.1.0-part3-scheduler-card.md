@@ -80,9 +80,12 @@ no markup, no links-that-do-anything), and redaction receipts rendered. One rend
 
 **Exit criteria**
 
-- [ ] Design docs first · tests · coverage ≥95% · lint clean · docs · committed+pushed
-- [ ] Four blocks render on every surface; missing context renders `unknown`, never guessed
-- [ ] Injection corpus produces 0 approvals and 0 navigation; corpora frozen for the M24 study
+- [x] Design docs first · tests · coverage ≥95% · lint clean · docs · committed+pushed
+- [x] Four blocks render on every surface; missing context renders `unknown`, never guessed
+- [x] Injection corpus produces 0 approvals and 0 navigation; corpora frozen for the M24 study
+
+**Closed 2026-11-06.** Design: [card](../design/v0.1.0/card.md) · Reference: [card](../reference/card.md) ·
+Gate: recorded in the [index](wbs-v0.1.0-index.md).
 
 ---
 

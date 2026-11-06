@@ -10,7 +10,7 @@ acceptance test. No requirement is orphaned; no test exists without a requiremen
 
 | Req | Requirement (short) | Stories | CUJ | Scenarios ([PRD 17](17-scenarios.md)) | Acceptance test |
 |---|---|---|---|---|---|
-| **R1** | Decision card: 4 context blocks, unknown-labeling | US-01, US-06, US-07, US-11 | CUJ-1, CUJ-2, CUJ-3, CUJ-11 | SC-01, SC-03, SC-04, SC-05, SC-22, SC-23 | `test_card_context.py`, `test_card_untrusted.py` + user study |
+| **R1** | Decision card: 4 context blocks, unknown-labeling | US-01, US-06, US-07, US-11 | CUJ-1, CUJ-2, CUJ-3, CUJ-11 | SC-01, SC-03, SC-04, SC-05, SC-22, SC-23 | `tests/card/test_card.py` + corpus + user study (M24) |
 | **R2** | Any-channel answer, one record | US-06, US-07, US-17 | CUJ-3, CUJ-9 | SC-06, SC-18, SC-19 | `test_channel_parity.py`, `test_late_answer.py` |
 | **R3** | Timeout=deny, per-class TTL, warning, rescope | US-03, US-08, US-15 | CUJ-4 | SC-09, SC-10 | `tests/scheduler/test_expiry.py`, `tests/scheduler/test_recovery.py`, `tests/scheduler/test_clock.py` |
 | **R4** | Escalation ladder (routing, not deciding) | US-13, US-14 | CUJ-5 | SC-11, SC-12 | `test_escalation.py` + 3 a.m. drill |
@@ -24,7 +24,7 @@ acceptance test. No requirement is orphaned; no test exists without a requiremen
 | **E2** | Durable store + crash-safe scheduler | US-03 | CUJ-4, CUJ-13 | SC-09, SC-25 | `tests/store/test_durability.py`, `tests/scheduler/test_recovery.py` |
 | **E3** | Unforgeable single-use claims | US-09 | CUJ-3, CUJ-9 | SC-07, SC-08 | `test_claims.py` |
 | **E4** | Answer authN/authZ (signature, roster, self-review) | US-06, US-09, US-11 | CUJ-3, CUJ-8, CUJ-11 | SC-17, SC-22 | `test_answer_verify.py`, `test_slack_signature.py` |
-| **E5** | Injection-resistant rendering | US-11 | CUJ-11 | SC-22, SC-23 | `test_render_inert.py` + injection corpus gate |
+| **E5** | Injection-resistant rendering | US-11 | CUJ-11 | SC-22, SC-23 | `tests/card/test_card.py` (poisoned corpus) |
 | **E6** | Redaction-before-persistence + receipts | US-05 | CUJ-3, CUJ-10 | SC-21 | `tests/ask/test_redaction.py` + evidence scanner (M22) |
 | **E7** | Delivery accounting + hygiene | US-12 | CUJ-6, CUJ-9 | SC-13, SC-19 | `test_delivery_events.py` |
 | **E8** | Time correctness (UTC + monotonic) | US-08, US-15 | CUJ-4, CUJ-5 | SC-09, SC-10, SC-12 | `tests/scheduler/test_clock.py`, `tests/cli/test_doctor_skew.py` |
