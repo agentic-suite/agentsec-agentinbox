@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-suite.github.io/agentsec-agentinbox/schemas/ask-1.0.schema.json",
+  "title": "agentinbox ask/1.0",
+  "description": "The approval object a producer submits. Agent-supplied fields are untrusted and are redacted before storage.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "contract", "action_identity", "tool", "action", "arguments", "agent_id", "session_id",
+    "environment", "data_class", "class", "reason_code", "policy_ref", "criticality",
+    "requested_by", "expires_at", "context"
+  ],
+  "properties": {
+    "contract": { "const": "ask/1.0" },
+    "ask_id": { "type": "string", "pattern": "^ask_[0-9a-f]{16}$" },
+    "action_identity": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "tool": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "action": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "arguments": { "type": "object" },
+    "agent_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "session_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "environment": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "data_class": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "class": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "reason_code": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "policy_ref": {
+      "type": "object",
+      "required": ["rule_id", "policy_version"],
+      "additionalProperties": true,
+      "properties": {
+        "rule_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "policy_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "clause": { "type": "string", "maxLength": 8192 }
+      }
+    },
+    "criticality": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "requested_by": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "context": { "type": "object" },
+    "traceparent": { "type": "string", "maxLength": 128 }
+  }
+}
