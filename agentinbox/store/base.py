@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
+from pathlib import Path
 from typing import Any, Final, Protocol
 
 #: Version of the conformance suite a driver must declare to be admitted.
@@ -62,6 +63,16 @@ class StoreCapabilities:
     single_writer: bool
     multi_writer: bool = False
     cluster_safe: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class DriverSpec:
+    """What an ``agentinbox.store`` entry point must expose (admission gate)."""
+
+    name: str
+    conformance_version: str
+    capabilities: StoreCapabilities
+    factory: Callable[[Path], "AskStore"]
 
 
 @dataclass(frozen=True, slots=True)

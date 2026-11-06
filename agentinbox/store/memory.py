@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from agentinbox.store.base import (
     CONFORMANCE_VERSION,
     GENESIS_HASH,
+    DriverSpec,
     AskRecord,
     AskStatus,
     AuditEntry,
@@ -224,4 +225,12 @@ class MemoryStore:
         return entry
 
 
-__all__ = ["MemoryStore"]
+DRIVER = DriverSpec(
+    name="memory",
+    conformance_version=CONFORMANCE_VERSION,
+    capabilities=MemoryStore.capabilities,
+    factory=lambda _home: MemoryStore(),
+)
+
+
+__all__ = ["DRIVER", "MemoryStore"]

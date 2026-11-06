@@ -39,6 +39,10 @@ dev = [
 [project.scripts]
 agentinbox = "agentinbox.cli:main"
 
+[project.entry-points."agentinbox.store"]
+memory = "agentinbox.store.memory:DRIVER"
+sqlite = "agentinbox.store.sqlite:DRIVER"
+
 [project.urls]
 Homepage = "https://github.com/agentic-suite/agentsec-agentinbox"
 Documentation = "https://github.com/agentic-suite/agentsec-agentinbox/tree/main/docs"

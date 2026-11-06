@@ -148,13 +148,16 @@ sqlite = "agentinbox.store.sqlite:SqliteStore"
 memory = "agentinbox.store.memory:MemoryStore"
 ```
 
-`load_store(name, entry_points=...)`:
+`load_store(name, entry_points=..., required_capabilities=...)`:
 
 1. resolve the entry point in group `agentinbox.store`; unknown name → `DriverNotAdmittedError`;
-2. load the class and require `CONFORMANCE_VERSION == agentinbox.store.CONFORMANCE_VERSION` — a driver that
-   has not passed **this** suite version is refused (honesty rule, PRD 19);
-3. require a `capabilities` attribute and call the caller's capability requirements **before** returning;
-4. construct the driver; construction errors are surfaced, never retried into a memory fallback.
+2. the entry point must load a `DriverSpec` (`name`, `conformance_version`, `capabilities`, `factory`);
+   require `conformance_version == agentinbox.store.CONFORMANCE_VERSION` — a driver that has not passed
+   **this** suite version is refused (honesty rule, PRD 19);
+3. capability requirements are checked against the **spec** before construction, so an unsupported
+   configuration fails closed at load and no partial store is created;
+4. construct the driver via `spec.factory(home)`; construction errors are surfaced, never retried into a
+   memory fallback.
 
 ## 7. Tests (in-repo truth)
 

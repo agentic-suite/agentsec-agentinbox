@@ -20,6 +20,7 @@ from typing import Any
 from agentinbox.store.base import (
     CONFORMANCE_VERSION,
     GENESIS_HASH,
+    DriverSpec,
     AskRecord,
     AskStatus,
     AuditEntry,
@@ -514,4 +515,12 @@ def _row_to_claim(row: sqlite3.Row) -> ClaimRecord:
     )
 
 
-__all__ = ["MIGRATIONS", "SCHEMA_VERSION", "SqliteStore"]
+DRIVER = DriverSpec(
+    name="sqlite",
+    conformance_version=CONFORMANCE_VERSION,
+    capabilities=SqliteStore.capabilities,
+    factory=lambda home: SqliteStore(home / "inbox.db"),
+)
+
+
+__all__ = ["DRIVER", "MIGRATIONS", "SCHEMA_VERSION", "SqliteStore"]
