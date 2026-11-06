@@ -39,9 +39,12 @@ resurrect an expired ask. Expiry resolves deny with `human_gate_timeout` and a r
 
 **Exit criteria**
 
-- [ ] Design docs first · tests · coverage ≥95% · lint clean · docs · committed+pushed
-- [ ] Timeout = deny demonstrated, logged, with rescope-not-failure to the producer; zero-allow counter at 0
-- [ ] Crash and clock-jump fixtures all fire exactly once and never extend or resurrect
+- [x] Design docs first · tests · coverage ≥95% · lint clean · docs · committed+pushed
+- [x] Timeout = deny demonstrated, logged, with rescope-not-failure to the producer; zero-allow counter at 0
+- [x] Crash and clock-jump fixtures all fire exactly once and never extend or resurrect
+
+**Closed 2026-11-06.** Design: [scheduler](../design/v0.1.0/scheduler.md) · Reference:
+[scheduler](../reference/scheduler.md) · Gate: recorded in the [index](wbs-v0.1.0-index.md).
 
 ---
 

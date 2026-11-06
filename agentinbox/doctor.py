@@ -13,6 +13,7 @@ import stat
 import sys
 import time
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 
 from agentinbox.config import Config, ConfigError, load_config
@@ -56,6 +57,7 @@ def run_checks(home: Path, config_path: Path) -> Report:
         _store_path(home),
         _schema(home / "inbox.db"),
         _clock(),
+        _clock_skew(home / "inbox.db"),
     )
     return Report(checks=checks, config=config)
 
@@ -118,6 +120,35 @@ def _clock() -> Check:
     if wall <= 0 or after < before:
         return Check("clock", FAIL, "system clock is not sane")
     return Check("clock", OK, "UTC clock and monotonic time available")
+
+
+SIGNATURE_WINDOW_SECONDS = 300
+
+
+def _clock_skew(database: Path) -> Check:
+    """Evidence ahead of the wall clock means the machine moved backwards."""
+    if not database.exists():
+        return Check("clock-skew", OK, "no store yet")
+    try:
+        with sqlite3.connect(f"file:{database}?mode=ro", uri=True) as connection:
+            row = connection.execute("SELECT MAX(at) FROM audit").fetchone()
+    except sqlite3.Error as exc:
+        return Check("clock-skew", WARN, f"cannot read audit time ({exc})")
+    if row is None or row[0] is None:
+        return Check("clock-skew", OK, "no audit entries yet")
+    try:
+        newest = datetime.fromisoformat(str(row[0]).replace("Z", "+00:00"))
+    except ValueError:
+        return Check("clock-skew", WARN, "audit timestamp is not ISO-8601")
+    skew = (newest - datetime.now(UTC)).total_seconds()
+    if skew > SIGNATURE_WINDOW_SECONDS:
+        return Check(
+            "clock-skew",
+            WARN,
+            f"newest audit entry is {int(skew)}s ahead of the clock; a backwards jump "
+            "cannot extend a TTL, but check NTP",
+        )
+    return Check("clock-skew", OK, "audit evidence is consistent with the clock")
 
 
 def render_human(report: Report) -> str:

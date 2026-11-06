@@ -130,6 +130,11 @@ A milestone is **closed** only when all of these hold:
   transition; illegal attempts are evidence; terminal is terminal; expiry is derived on read, never written
   by a reader. Store schema v3 adds `warn_at`/`escalate_at`/`tier`; conformance version 2 adds
   transitions/delivery reads. Next: **M4** (`4.D0` scheduler).
+- **2026-11-06 — M4 Scheduler / timeout=deny closed.** Issues #147–#157. **Gate:** 317 tests pass · coverage
+  **95.94%** · `ruff` clean · `mypy --strict` clean · DCO signed. Warn at `T-60`, expiry at `T`, recovery fires
+  once with a marker, concurrent schedulers cannot double-expire, backwards jumps cannot postpone, and the
+  zero-allow-on-expiry counter stays 0. `doctor` warns when persisted evidence is ahead of the clock.
+  Next: **M5** (`5.D0` decision card).
 
 ## PRD coverage matrix (every doc 00–30)
 
