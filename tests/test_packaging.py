@@ -17,7 +17,9 @@ from pathlib import Path
 def test_package_importable_with_version() -> None:
     import agentinbox
 
-    assert re.fullmatch(r"\d+\.\d+\.\d+(?:\.dev\d+)?", agentinbox.__version__), agentinbox.__version__
+    version = agentinbox.__version__
+
+    assert re.fullmatch(r"\d+\.\d+\.\d+(?:\.dev\d+)?", version), version
 
 
 def test_distribution_metadata_is_agentsec_agentinbox() -> None:

@@ -62,6 +62,9 @@ src = ["agentinbox", "tests"]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "PT", "RUF", "S"]
 ignore = ["S101"] # asserts are the test mechanism
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S108", "S603", "S607"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["agentinbox"]
 

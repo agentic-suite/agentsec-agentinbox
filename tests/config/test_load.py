@@ -65,7 +65,7 @@ def test_unknown_key_is_rejected_with_its_path(tmp_path: Path) -> None:
 
 
 def test_forward_slate_section_is_not_silently_ignored(tmp_path: Path) -> None:
-    with pytest.raises(ConfigError, match="not supported in v0.1.0"):
+    with pytest.raises(ConfigError, match=r"not supported in v0\.1\.0"):
         load_config(write(tmp_path, MINIMAL + '\n[quiet_hours]\nwindow = "22:00-08:00"\n'))
 
 
@@ -135,7 +135,7 @@ def test_non_loopback_bind_is_rejected_in_v0_1_0(tmp_path: Path) -> None:
 def test_webui_enabled_is_not_supported_in_v0_1_0(tmp_path: Path) -> None:
     text = MINIMAL + "\n[webui]\nenabled = true\n"
 
-    with pytest.raises(ConfigError, match="not supported in v0.1.0"):
+    with pytest.raises(ConfigError, match=r"not supported in v0\.1\.0"):
         load_config(write(tmp_path, text))
 
 

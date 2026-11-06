@@ -17,6 +17,8 @@ EXIT_CODES: dict[str, int] = {
 }
 
 #: CI treats these as failure, per PRD 02.
-FAILURE_CODES: frozenset[int] = frozenset({EXIT_CODES["DENIED"], EXIT_CODES["EXPIRED"], EXIT_CODES["UNAVAILABLE"]})
+FAILURE_CODES: frozenset[int] = frozenset(
+    {EXIT_CODES["DENIED"], EXIT_CODES["EXPIRED"], EXIT_CODES["UNAVAILABLE"]}
+)
 #: CI retries on this one.
 RETRY_CODES: frozenset[int] = frozenset({EXIT_CODES["PENDING"]})

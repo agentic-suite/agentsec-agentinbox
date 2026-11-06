@@ -22,7 +22,9 @@ def test_env_overrides_default() -> None:
 
 
 def test_flag_overrides_env() -> None:
-    assert resolve_home("/tmp/flag", env={"AGENTINBOX_HOME": "/srv/inbox"}) == Path("/tmp/flag")
+    flag_home = str(Path.home() / "flag-home")
+
+    assert resolve_home(flag_home, env={"AGENTINBOX_HOME": "/srv/inbox"}) == Path(flag_home)
 
 
 def test_relative_flag_is_rejected() -> None:

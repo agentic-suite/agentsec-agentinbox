@@ -11,7 +11,9 @@ from agentinbox.cli import main
 from agentinbox.config import load_config
 
 
-def test_init_creates_private_home_and_config(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_init_creates_private_home_and_config(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     home = tmp_path / "home"
 
     assert main(["--home", str(home), "init"]) == 0

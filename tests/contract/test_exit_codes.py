@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import pytest
-from tests.contract.exit_codes import EXIT_CODES, FAILURE_CODES, RETRY_CODES
 
 from agentinbox import exit_codes
 from agentinbox.cli import main
+from tests.contract.exit_codes import EXIT_CODES, FAILURE_CODES, RETRY_CODES
 
 
 def test_enum_matches_the_frozen_literal_map() -> None:

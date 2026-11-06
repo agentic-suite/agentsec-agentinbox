@@ -1,6 +1,6 @@
 """Command-line entry point and the frozen v0.1.0 command surface.
 
-Design of record: ``docs/design/v0.1.0/foundation.md`` §2–§3. Two rules are load-bearing:
+Design of record: ``docs/design/v0.1.0/foundation.md`` §2-§3. Two rules are load-bearing:
 
 * an unimplemented command **refuses** with exit ``4`` (unavailable/fail-closed) and a one-line
   message — it never exits ``0``, because ``0`` means "approved";
@@ -153,7 +153,9 @@ def build_parser() -> argparse.ArgumentParser:
         version=f"{PROG} {__version__}",
         help="print the version and exit",
     )
-    parser.add_argument("--config", metavar="PATH", help="config file (default: <home>/config.toml)")
+    parser.add_argument(
+        "--config", metavar="PATH", help="config file (default: <home>/config.toml)"
+    )
     parser.add_argument("--home", metavar="PATH", help="home directory override")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
     parser.add_argument("--no-color", action="store_true", help="disable color output")
