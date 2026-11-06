@@ -1,0 +1,53 @@
+"""The AskStore contract (E11) — import from here, never from a driver module."""
+
+from __future__ import annotations
+
+from agentinbox.store.base import (
+    CONFORMANCE_VERSION,
+    GENESIS_HASH,
+    AskRecord,
+    AskStatus,
+    AskStore,
+    AuditEntry,
+    CapabilityError,
+    ClaimRecord,
+    CreateResult,
+    DriverNotAdmittedError,
+    SchemaVersionError,
+    SessionExport,
+    StoreCapabilities,
+    StoreError,
+    TransitionRecord,
+    canonical_json,
+    chain_hash,
+    parse_iso,
+    payload_digest,
+    require_capability,
+    to_iso,
+    utcnow,
+)
+
+__all__ = [
+    "CONFORMANCE_VERSION",
+    "GENESIS_HASH",
+    "AskRecord",
+    "AskStatus",
+    "AskStore",
+    "AuditEntry",
+    "CapabilityError",
+    "ClaimRecord",
+    "CreateResult",
+    "DriverNotAdmittedError",
+    "SchemaVersionError",
+    "SessionExport",
+    "StoreCapabilities",
+    "StoreError",
+    "TransitionRecord",
+    "canonical_json",
+    "chain_hash",
+    "parse_iso",
+    "payload_digest",
+    "require_capability",
+    "to_iso",
+    "utcnow",
+]
