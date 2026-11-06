@@ -87,9 +87,13 @@ Future drivers (Postgres, embedded) inherit this contract instead of re-deriving
 
 **Exit criteria**
 
-- [ ] Design docs first · tests · coverage ≥95% · lint clean · docs · committed+pushed
-- [ ] The AskStore interface is the only state path; both drivers pass the full conformance suite
-- [ ] Capability-mismatched configs refuse to start; downgrade refuses loudly; store perms correct by default
+- [x] Design docs first · tests · coverage ≥95% · lint clean · docs · committed+pushed
+- [x] The AskStore interface is the only state path; both drivers pass the full conformance suite
+- [x] Capability-mismatched configs refuse to start; downgrade refuses loudly; store perms correct by default
+
+**Closed 2026-11-06.** Design: [store](../design/v0.1.0/store.md) · Reference: [store](../reference/store.md) ·
+Gate: 203 tests, coverage 97.71%, `ruff` clean, `mypy --strict` clean · Checkpoint in the
+[index](wbs-v0.1.0-index.md).
 
 ---
 

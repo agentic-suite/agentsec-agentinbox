@@ -115,6 +115,11 @@ A milestone is **closed** only when all of these hold:
   **Gate (run once at milestone end):** 129 tests pass · coverage **100%** (≥95 required) ·
   `ruff` clean · `mypy --strict` clean · DCO signed. Workflow YAML validated; 8 review findings
   resolved ([log](codereview-log.md)). Next: **M1** (`1.D0` store design).
+- **2026-11-06 — M1 AskStore contract + drivers (E11) closed.** Issues #17–#28. Commits on `feat-0.1.0`:
+  `07fd35a` design+interface · `539d6da` SQLite · `2634b4a` memory · `bb1ce53` conformance · `87e0742`
+  migrations · `727af69` loader. **Gate:** 203 tests pass · coverage **97.71%** · `ruff` clean ·
+  `mypy --strict` clean · DCO signed. Both drivers pass the same suite; a broken driver fails it; a store
+  newer than the build refuses loudly. Next: **M2** (`2.D0` ask contract).
 
 ## PRD coverage matrix (every doc 00–30)
 

@@ -21,7 +21,7 @@ acceptance test. No requirement is orphaned; no test exists without a requiremen
 | **R9** | Delegated/machine approvals (v1.x) | US-02 | — | — | deferred; depends on agentpolicy R41 |
 | **R10** | Standing approvals with expiry (v1.x) | US-03 | CUJ-4 variant | — (v1.x) | deferred |
 | **E1** | Ask contract + idempotent ingest | US-23, US-24 | CUJ-1, CUJ-13 | SC-01, SC-25, SC-26 | `test_contract_fixtures.py`, `test_ingest_idempotent.py` |
-| **E2** | Durable store + crash-safe scheduler | US-03 | CUJ-4, CUJ-13 | SC-09, SC-25 | `test_store_recovery.py`, `test_scheduler_recovery.py` |
+| **E2** | Durable store + crash-safe scheduler | US-03 | CUJ-4, CUJ-13 | SC-09, SC-25 | `tests/store/test_durability.py` (crash/recovery) · scheduler recovery lands in M4 |
 | **E3** | Unforgeable single-use claims | US-09 | CUJ-3, CUJ-9 | SC-07, SC-08 | `test_claims.py` |
 | **E4** | Answer authN/authZ (signature, roster, self-review) | US-06, US-09, US-11 | CUJ-3, CUJ-8, CUJ-11 | SC-17, SC-22 | `test_answer_verify.py`, `test_slack_signature.py` |
 | **E5** | Injection-resistant rendering | US-11 | CUJ-11 | SC-22, SC-23 | `test_render_inert.py` + injection corpus gate |
@@ -30,7 +30,7 @@ acceptance test. No requirement is orphaned; no test exists without a requiremen
 | **E8** | Time correctness (UTC + monotonic) | US-08, US-15 | CUJ-4, CUJ-5 | SC-09, SC-10, SC-12 | `test_clock_skew.py`, `test_time_persistence.py` |
 | **E9** | Fail-closed degradation | US-18, US-02 | CUJ-7, CUJ-12 | SC-24 | `test_failclosed_matrix.py` |
 | **E10** | Versioning + compatibility | US-23 | CUJ-13 | fixture-level (conformance suite) | `test_schema_migration.py`, `test_contract_version.py` |
-| **E11** | Pluggable store (conformance-gated contract) | US-23, US-24 | CUJ-1, CUJ-13 | SC-02, SC-24, SC-25 | `test_store_conformance.py` (crash/race/redelivery/chain fixtures) |
+| **E11** | Pluggable store (conformance-gated contract) | US-23, US-24 | CUJ-1, CUJ-13 | SC-02, SC-24, SC-25 | `tests/store/conformance.py` (race/claim/chain/crash fixtures) + `tests/store/test_loader.py` |
 | **E12** | Pluggable bus (movement ≠ truth) | US-04, US-12 | CUJ-6, CUJ-9 | SC-13, SC-18, SC-19 | `test_bus_conformance.py`, `test_spool.py` (atomicity/locking/idempotent consumers) |
 
 ## M0 foundation (shipped tests, v0.1.0)
