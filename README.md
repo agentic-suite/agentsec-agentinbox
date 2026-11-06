@@ -12,13 +12,15 @@ ask-gate: **agentpolicy asks, agentinbox answers**.
 
 ## Status
 
-**planned — PRD complete (00–30), code not started.** The full requirement set
-is published early on purpose, so we can be held to it: the v0.1.0 core
-(requirements R1–R7, engineering requirements E1–E12), the forward product-depth
-slate (PRDs 24–29: constrained approvals, evidence & decision quality, approver
-experience, governance & extensibility, review loops, trust maturity), and the
-hardening layer that gates it all (PRD 30). See
-[docs/prd/](./docs/prd/README.md) for the plan of record.
+**in development — v0.1.0, milestone M0 (foundation).** The installable
+skeleton exists today: the package, the frozen CLI surface and exit-code
+contract, the fail-closed config model, `init`, and `doctor`. Nothing asks or
+answers yet, and every unimplemented command says so instead of pretending.
+The full requirement set is published early on purpose, so we can be held to
+it: the v0.1.0 core (requirements R1–R7, engineering requirements E1–E12), the
+forward product-depth slate (PRDs 24–30), and the hardening layer that gates it
+all (PRD 30). See [docs/prd/](./docs/prd/README.md) for the plan of record and
+[the WBS](./docs/wbs/v0.1.0/wbs-v0.1.0-index.md) for the build order.
 
 ## What it does
 
@@ -75,14 +77,24 @@ recipes. The honest, per-release compatibility table (field-tested /
 conformance-tested / documented / not-supported) lives in
 [docs/prd/19-harness-compatibility.md](./docs/prd/19-harness-compatibility.md).
 
-## Install
+## Install (from source, M0)
 
-Not yet installable — the plan of record is `pip install agentsec-agentinbox`,
-one config file, first approval in under 5 minutes, zero cloud dependencies.
+The package is **standalone**: no runtime dependencies beyond the Python
+standard library, no network calls, no external services. Python 3.11–3.13 on
+POSIX (Windows is not supported in v0.1.0).
 
 ```sh
-# coming with v0.1.0
+git clone https://github.com/agentic-suite/agentsec-agentinbox
+cd agentsec-agentinbox
+make setup                 # creates .venv and installs the package + dev tools
+agentinbox --version       # or: python -m agentinbox --version
+
+agentinbox init            # writes ~/.agentinbox + a commented config.toml
+agentinbox doctor          # exit 0 on a healthy install, 4 (fail-closed) otherwise
 ```
+
+`AGENTINBOX_HOME` (or `--home`) relocates the home directory. A PyPI release
+(`pip install agentsec-agentinbox`) lands with v0.1.0.
 
 ## Documentation
 
@@ -95,9 +107,11 @@ one config file, first approval in under 5 minutes, zero cloud dependencies.
   **26 milestones (M0–M25)** across **13 detail files** (2 milestones per file): the core
   engine (M0–M9), reach (M10–M14), evidence + producers (M15–M19), hardening +
   ops + docs (M20–M23), field tests + release (M24–M25, which tags `v0.1.0`).
-- Design docs and ADRs are authored with the build, in `docs/` (same layout as
-  the suite's other tools).
-- Contributing: [org guide](https://github.com/agentic-suite/.github/blob/main/CONTRIBUTING.md)
+- **Design docs are authored before code**, milestone by milestone — start with
+  [the foundation design](./docs/design/v0.1.0/foundation.md) (CLI surface,
+  exit-code contract, config model, store layout).
+- Contributing: [CONTRIBUTING.md](./CONTRIBUTING.md) (workflow, DCO, tests) and
+  the [org guide](https://github.com/agentic-suite/.github/blob/main/CONTRIBUTING.md)
 - Security: [SECURITY.md](./SECURITY.md)
 - Roadmap: [agentic-suite](https://github.com/agentic-suite)
 
