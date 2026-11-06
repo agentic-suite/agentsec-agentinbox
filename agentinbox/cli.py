@@ -17,6 +17,7 @@ from collections.abc import Callable, Sequence
 from typing import NoReturn
 
 from agentinbox import __version__
+from agentinbox.exit_codes import ExitCode
 
 PROG = "agentinbox"
 
@@ -71,7 +72,7 @@ def _stub(command: str) -> Handler:
             f"{PROG}: {command} is not implemented in v0.1.0 (scheduled: {milestone})",
             file=sys.stderr,
         )
-        return 4
+        return int(ExitCode.UNAVAILABLE)
 
     return handler
 
@@ -90,7 +91,7 @@ def _version(args: argparse.Namespace) -> int:
         )
     else:
         print(f"{PROG} {__version__}")
-    return 0
+    return int(ExitCode.APPROVED)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -137,14 +138,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"{PROG}: error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)
         else:
             print(f"{PROG}: error: the following arguments are required: COMMAND", file=sys.stderr)
-        return 1
+        return int(ExitCode.USAGE)
 
     # A stub accepts the flags of the command it will become (and refuses); a real command
     # rejects anything it does not define.
     if extra and args.command == "version":
         parser.print_usage(sys.stderr)
         print(f"{PROG}: error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)
-        return 1
+        return int(ExitCode.USAGE)
 
     handler: Handler = args.handler
     return handler(args)
