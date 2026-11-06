@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-SECRET = "SECRET"
+SECRET = "SECRET"  # noqa: S105 - a redaction class label, not a credential
 PRIVATE_KEY = "PRIVATE_KEY"
 CONNECTION_STRING = "CONNECTION_STRING"
 EMAIL = "EMAIL"

@@ -20,12 +20,12 @@ acceptance test. No requirement is orphaned; no test exists without a requiremen
 | **R8** | Mobile push (v1.x) | US-13 | CUJ-5 | — (v1.x) | deferred |
 | **R9** | Delegated/machine approvals (v1.x) | US-02 | — | — | deferred; depends on agentpolicy R41 |
 | **R10** | Standing approvals with expiry (v1.x) | US-03 | CUJ-4 variant | — (v1.x) | deferred |
-| **E1** | Ask contract + idempotent ingest | US-23, US-24 | CUJ-1, CUJ-13 | SC-01, SC-25, SC-26 | `test_contract_fixtures.py`, `test_ingest_idempotent.py` |
+| **E1** | Ask contract + idempotent ingest | US-23, US-24 | CUJ-1, CUJ-13 | SC-01, SC-25, SC-26 | `tests/ask/test_contract.py`, `tests/ask/test_identity.py`, `tests/ask/test_api.py` |
 | **E2** | Durable store + crash-safe scheduler | US-03 | CUJ-4, CUJ-13 | SC-09, SC-25 | `tests/store/test_durability.py` (crash/recovery) · scheduler recovery lands in M4 |
 | **E3** | Unforgeable single-use claims | US-09 | CUJ-3, CUJ-9 | SC-07, SC-08 | `test_claims.py` |
 | **E4** | Answer authN/authZ (signature, roster, self-review) | US-06, US-09, US-11 | CUJ-3, CUJ-8, CUJ-11 | SC-17, SC-22 | `test_answer_verify.py`, `test_slack_signature.py` |
 | **E5** | Injection-resistant rendering | US-11 | CUJ-11 | SC-22, SC-23 | `test_render_inert.py` + injection corpus gate |
-| **E6** | Redaction-before-persistence + receipts | US-05 | CUJ-3, CUJ-10 | SC-21 | `test_redaction.py` + evidence scanner |
+| **E6** | Redaction-before-persistence + receipts | US-05 | CUJ-3, CUJ-10 | SC-21 | `tests/ask/test_redaction.py` + evidence scanner (M22) |
 | **E7** | Delivery accounting + hygiene | US-12 | CUJ-6, CUJ-9 | SC-13, SC-19 | `test_delivery_events.py` |
 | **E8** | Time correctness (UTC + monotonic) | US-08, US-15 | CUJ-4, CUJ-5 | SC-09, SC-10, SC-12 | `test_clock_skew.py`, `test_time_persistence.py` |
 | **E9** | Fail-closed degradation | US-18, US-02 | CUJ-7, CUJ-12 | SC-24 | `test_failclosed_matrix.py` |

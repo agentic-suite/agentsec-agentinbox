@@ -15,17 +15,16 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
 
 from agentinbox.store.base import (
     CONFORMANCE_VERSION,
     GENESIS_HASH,
-    DriverSpec,
     AskRecord,
     AskStatus,
     AuditEntry,
     ClaimRecord,
     CreateResult,
+    DriverSpec,
     SchemaVersionError,
     SessionExport,
     StoreCapabilities,
@@ -363,12 +362,15 @@ class SqliteStore:
             if ask_ids:
                 placeholders = ",".join("?" for _ in ask_ids)
                 transitions = self._conn.execute(
-                    f"SELECT * FROM transitions WHERE ask_id IN ({placeholders})"
+                    # placeholders are generated "?" only; ids are bound parameters
+                    f"SELECT * FROM transitions WHERE ask_id IN ({placeholders})"  # noqa: S608
                     " ORDER BY ask_id, seq",
                     ask_ids,
                 ).fetchall()
                 claims = self._conn.execute(
-                    f"SELECT * FROM claims WHERE ask_id IN ({placeholders}) ORDER BY issued_at",
+                    # same: only "?" placeholders are interpolated
+                    f"SELECT * FROM claims WHERE ask_id IN ({placeholders})"  # noqa: S608
+                    " ORDER BY issued_at",
                     ask_ids,
                 ).fetchall()
 

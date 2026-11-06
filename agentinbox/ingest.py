@@ -46,7 +46,10 @@ def enforce_caps(raw: dict[str, Any]) -> None:
 
     for key in ("arguments", "context"):
         value = raw.get(key)
-        if isinstance(value, dict | list) and len(canonical_json(value).encode("utf-8")) > OBJECT_CAP_BYTES:
+        if (
+            isinstance(value, dict | list)
+            and len(canonical_json(value).encode("utf-8")) > OBJECT_CAP_BYTES
+        ):
             raise ContractError(key, f"object exceeds {OBJECT_CAP_BYTES} bytes (64 KiB)")
 
     policy = raw.get("policy_ref")
@@ -93,7 +96,9 @@ def validate_ask(raw: dict[str, Any], *, now: datetime, config: Config) -> AskCo
     enforce_caps(raw)
     verify_action_identity(contract)
     resolve_class(config, contract)
-    _validate_expiry(contract.expires_at, now=now, config=config, action_class=contract.action_class)
+    _validate_expiry(
+        contract.expires_at, now=now, config=config, action_class=contract.action_class
+    )
     _validate_ask_id(contract.ask_id)
     return contract
 
@@ -149,7 +154,9 @@ def ingest(
 
     arguments, argument_receipts = redact_value(dict(contract.arguments), "arguments")
     context, context_receipts = redact_value(dict(contract.context), "context")
-    extra_raw = {key: value for key, value in contract.extra.items() if key not in RESERVED_METADATA}
+    extra_raw = {
+        key: value for key, value in contract.extra.items() if key not in RESERVED_METADATA
+    }
     extra, extra_receipts = redact_value(extra_raw, "extra")
     receipts = argument_receipts + context_receipts + extra_receipts
 

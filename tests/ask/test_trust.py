@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from tests.ask.conftest import NOW, config, payload
-
 from agentinbox.ingest import ingest
 from agentinbox.store import canonical_json
 from agentinbox.trust import TRUSTED_FIELDS, ProducerIdentity, classify_trust
+from tests.ask.conftest import NOW, config, payload
 
 
 def test_unauthenticated_producer_cannot_assert_trusted_fields() -> None:

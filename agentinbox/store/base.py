@@ -11,7 +11,7 @@ import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, Final, Protocol
 
@@ -39,7 +39,7 @@ class ChainHashMismatch(StoreError):
     """The audit chain does not verify (tampering or corruption)."""
 
 
-class AskStatus(str, Enum):
+class AskStatus(StrEnum):
     """The v0.1.0 status vocabulary (PRD 15)."""
 
     PENDING = "pending"
@@ -72,7 +72,7 @@ class DriverSpec:
     name: str
     conformance_version: str
     capabilities: StoreCapabilities
-    factory: Callable[[Path], "AskStore"]
+    factory: Callable[[Path], AskStore]
 
 
 @dataclass(frozen=True, slots=True)

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from tests.ask.conftest import NOW, config, payload
-
 from agentinbox.ingest import ingest
 from agentinbox.redaction import (
     CONNECTION_STRING,
@@ -14,6 +12,7 @@ from agentinbox.redaction import (
 )
 from agentinbox.store import canonical_json
 from agentinbox.trust import ProducerIdentity
+from tests.ask.conftest import NOW, config, payload
 
 OPENAI_KEY = "sk-" + "a1B2c3D4" * 4
 GITHUB_TOKEN = "ghp_" + "Z9y8X7w6V5u4T3s2R1q0P9o8N7m6L5k4J3h2"
@@ -57,7 +56,7 @@ def test_email_is_a_pii_class() -> None:
 
 
 def test_nested_paths_and_lists_are_receipted() -> None:
-    redacted, receipts = redact_value(
+    _redacted, receipts = redact_value(
         {"session_tail": [{"tool": "read", "output": OPENAI_KEY}], "flags": [EMAIL_ADDRESS]},
         "context",
     )

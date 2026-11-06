@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from tests.ask.conftest import NOW, config, payload
-
 from agentinbox.ingest import ingest
 from agentinbox.trust import ProducerIdentity
+from tests.ask.conftest import NOW, config, payload
 
 
 def test_retries_coalesce_to_one_ask(store) -> None:  # type: ignore[no-untyped-def]

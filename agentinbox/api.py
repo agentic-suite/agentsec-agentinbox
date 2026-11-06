@@ -81,12 +81,12 @@ class _ApiServer(ThreadingHTTPServer):
 class _Handler(BaseHTTPRequestHandler):
     server: _ApiServer
 
-    def log_message(self, format: str, *args: Any) -> None:  # noqa: A002 - stdlib signature
+    def log_message(self, format: str, *args: Any) -> None:
         return
 
     # ------------------------------------------------------------------ routing
 
-    def do_POST(self) -> None:  # noqa: N802 - stdlib signature
+    def do_POST(self) -> None:
         if not self._authorized():
             return
         if self.path != "/v1/asks":
@@ -133,7 +133,7 @@ class _Handler(BaseHTTPRequestHandler):
             },
         )
 
-    def do_GET(self) -> None:  # noqa: N802 - stdlib signature
+    def do_GET(self) -> None:
         if not self._authorized():
             return
         parsed = urlparse(self.path)
@@ -241,8 +241,9 @@ def start_api(
     )
     thread.start()
     host, bound_port = server.server_address[:2]
+    host_text = host.decode() if isinstance(host, bytes) else host
     return IngestAPI(
-        url=f"http://{host}:{bound_port}",
+        url=f"http://{host_text}:{bound_port}",
         token=token,
         _server=server,
         _thread=thread,
@@ -251,4 +252,4 @@ def start_api(
     )
 
 
-__all__ = ["IngestAPI", "MAX_WAIT_SECONDS", "start_api"]
+__all__ = ["MAX_WAIT_SECONDS", "IngestAPI", "start_api"]

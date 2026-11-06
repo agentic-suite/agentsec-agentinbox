@@ -7,20 +7,18 @@ honest against the SQLite reference.
 from __future__ import annotations
 
 import threading
-from collections.abc import Iterator
-from contextlib import contextmanager
 from dataclasses import replace
 from datetime import datetime, timedelta
 
 from agentinbox.store.base import (
     CONFORMANCE_VERSION,
     GENESIS_HASH,
-    DriverSpec,
     AskRecord,
     AskStatus,
     AuditEntry,
     ClaimRecord,
     CreateResult,
+    DriverSpec,
     SessionExport,
     StoreCapabilities,
     StoreError,

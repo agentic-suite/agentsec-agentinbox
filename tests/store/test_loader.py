@@ -64,7 +64,7 @@ def test_builtin_sqlite_driver_uses_the_home_directory(tmp_path: Path) -> None:
 
 
 def test_unknown_driver_is_refused_with_the_group_named() -> None:
-    with pytest.raises(DriverNotAdmittedError, match="agentinbox.store"):
+    with pytest.raises(DriverNotAdmittedError, match=r"agentinbox\.store"):
         load_store("postgres")
 
 

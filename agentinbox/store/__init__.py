@@ -25,9 +25,9 @@ from agentinbox.store.base import (
     parse_iso,
     payload_digest,
     require_capability,
-    verify_audit_chain,
     to_iso,
     utcnow,
+    verify_audit_chain,
 )
 
 __all__ = [
@@ -53,7 +53,7 @@ __all__ = [
     "parse_iso",
     "payload_digest",
     "require_capability",
-    "verify_audit_chain",
     "to_iso",
     "utcnow",
+    "verify_audit_chain",
 ]

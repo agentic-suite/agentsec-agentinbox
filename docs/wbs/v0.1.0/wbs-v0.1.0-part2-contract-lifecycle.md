@@ -41,9 +41,12 @@ rejected with field-named diagnostics, never partially stored (SC-02).
 
 **Exit criteria**
 
-- [ ] Design docs first · tests · coverage ≥95% · lint clean · docs · committed+pushed
-- [ ] Duplicate ingest coalesces; malformed asks reject with field-named diagnostics and store nothing partial
-- [ ] No raw secret ever persists; trusted fields from unauthenticated producers render unverified
+- [x] Design docs first · tests · coverage ≥95% · lint clean · docs · committed+pushed
+- [x] Duplicate ingest coalesces; malformed asks reject with field-named diagnostics and store nothing partial
+- [x] No raw secret ever persists; trusted fields from unauthenticated producers render unverified
+
+**Closed 2026-11-06.** Design: [ask contract](../design/v0.1.0/ask-contract.md) · Reference:
+[ask contract](../reference/ask-contract.md) · Gate: recorded in the [index](wbs-v0.1.0-index.md).
 
 ---
 

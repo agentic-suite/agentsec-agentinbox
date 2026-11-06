@@ -6,12 +6,12 @@ Every rejection names the failing field and nothing partial is stored (SC-02).
 from __future__ import annotations
 
 import pytest
-from tests.ask.conftest import NOW, config, payload
 
 from agentinbox.contract import ContractError, parse_ask
 from agentinbox.ingest import enforce_caps, ingest, validate_ask, verify_action_identity
 from agentinbox.store import StoreError
 from agentinbox.trust import ProducerIdentity
+from tests.ask.conftest import NOW, config, payload
 
 
 def test_valid_ask_passes_every_check() -> None:

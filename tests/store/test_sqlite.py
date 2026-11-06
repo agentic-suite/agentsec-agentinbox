@@ -31,7 +31,9 @@ def make_store(tmp_path: Path) -> SqliteStore:
     return SqliteStore(tmp_path / "home" / "inbox.db")
 
 
-def make_ask(index: int = 0, *, created_at: datetime = T0, identity: str | None = None) -> AskRecord:
+def make_ask(
+    index: int = 0, *, created_at: datetime = T0, identity: str | None = None
+) -> AskRecord:
     return AskRecord(
         ask_id=f"ask_{index:016x}",
         action_identity=identity or "sha256:" + "a" * 64,
@@ -43,7 +45,9 @@ def make_ask(index: int = 0, *, created_at: datetime = T0, identity: str | None 
     )
 
 
-def transition(ask: AskRecord, kind: str = "created", to: AskStatus = AskStatus.PENDING) -> TransitionRecord:
+def transition(
+    ask: AskRecord, kind: str = "created", to: AskStatus = AskStatus.PENDING
+) -> TransitionRecord:
     return TransitionRecord(
         ask_id=ask.ask_id, at=ask.created_at, kind=kind, to_status=to, detail={"why": kind}
     )
@@ -174,7 +178,8 @@ def test_expired_claim_cannot_be_consumed(store: SqliteStore) -> None:
     )
     store.issue_claim(claim)
 
-    assert store.consume_claim(claim.claim_id, ask_id=ask.ask_id, at=T0 + timedelta(seconds=2)) is False
+    late = T0 + timedelta(seconds=2)
+    assert store.consume_claim(claim.claim_id, ask_id=ask.ask_id, at=late) is False
 
 
 def test_duplicate_claim_id_is_rejected(store: SqliteStore) -> None:

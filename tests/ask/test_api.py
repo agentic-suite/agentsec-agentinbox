@@ -11,11 +11,11 @@ from collections.abc import Iterator
 from typing import Any
 
 import pytest
-from tests.ask.conftest import NOW, config, payload
 
 from agentinbox.api import IngestAPI, start_api
 from agentinbox.ingest import ingest
 from agentinbox.trust import ProducerIdentity
+from tests.ask.conftest import NOW, config, payload
 
 TOKEN = "test-socket-token-0123456789"
 

@@ -8,9 +8,16 @@ from typing import Any
 
 import pytest
 
-from agentinbox.contract import ContractError, ask_schema, compute_action_identity, parse_ask
+from agentinbox.contract import (
+    ContractError,
+    ask_schema,
+    compute_action_identity,
+    parse_ask,
+)
 
-SCHEMA_PATH = Path(__file__).resolve().parents[2] / "agentinbox" / "contract" / "ask-1.0.schema.json"
+SCHEMA_PATH = (
+    Path(__file__).resolve().parents[2] / "agentinbox" / "contract" / "ask-1.0.schema.json"
+)
 
 
 def valid_payload(**overrides: Any) -> dict[str, Any]:

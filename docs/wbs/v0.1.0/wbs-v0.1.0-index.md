@@ -120,6 +120,11 @@ A milestone is **closed** only when all of these hold:
   migrations · `727af69` loader. **Gate:** 203 tests pass · coverage **97.71%** · `ruff` clean ·
   `mypy --strict` clean · DCO signed. Both drivers pass the same suite; a broken driver fails it; a store
   newer than the build refuses loudly. Next: **M2** (`2.D0` ask contract).
+- **2026-11-06 — M2 Ask contract + ingest + redaction (E1, E6) closed.** Issues #124–#135. Commits on
+  `feat-0.1.0`: `d4fad27` schema+model · `5604e42` validation/identity/redaction/trust · `38acdda` API.
+  **Gate:** 268 tests pass · coverage **96.45%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  SC-02/SC-06 proven at the unit level; secrets never reach the store; trust cannot be self-asserted.
+  Next: **M3** (`3.D0` lifecycle).
 
 ## PRD coverage matrix (every doc 00–30)
 

@@ -6,6 +6,7 @@ is **not** an AskStore, regardless of what it declares (E11: refused at load, ne
 
 from __future__ import annotations
 
+import itertools
 import threading
 from datetime import UTC, datetime, timedelta
 
@@ -175,7 +176,7 @@ def check_gapless_audit_seq(store) -> None:  # type: ignore[no-untyped-def]
     seqs = [entry.seq for entry in ordered]
     assert seqs == list(range(seqs[0], seqs[0] + len(seqs)))
 
-    for earlier, later in zip(ordered, ordered[1:], strict=False):
+    for earlier, later in itertools.pairwise(ordered):
         assert later.prev_hash == earlier.entry_hash
     for entry in ordered:
         assert entry.entry_hash == chain_hash(

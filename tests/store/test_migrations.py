@@ -64,9 +64,8 @@ def test_old_store_migrates_forward_and_preserves_rows(tmp_path: Path) -> None:
         assert loaded.session_id == "sess_old"
         assert loaded.payload == {}
         assert loaded.decided_at is None
-        assert [item.ask_id for item in store.list_pending(now=datetime(2026, 11, 6, tzinfo=UTC))] == [
-            "ask_old"
-        ]
+        pending = store.list_pending(now=datetime(2026, 11, 6, tzinfo=UTC))
+        assert [item.ask_id for item in pending] == ["ask_old"]
         store.verify_chain()
     finally:
         store.close()
