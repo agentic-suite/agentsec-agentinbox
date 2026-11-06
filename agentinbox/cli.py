@@ -23,6 +23,7 @@ from agentinbox.config import (
     resolve_config_path,
     resolve_home,
 )
+from agentinbox.doctor import render_explain, render_human, run_checks
 from agentinbox.exit_codes import ExitCode
 
 PROG = "agentinbox"
@@ -95,6 +96,32 @@ def _init(args: argparse.Namespace) -> int:
     return int(ExitCode.APPROVED)
 
 
+def _doctor(args: argparse.Namespace) -> int:
+    try:
+        home = resolve_home(args.home)
+        config_path = resolve_config_path(home, args.config)
+    except ConfigError as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    report = run_checks(home, config_path)
+    if args.json:
+        print(
+            json.dumps(
+                [{"id": c.id, "status": c.status, "detail": c.detail} for c in report.checks]
+            )
+        )
+    else:
+        print(render_human(report))
+        if args.explain:
+            explanation = render_explain(report, home, config_path)
+            if explanation is None:
+                print("explain unavailable: config is invalid")
+            else:
+                print(explanation)
+    return int(ExitCode.APPROVED if report.ok else ExitCode.UNAVAILABLE)
+
+
 def _version(args: argparse.Namespace) -> int:
     if getattr(args, "json", False):
         print(
@@ -140,12 +167,18 @@ def build_parser() -> argparse.ArgumentParser:
             handler = _version
         elif command == "init":
             handler = _init
+        elif command == "doctor":
+            handler = _doctor
         else:
             handler = _stub(command)
         sub.set_defaults(handler=handler)
         if command == "init":
             sub.add_argument(
                 "--force", action="store_true", help="overwrite an existing config file"
+            )
+        if command == "doctor":
+            sub.add_argument(
+                "--explain", action="store_true", help="print the effective configuration"
             )
 
     return parser
@@ -169,7 +202,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # A stub accepts the flags of the command it will become (and refuses); a real command
     # rejects anything it does not define.
-    if extra and args.command in {"version", "init"}:
+    if extra and args.command in {"version", "init", "doctor"}:
         parser.print_usage(sys.stderr)
         print(f"{PROG}: error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)
         return int(ExitCode.USAGE)
