@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
@@ -32,6 +32,10 @@ class SchemaVersionError(StoreError):
 
 class DriverNotAdmittedError(StoreError):
     """The driver is unknown or has not passed this conformance suite."""
+
+
+class ChainHashMismatch(StoreError):
+    """The audit chain does not verify (tampering or corruption)."""
 
 
 class AskStatus(str, Enum):
@@ -189,7 +193,7 @@ def to_iso(moment: datetime) -> str:
     """UTC ISO-8601 with a ``Z`` suffix; naive datetimes are a bug, not a guess."""
     if moment.tzinfo is None or moment.utcoffset() is None:
         raise ValueError("datetime must be timezone-aware (UTC)")
-    return moment.astimezone(UTC).isoformat().replace("+00:00", "Z")
+    return moment.astimezone(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
 
 
 def parse_iso(text: str) -> datetime:
@@ -216,3 +220,26 @@ def chain_hash(*, prev_hash: str, seq: int, kind: str, ref_id: str, at: str, dig
 
 
 GENESIS_HASH: Final = "0" * 64
+
+
+def verify_audit_chain(entries: Sequence[AuditEntry]) -> None:
+    """Recompute the chain; raise on the first bad entry. Driver-independent (E11)."""
+    previous = GENESIS_HASH
+    for expected_seq, entry in enumerate(entries, start=1):
+        if entry.seq != expected_seq:
+            raise ChainHashMismatch(
+                f"audit seq gap: expected {expected_seq}, found {entry.seq}"
+            )
+        if entry.prev_hash != previous:
+            raise ChainHashMismatch(f"audit seq {entry.seq}: prev_hash does not link")
+        recomputed = chain_hash(
+            prev_hash=entry.prev_hash,
+            seq=entry.seq,
+            kind=entry.kind,
+            ref_id=entry.ref_id,
+            at=to_iso(entry.at),
+            digest=entry.payload_digest,
+        )
+        if recomputed != entry.entry_hash:
+            raise ChainHashMismatch(f"audit seq {entry.seq}: entry_hash does not verify")
+        previous = entry.entry_hash

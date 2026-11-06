@@ -10,6 +10,7 @@ from agentinbox.store.base import (
     AskStore,
     AuditEntry,
     CapabilityError,
+    ChainHashMismatch,
     ClaimRecord,
     CreateResult,
     DriverNotAdmittedError,
@@ -23,6 +24,7 @@ from agentinbox.store.base import (
     parse_iso,
     payload_digest,
     require_capability,
+    verify_audit_chain,
     to_iso,
     utcnow,
 )
@@ -35,6 +37,7 @@ __all__ = [
     "AskStore",
     "AuditEntry",
     "CapabilityError",
+    "ChainHashMismatch",
     "ClaimRecord",
     "CreateResult",
     "DriverNotAdmittedError",
@@ -48,6 +51,7 @@ __all__ = [
     "parse_iso",
     "payload_digest",
     "require_capability",
+    "verify_audit_chain",
     "to_iso",
     "utcnow",
 ]
