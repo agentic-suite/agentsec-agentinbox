@@ -5,13 +5,12 @@ from __future__ import annotations
 from datetime import timedelta
 from pathlib import Path
 
-from tests.ask.conftest import NOW, config, payload
-
 from agentinbox.claims import hash_secret, mint_claim, secret_matches
 from agentinbox.ingest import ingest
 from agentinbox.store import StoreError
 from agentinbox.store.sqlite import SqliteStore
 from agentinbox.trust import ProducerIdentity
+from tests.ask.conftest import NOW, config, payload
 
 
 def make_ask(store):  # type: ignore[no-untyped-def]

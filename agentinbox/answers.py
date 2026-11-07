@@ -16,7 +16,7 @@ messages stay uniform so a caller cannot probe claim existence.
 from __future__ import annotations
 
 import threading
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -31,7 +31,9 @@ from agentinbox.store import (
     utcnow,
 )
 
-CREDENTIAL_CAUSES = frozenset({"unknown_claim", "bad_secret", "expired_token", "used", "revoked", "guessing"})
+CREDENTIAL_CAUSES = frozenset(
+    {"unknown_claim", "bad_secret", "expired_token", "used", "revoked", "guessing"}
+)
 _PUBLIC = {
     "unknown_claim": "bad_claim",
     "bad_secret": "bad_claim",
@@ -79,7 +81,7 @@ class AnswerVerifier:
         store: AskStore,
         config: Config,
         *,
-        now=utcnow,  # type: ignore[no-untyped-def]
+        now: Callable[[], datetime] = utcnow,
         max_attempts: int = 5,
     ) -> None:
         self.store = store
@@ -126,11 +128,6 @@ class AnswerVerifier:
             self._reject(ask, request, now, "identity_mismatch", "claim tier is stale")
             raise AnswerRejected("identity_mismatch", "claim tier is stale")
 
-        # --- ask state ------------------------------------------------------
-        if ask.status is not AskStatus.PENDING:
-            self._late(ask, request, now)
-            raise AnswerRejected("late", "ask is already resolved")
-
         # --- authorization --------------------------------------------------
         ask_class = self._class_for(ask)
         allowed = self._allowed_principals(ask_class, request.channel)
@@ -142,6 +139,11 @@ class AnswerVerifier:
         if request.principal == requested_by and ask_class.self_review != "allow":
             self._reject(ask, request, now, "self_review", "requester cannot decide their own ask")
             raise AnswerRejected("self_review", "self-review is not allowed for this class")
+
+        # --- ask state ------------------------------------------------------
+        if ask.status is not AskStatus.PENDING:
+            self._late(ask, request, now)
+            raise AnswerRejected("late", "ask is already resolved")
 
         if request.decision == "deny" and ask_class.require_reason_on_deny and not request.reason:
             self._reject(ask, request, now, "reason_required", "deny requires a reason")

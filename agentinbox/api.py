@@ -19,6 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+from agentinbox.answers import AnswerRejected, AnswerRequest, AnswerVerifier
 from agentinbox.config import Config
 from agentinbox.contract import ContractError
 from agentinbox.ingest import TOTAL_CAP_BYTES, ingest
@@ -27,6 +28,7 @@ from agentinbox.trust import ProducerIdentity
 
 MAX_WAIT_SECONDS = 30.0
 _ASK_PATH = re.compile(r"^/v1/asks/([A-Za-z0-9_-]+)$")
+_ANSWER_PATH = re.compile(r"^/v1/asks/([A-Za-z0-9_-]+)/answer$")
 _WAIT_PATTERN = re.compile(r"^(\d+(?:\.\d+)?)s?$")
 
 
@@ -89,6 +91,11 @@ class _Handler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         if not self._authorized():
             return
+
+        answer_match = _ANSWER_PATH.fullmatch(self.path)
+        if answer_match is not None:
+            self._handle_answer(answer_match.group(1))
+            return
         if self.path != "/v1/asks":
             self._error(HTTPStatus.NOT_FOUND, "path", "unknown endpoint")
             return
@@ -132,6 +139,46 @@ class _Handler(BaseHTTPRequestHandler):
                 "created": result.created,
             },
         )
+
+    def _handle_answer(self, ask_id: str) -> None:
+        """Raw-API answers are refused: answers come only from an authenticated channel adapter."""
+        raw = self._read_body()
+        if raw is None:
+            return
+        try:
+            body = json.loads(raw)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            self._error(HTTPStatus.BAD_REQUEST, "body", "must be valid JSON")
+            return
+        if not isinstance(body, dict):
+            self._error(HTTPStatus.BAD_REQUEST, "body", "must be a JSON object")
+            return
+        if body.get("decision") not in {"approve", "deny"}:
+            self._error(HTTPStatus.BAD_REQUEST, "decision", "must be approve or deny")
+            return
+        if self.server.store.get(ask_id) is None:
+            self._error(HTTPStatus.NOT_FOUND, "ask_id", "unknown ask")
+            return
+
+        request = AnswerRequest(
+            ask_id=ask_id,
+            claim_id=str(body.get("claim_id", "")),
+            secret=str(body.get("secret", "")),
+            principal=str(body.get("principal", "")),
+            channel=str(body.get("channel", "api")),
+            decision=str(body["decision"]),
+            reason=body.get("reason"),
+            typed_confirmation=body.get("typed_confirmation"),
+        )
+        verifier = AnswerVerifier(self.server.store, self.server.config, now=self.server.now)
+        try:
+            verifier.submit(request, channel_authenticated=False)
+        except AnswerRejected:
+            self._error(
+                HTTPStatus.FORBIDDEN, "authorization", "answers require an authenticated channel"
+            )
+            return
+        self._send(HTTPStatus.OK, {"ask_id": ask_id, "status": "resolved"})
 
     def do_GET(self) -> None:
         if not self._authorized():
