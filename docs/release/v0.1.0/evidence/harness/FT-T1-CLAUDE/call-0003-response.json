@@ -1,0 +1,6 @@
+{
+  "status_code": 200,
+  "body": {
+    "_raw": "event: ping\ndata: {\"type\":\"ping\"}\n\nevent: message_start\ndata: {\"type\": \"message_start\", \"message\": {\"id\": \"msg_9d90865c3c6d49e4b0595ab7\", \"type\": \"message\", \"role\": \"assistant\", \"model\": \"Qwen3-4B-Instruct-2507-4bit\", \"content\": [], \"stop_reason\": null, \"stop_sequence\": null, \"usage\": {\"input_tokens\": 0, \"output_tokens\": 0}}}\n\nevent: content_block_start\ndata: {\"type\": \"content_block_start\", \"index\": 0, \"content_block\": {\"type\": \"tool_use\", \"id\": \"call_9d4f1aa9\", \"name\": \"Bash\", \"input\": {}}}\n\nevent: content_block_delta\ndata: {\"type\": \"content_block_delta\", \"index\": 0, \"delta\": {\"type\": \"input_json_delta\", \"partial_json\": \"{\\\"command\\\": \\\"echo done >> ft-t1-side-effect.txt\\\"}\"}}\n\nevent: content_block_stop\ndata: {\"type\": \"content_block_stop\", \"index\": 0}\n\nevent: message_delta\ndata: {\"type\": \"message_delta\", \"delta\": {\"stop_reason\": \"tool_use\", \"stop_sequence\": null}, \"usage\": {\"output_tokens\": 35, \"input_tokens\": 0, \"cache_creation_input_tokens\": 1817, \"cache_read_input_tokens\": 17408}}\n\nevent: message_stop\ndata: {\"type\": \"message_stop\"}\n\n"
+  }
+}

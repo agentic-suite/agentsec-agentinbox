@@ -8,7 +8,7 @@ PYTHON ?= python3
 PY := $(VIRTUAL_ENV)/bin/python
 PIP := $(VIRTUAL_ENV)/bin/pip
 
-.PHONY: setup lint typecheck test cov gate clean packs scan claims evidence sbom posture
+.PHONY: setup lint typecheck test cov gate clean packs scan claims evidence compat sbom posture
 
 setup: $(VIRTUAL_ENV)/bin/python
 	$(PY) -m pip install --quiet --upgrade pip
@@ -31,7 +31,7 @@ cov:
 	$(PY) -m pytest --cov=agentinbox --cov-report=term-missing --cov-fail-under=95
 
 # Single milestone gate: the WBS runs these once at milestone end, never per ticket.
-gate: lint typecheck test cov claims evidence
+gate: lint typecheck test cov claims evidence compat
 
 # Release-blocking security checks (M22).
 packs:
@@ -48,6 +48,9 @@ evidence:
 	$(PY) -m agentinbox.scanner --path docs/release/v0.1.0
 	$(PY) -m agentinbox.scanner --path docs/field-test/v0.1.0
 	$(PY) -m agentinbox.scanner --path field-test/v0.1.0/results
+
+compat:
+	$(PY) -m agentinbox.compatmatrix --check
 
 sbom:
 	$(PY) -m agentinbox.posture sbom
