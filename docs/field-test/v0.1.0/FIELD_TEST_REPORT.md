@@ -108,16 +108,17 @@ regression note) before the group closes. One run per case; a re-run is a **seco
 
 | Item | Value |
 |---|---|
-| Host / OS / arch | *(e.g. macOS Darwin arm64 · version)* |
-| Python / venv | *(repo `.venv`, exact version)* |
-| agentinbox build | *(commit + branch of the release candidate)* |
+| Host / OS / arch | macOS **Darwin arm64** (recorded in every suite's `env.json`) |
+| Python / venv | host **3.12.14** (`.venv`); Docker SUT **python:3.13-slim** |
+| agentinbox build | sweep commit **`e54972b`** (`feat-0.1.0`); core cases from `0ee6033` |
 | Core regression baseline | `ab94330` (M23 core) + PRD 17 expected events |
 | Channels configured | terminal · desktop · webhook (loopback) — as used per case |
-| Claude Code | *(version, or "absent → FT-T1-CLAUDE BLOCKED")* |
-| Codex CLI | *(version, or "absent → FT-T1-CODEX BLOCKED")* |
-| Study corpus | *(checksum + participant count, once frozen — plan §9.1)* |
-| Clock / sync | *(UTC, `doctor` clock check result)* |
-| Results / journal | `field-test/v0.1.0/results/<suite>/` · `journal/<case>/` |
+| Claude Code | installed on the box; **version not captured** in the journal (gap) |
+| Codex CLI | **0.135.0** (shown in the captured transcript) |
+| OMLX | `http://127.0.0.1:8000`; **`Qwen3-4B-Instruct-2507-4bit`**; reachable |
+| Study corpus | **not frozen — 0 participants**; no timings/decisions claimed |
+| Clock / sync | not separately recorded; expiry timing observed in the live case |
+| Results / journal | `field-test/v0.1.0/results/<suite>/` (30+ suites/cases committed) |
 
 ---
 
@@ -243,8 +244,30 @@ re-derived from the committed result files. **Class:** **P/F** = hard gate · **
 
 ## Per-Suite Results
 
-*(fills by group: suite → cases run, pass rate, where the evidence lives, and what was deep-verified vs
-spot-checked. A suite is complete only when every case in it has a verdict.)*
+Deep validation re-read every `verdict.json` + `assertions.ndjson` in each suite. `pytest` column is the
+sum of tests reported passing in that suite's `stdout.log`; blocked suites have no pytest run.
+
+| Suite | Cases | ✅ | ❌ | ⛔ | Evidence (committed) |
+|---|---|---|---|---|---|
+| s0-core | 9 | 9 | 0 | 0 | `field-test/v0.1.0/results/s0-core/` — 146 pytest tests + live kill/restart |
+| s1-cross-channel | 3 | 3 | 0 | 0 | `.../s1-cross-channel/` — 10 pytest tests |
+| s2-escalation | 2 | 2 | 0 | 0 | `.../s2-escalation/` — 13 pytest tests |
+| s3-flood | 3 | 3 | 0 | 0 | `.../s3-flood/` — 26 pytest tests; pair verdict enforced |
+| s4-ci | 2 | 0 | 2 | 0 | `.../s4-ci/` — 17 pytest tests passed; 2 failed tests (unraisable warnings) |
+| s5-evidence | 2 | 0 | 2 | 0 | `.../s5-evidence/` — 32 pytest tests passed; 5 unraisable-warning failures |
+| s6-attacks | 3 | 2 | 1 | 0 | `.../s6-attacks/` — 25 pytest tests; SC-22/23 release-gating ✅; SC-24 unraisable |
+| s7-governance | 2 | 1 | 1 | 0 | `.../s7-governance/` — 12 pytest tests; SC-25 ✅; SC-26 unraisable |
+| s8-readiness | 3 | 3 | 0 | 0 | `.../s8-readiness/` — 28 pytest tests |
+| s9-constrained | 4 | 4 | 0 | 0 | `.../s9-constrained/` — 27 pytest tests |
+| s10-operations | 4 | 4 | 0 | 0 | `.../s10-operations/` — 76 pytest tests |
+| s11-outcomes | 4 | 4 | 0 | 0 | `.../s11-outcomes/` — 64 pytest tests |
+| s12-grants | 4 | 4 | 0 | 0 | `.../s12-grants/` — 72 pytest tests |
+| s13-insights | 4 | 4 | 0 | 0 | `.../s13-insights/` — 36 pytest tests |
+| s14-study | 2 | 0 | 0 | 2 | `.../s14-study/` — blocked; no timings or decisions claimed |
+| s15-harness | 2 | 0 | 2 | 0 | `.../s15-harness/` — 11/11 LLM pairs; audit/allow assertions red |
+| s16-live | 2 | 0 | 0 | 0 | **not run** — cases have no verdict directory |
+
+**Totals:** 43 ✅ · 8 ❌ · 2 ⛔ · 2 ▫ (53 verdicts on disk; ~584 pytest tests passed inside the SUT).
 
 ---
 
@@ -256,12 +279,21 @@ test that now guards it. No entry may be closed without all four. At authoring: 
 - **Six cases — ❌ pytest/toolchain, not product assertions.** `FT-SC-15, 16, 20, 21, 24, 26` fail under
   pytest 9.2.0 on Python 3.13 because unclosed-SQLite `ResourceWarning`s are promoted to
   `PytestUnraisableExceptionWarning`; the product assertions inside those selections passed (e.g. 6/2,
-  11/2, 21/4, 11/1). Fix: none (do-not-fix rule); this is a harness/toolchain gate, not a policy defect.
+  11/2, 21/4, 11/1). Exact failed tests by case: `FT-SC-15` → `test_unknown_ask_fails_closed`,
+  `test_bad_config_fails_closed`; `FT-SC-16` → `test_denied_gate_returns_two`,
+  `test_missing_ask_flag_is_a_usage_error`; `FT-SC-20` → `test_verify_log_detects_tampering`,
+  `test_export_jsonl_by_session`, `test_export_requires_exactly_one_scope`;
+  `FT-SC-21` → `test_cli_parse_errors_stay_on_one_line`; `FT-SC-24` →
+  `test_schema_mismatch_refuses_downgrade`; `FT-SC-26` →
+  `test_offline_day_terminal_ci_audit_export_report`. Fix: none (do-not-fix rule); this is a
+  harness/toolchain gate, not a policy defect.
 - **FT-T1-CLAUDE / FT-T1-CODEX — ❌ Tier-1 answerer script error.** The three-call/allow-deny behaviour and
   LLM capture worked (Claude 6/6 pairs, Codex 5/5; secret-free), but `t1_answerer.sh` calls `mapfile`, which
   macOS's bash 3.2 does not provide, so the answerer died and `export --session` produced an empty audit;
-  Codex's allow command also did not execute (the sandbox/runner path, not agentinbox). Fix: none applied
-  (stop rule); both cases remain ❌ and feed **no** matrix label to M33.
+  Codex's allow command also did not execute (the sandbox/runner path, not agentinbox). Exact T1 assertions:
+  Claude — `triple ✅`, `allow-executed ✅`, `deny-held ✅`, `captured ✅`, `audit ❌`; Codex — `triple ✅`,
+  `allow-executed ❌`, `deny-held ✅`, `captured ✅`, `audit ❌`. Fix: none applied (stop rule); both cases
+  remain ❌ and feed **no** matrix label to M33.
 - **Leak-gate hit — Codex plugin clone.** `ft_capture` copied Codex's `.tmp/plugins` into the case artifacts;
   `scan_results.py` found a bearer token there. The unsafe `.tmp` directory was removed from the results
   (evidence, not test code) and the final scan is clean; no secret was committed. The harness still needs a
@@ -282,8 +314,8 @@ test that now guards it. No entry may be closed without all four. At authoring: 
 | # | Case | Defect | Cause | Fix | Regression | Owner | Status |
 |---|---|---|---|---|---|---|---|
 | 1 | FT-SC-10-LIVE | live daemon did not start; then resolve assertion looked in the wrong artifact | duplicate `[classes.irreversible]` TOML table; `human_gate_timeout` lives on `resolve()`, not the audit row | step writes a dedicated config; assertion calls `resolve()` | live step re-run ✅ PASS | field-test harness | ✅ resolved |
-| 2 | FT-SC-15, 16, 20, 21, 24, 26 | pytest reports failures though product assertions passed | pytest 9.2.0 / Python 3.13 promotes unclosed-SQLite `ResourceWarning` to `PytestUnraisableExceptionWarning` | none (do-not-fix rule) | none | field-test toolchain | ⛔ open |
-| 3 | FT-T1-CLAUDE, FT-T1-CODEX | answerer dies, audit empty; Codex allow not executed | `mapfile` unavailable in macOS bash 3.2 | none (stop rule) | none | field-test harness | ⛔ open |
+| 2 | FT-SC-15, 16, 20, 21, 24, 26 | pytest reports failures though product assertions passed; exact failing tests are named in Root Cause | pytest 9.2.0 / Python 3.13 promotes unclosed-SQLite `ResourceWarning` to `PytestUnraisableExceptionWarning` | none (do-not-fix rule) | none | field-test toolchain | ⛔ open |
+| 3 | FT-T1-CLAUDE, FT-T1-CODEX | answerer dies, audit empty; Codex allow not executed (Claude: audit ❌ only; Codex: allow ❌ + audit ❌) | `mapfile` unavailable in macOS bash 3.2 | none (stop rule) | none | field-test harness | ⛔ open |
 | 4 | FT-T1-CODEX | bearer token in results | `ft_capture` copied Codex `.tmp/plugins` | unsafe artifact removed; capture exclusion still needed | final leak scan clean | field-test harness | ⚠️ mitigated, fix needed |
 
 ---
@@ -341,6 +373,37 @@ Status vocabulary: **not run | ✅ PASS | ❌ FAIL | ⛔ BLOCKED** — this run 
   **At authoring:** the Tier-1 harness recipes + the study cohort await the field box + participants.
 - **Not tested (honest):** everything not later listed as PASS/FAIL/BLOCKED above — stated as `not run`,
   never omitted.
+
+---
+
+## Deep Validation Audit — post-sweep (2026-11-07)
+
+A second, independent audit re-derived every result from disk after the sweep stopped. All checks were run
+read-only; no verdict was changed except the one stale report cell named below.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | `check_grounding.py --strict` | 53 verdicts, **43 grounded PASS, 0 over-claimed** |
+| 2 | `scan_results.py` leak gate | **471 files clean** after removing the Codex plugin `.tmp` tree |
+| 3 | `verify_harness.py` | OK — grounding/assertion/blocked/leak gates all reject bad input |
+| 4 | Verdict census from disk | **43 ✅ / 8 ❌ / 2 ⛔ / 2 ▫**, no duplicate case ids |
+| 5 | Registry coverage | only `FT-SC-16-LIVE`, `FT-SC-24-LIVE` have no verdict dir |
+| 6 | Verdict ↔ `assertions.ndjson` reconciliation | **clean** — totals/grounded counts match; blocked cases are P/F\|B with limitations |
+| 7 | LLM evidence | Claude **6/6** pairs, Codex **5/5**, all **2xx**, secret-free; both T1 verdicts still ❌ |
+| 8 | Pytest evidence | every suite-backed case has a real passing count (1–30 tests each); **~584 tests** total |
+| 9 | Master table vs disk | one stale cell found: `FT-SC-85` said `▫ not run` though disk = pass; **fixed by hand**, all rows now match |
+| 10 | Headline counts vs disk | report **43/8/2/2** matches disk exactly |
+| 11 | Stated fail causes vs stdout | all six toolchain ❌ logs contain `PytestUnraisableExceptionWarning`; exact test names are in Root Cause |
+| 12 | T1 verdicts vs assertions | Claude: audit ❌ only; Codex: allow ❌ + audit ❌ — exactly as reported |
+| 13 | Environment fingerprints | every suite has `env.json` (Darwin arm64, Python 3.12.14) |
+| 14 | `summary.json` vs verdicts | all 16 suites match (0 mismatches) |
+| 15 | Per-suite pytest totals | recomputed and corrected in Per-Suite Results (s0 146, total ~584) |
+| 16 | Report claims audit | status, counts, blockers, `mapfile`, leak, 11/11 pairs, 16-row batch log, marker, release-blocked — all present |
+
+**Discrepancy found and corrected:** `FT-SC-85` was the only master-table cell not updated after its batch
+(disk verdict = ✅ pass). Fixed by hand in this report (commit `2fc2455`); counts were already correct.
+**No product assertion failure was found in any ✅ case.** The 8 ❌ are 6 pytest-toolchain failures + 2
+Tier-1 harness failures; the 2 ⛔ are the human study; the 2 ▫ were never started after the stop rule.
 
 ---
 
