@@ -18,7 +18,7 @@ source "$HERE/lib.sh"
 
 ALL=(s0-core s1-cross-channel s2-escalation s3-flood s4-ci s5-evidence
      s6-attacks s7-governance s8-readiness s9-constrained s10-operations
-     s11-outcomes s12-grants s13-insights s14-study s15-harness)
+     s11-outcomes s12-grants s13-insights s14-study s15-harness s16-live)
 
 suites=("$@")
 if [[ ${#suites[@]} -eq 0 ]]; then
@@ -38,10 +38,14 @@ rc=0
 for s in "${suites[@]}"; do
   echo
   echo "############## suite $s ##############"
+  # Each suite is its own run dir (verdict isolation), but the IMAGE build is
+  # shared: run-suite boots with --no-build when FT_STACK_BUILT=1 is exported.
   if ! bash "$HERE/run-suite.sh" "$s"; then
     echo "!! suite $s had failures" >&2
     rc=1
   fi
+  # run-suite tears its stack down; keep the built image for the next suite.
+  export FT_STACK_BUILT=1
 done
 
 echo

@@ -41,6 +41,7 @@ if [[ -z "${FT_RUN_ID:-}" ]]; then
   exit 3
 fi
 FT_RUN_DIR="$RESULTS_ROOT/$FT_RUN_ID"
+export FT_RUN_DIR
 
 if [[ -x "$REPO_ROOT/.venv/bin/python" ]]; then
   FT_PY="${AGENTINBOX_PYTHON:-$REPO_ROOT/.venv/bin/python}"
@@ -63,6 +64,14 @@ STACK_COMPOSE=(docker compose --project-directory "$REPO_ROOT" -f "$FT_DIR/docke
 FT_SUT_SERVICE="agentinbox"
 FT_SERVICES=(agentinbox)
 FT_CONTAINER_PY="${FT_CONTAINER_PY:-python}"
+# Local OMLX — the only model backend in this field test. Namespaced FT_LLM_* so
+# ambient OPENAI_*/ANTHROPIC_* variables can never leak into a field run.
+FT_LLM_HOST_URL="${FT_LLM_HOST_URL:-http://127.0.0.1:8000}"
+FT_LLM_BASE_URL="${FT_LLM_BASE_URL:-http://127.0.0.1:8000/v1}"
+FT_LLM_MODEL="${FT_LLM_MODEL:-Qwen3-4B-Instruct-2507-4bit}"
+FT_T1_UPSTREAM="${FT_T1_UPSTREAM:-http://127.0.0.1:8000}"
+FT_T1_MODEL="${FT_T1_MODEL:-$FT_LLM_MODEL}"
+export FT_LLM_HOST_URL FT_LLM_BASE_URL FT_LLM_MODEL FT_T1_UPSTREAM FT_T1_MODEL
 
 FT_CASE_DIR=""
 FT_CASE_STATUS="fail"
@@ -288,6 +297,8 @@ ft_finalize() {
 
 ft_teardown_on_exit() {
   local code=$?
+  # Shared-stack mode: the RUNNER owns teardown (once, at the end, honoring
+  # STACK_KEEP). A standalone case tears down its own boot here.
   if [[ "${FT_SHARED_STACK:-0}" == "1" ]]; then
     exit "$code"
   fi
@@ -297,6 +308,22 @@ ft_teardown_on_exit() {
   fi
   stack_teardown
   exit "$code"
+}
+
+# --- local OMLX reachability -------------------------------------------------
+# The Tier-1 harnesses need the box-local OMLX. Absent => BLOCKED (not a skip).
+ft_llm_reachable() {
+  curl -sf --max-time 5 "${FT_LLM_HOST_URL%/}/v1/models" >/dev/null 2>&1 \
+    || curl -sf --max-time 5 "${FT_LLM_BASE_URL%/}/models" >/dev/null 2>&1
+}
+
+ft_llm_up() {
+  if ft_llm_reachable; then
+    echo "  PASS omlx-reachable (${FT_LLM_HOST_URL}, model=${FT_LLM_MODEL})"
+    return 0
+  fi
+  echo "  FAIL omlx-unreachable (${FT_LLM_HOST_URL})" >&2
+  return 1
 }
 
 # --- LLM capture gate (Tier-1 harnesses only) --------------------------------
@@ -333,20 +360,41 @@ ft_require_docker() {
   fi
 }
 
-stack_up() {
-  ft_record "compose up (agentinbox)"
+# Shared stack lifecycle. The image is BUILT once per run (FT_STACK_BUILT);
+# later boots reuse it with `up --no-build` so a 16-suite sweep does not
+# rebuild 16 times. STACK_KEEP=1 defers teardown to the caller (the run
+# teardowns once, at the end).
+FT_STACK_BUILT="${FT_STACK_BUILT:-0}"
+
+_ft_stack_log() {
+  local target="$1"; shift
   if [[ -n "${FT_CASE_DIR:-}" ]]; then
-    "${STACK_COMPOSE[@]}" up -d --build "$FT_SUT_SERVICE" \
-      >> "$FT_CASE_DIR/stdout.log" 2>> "$FT_CASE_DIR/stderr.log" || return 1
+    "${STACK_COMPOSE[@]}" "$@" \
+      >> "$FT_CASE_DIR/stdout.log" 2>> "$FT_CASE_DIR/stderr.log"
   else
     mkdir -p "$(dirname "$FT_SETUP_LOG")"
-    "${STACK_COMPOSE[@]}" up -d --build "$FT_SUT_SERVICE" \
-      >> "$FT_SETUP_LOG" 2>&1 || return 1
+    "${STACK_COMPOSE[@]}" "$@" >> "$FT_SETUP_LOG" 2>&1
   fi
+}
+
+stack_build() {
+  ft_record "compose build (agentinbox)"
+  _ft_stack_log build "$FT_SUT_SERVICE" || return 1
+  FT_STACK_BUILT=1
+}
+
+stack_up() {
+  # First boot in this process builds; every later boot is --no-build.
+  if [[ "$FT_STACK_BUILT" != "1" ]]; then
+    stack_build || return 1
+  fi
+  ft_record "compose up (agentinbox, no-build=$FT_STACK_BUILT)"
+  _ft_stack_log up -d --no-build "$FT_SUT_SERVICE"
 }
 
 stack_teardown() {
   if [[ "${STACK_KEEP:-}" == "1" ]]; then
+    echo "==> STACK_KEEP=1 set; leaving the stack running" >&2
     return 0
   fi
   "${STACK_COMPOSE[@]}" down -v >/dev/null 2>&1 || true
@@ -392,6 +440,7 @@ ft_wait_ready() {
 
 ft_up_sut() {
   ft_require_docker || return 3
+  # Boot once per process (stack_up is --no-build after the first build).
   if ! stack_up; then ft_fail "stack-up"; return 1; fi
   ft_pass "stack-up"
   if ft_wait_ready; then ft_pass "stack-ready"; else ft_fail "stack-ready"; return 1; fi

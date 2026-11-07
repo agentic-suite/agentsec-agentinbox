@@ -18,7 +18,7 @@ if [[ -z "$SUITE" ]]; then
     echo "suites: s0-core s1-cross-channel s2-escalation s3-flood s4-ci"
     echo "        s5-evidence s6-attacks s7-governance s8-readiness"
     echo "        s9-constrained s10-operations s11-outcomes s12-grants"
-    echo "        s13-insights s14-study s15-harness"
+    echo "        s13-insights s14-study s15-harness s16-live"
   } >&2
   exit 2
 fi
@@ -54,13 +54,14 @@ fi
 # Bring the SUT up once for this suite. Cases with no Docker environment
 # requirement (study/harness) are skipped at this step and BLOCKED instead.
 echo "==> suite $SUITE: ${#ids[@]} case(s) -> $FT_RUN_DIR"
-trap 'stack_teardown' EXIT
 if ft_require_docker && stack_up && ft_wait_ready; then
   export FT_STACK_READY=1
-  echo "==> SUT READY"
+  echo "==> SUT READY (built once per run; suites after the first boot with --no-build)"
 else
   echo "!! SUT failed to start" >&2
 fi
+# One teardown per suite run, honoring STACK_KEEP (lib.sh defers it).
+trap 'stack_teardown' EXIT
 
 rc=0
 for id in "${ids[@]}"; do

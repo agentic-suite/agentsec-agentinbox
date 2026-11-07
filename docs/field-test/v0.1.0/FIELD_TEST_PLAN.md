@@ -97,6 +97,29 @@ Cases whose environment is genuinely unavailable (no Claude Code / Codex CLI on 
 
 > **Explicit boundary: no LLM decides anything under test.** agentinbox's decision path is deterministic by construction — there is no model in the ask→card→answer→resolve path; suggestions, readiness scores, and insights are computed from stored facts (M26–M31 design docs). The **only** LLM in this field test is *inside the Tier-1 harness itself* (Claude Code / Codex CLI driving a real agent that triggers a gated tool call, per the harness recipes). That agent is the **test subject**: the case asserts the hook/wrapper blocked the tool, the ask was minted, and the answer gated it. If no harness exists on the box, those cases are `BLOCKED` (§0.2) — a hosted-model substitute is **not** permitted.
 
+### 4.1 Model selection — OMLX, local only (pinned: `Qwen3-4B-Instruct-2507-4bit`)
+
+The harness LLM is the **box-local OMLX** server (`http://127.0.0.1:8000`) — the same backend agentpolicy field-tested. No hosted model is used anywhere in this plan. The model is chosen on exactly two criteria, in order: **(1) tool-call reliability**, then **(2) latency** — the Tier-1 cases need the agent to actually *emit a tool call* so the hook/wrapper can gate it; a model that never calls a tool proves nothing however fast it is.
+
+Models served by this box's OMLX (measured by agentpolicy's `omlx_bench.py`, 3 trials, `temperature=0`; verified present on this box 2026-11-07):
+
+| OMLX model | tool calls | p50 latency | verdict |
+|---|---|---|---|
+| **`Qwen3-4B-Instruct-2507-4bit`** | **3/3** | **~1.0 s** | ✅ **PINNED — best fit** |
+| `Qwen3.5-4B-4bit` / `mlx-community--Qwen3.5-4B-4bit` | 3/3 | ~6.6–6.8 s | fallback only (~7× slower at p50) |
+| `Qwen3.5-9B-MLX-4bit` | 3/3 | ~12.9 s | too slow |
+| `Qwen3-8B-4bit` | 3/3 | ~27.5 s | too slow (~27× slower than the pin) |
+| `Llama-3.2-3B-Instruct-4bit` | **0/3** | ~0.8 s | ❌ **disqualified** — never emits a tool call |
+| `MarkItDown` | — | — | a document converter, not an LLM; excluded |
+
+**Justification.**
+- **Tool-call reliability gates.** `Llama-3.2-3B` is the fastest model but returned zero tool calls in three trials — the guarded tool is never invoked, the guard never fires, the case asserts nothing. Disqualified outright.
+- **Then latency decides.** Among reliable callers, `Qwen3-4B-Instruct-2507-4bit` is ~7× faster at p50 than the Qwen3.5-4B pair and ~27× faster than `Qwen3-8B`; over a multi-call Tier-1 sweep that is the difference between minutes and an hour.
+- **Provenance.** It is exactly agentpolicy's field-test pin (same model, same role, same benchmark), so the choice is evidence-backed, not novel.
+- **Caveat.** p50 includes full generation; the 6–27 s figures largely reflect how much text those models emit before calling. The pin is both fast *and* tool-reliable.
+
+**Applied.** Pinned in `scripts/fieldtest/.env.example` (`FT_LLM_MODEL`, `FT_T1_MODEL`, `FT_T1_UPSTREAM`); both `t1_claude.sh` (Anthropic `/v1/messages` surface) and `t1_codex.sh` (OpenAI-compatible `/v1/responses`) route through `t1_proxy.py` to OMLX. Re-derive on a new box with a field-test-shaped request before re-pinning; a changed model is a new run, not a continuation.
+
 ---
 
 ## 5. Layer 0 — the core regression gate (mandatory, first)
@@ -105,7 +128,7 @@ The **entire** SC-01–SC-26 block runs **before** any expansion case is evaluat
 
 ---
 
-## 6. Master scenario matrix — the 49 cases
+## 6. Master scenario matrix — 55 field units (51 deterministic + 4 blocked-environment)
 
 `Class`: **P/F** = must pass or fail. **P/F|B** = pass, fail, or blocked-with-reason (§0.2).
 `Env`: `ci` = this POSIX box, in-process (no network) · `cli` = scratch `--home` via the CLI · `ch` = terminal + desktop/webhook channels · `t1` = the real harness on the box · `hum` = study participants.
@@ -123,6 +146,7 @@ The **entire** SC-01–SC-26 block runs **before** any expansion case is evaluat
 | FT-SC-06 | Duplicate ingest coalesces | 17 SC-06 | ci | 3× same POST | same `ask_id` ×3; one delivery; `deduplicated` ×2; approver sees one card | P/F |
 | FT-SC-09 | Timeout = deny with warning | 17 SC-09 | cli | short-TTL ask, nobody answers | `ask-warned` at T-60 on both channels; `ask-expired` at T=300; resolve `deny/human_gate_timeout/retryable=false` + hint; jitter ≤1 s; zero allow paths | P/F |
 | FT-SC-10 | Expiry survives a crash | 17 SC-10 | cli | kill -9 at T-30, restart T+10; NTP step-back variant | `ask-expired` fires **exactly once** (scheduler-recovered), correct time; clock step-back does **not** extend TTL | P/F |
+| FT-SC-10-LIVE | Expiry survives a **real** daemon crash | 17 SC-10 | cli | host daemon `kill -9` mid-TTL, restart, `serve --once` | exactly one `expired` in the export; resolve `human_gate_timeout`; live step (not mocked) | P/F |
 
 ### S2 — Cross-channel truth (SC-07, 08, 18, 19 · PRD 17 G2 · #100/#401)
 
@@ -146,6 +170,7 @@ The **entire** SC-01–SC-26 block runs **before** any expansion case is evaluat
 |---|---|---|---|---|---|---|
 | FT-SC-13 | Flood pack (the attack) | 17 | ci | agentdrill pack, 200 asks / 30 s | burst capacity allowed first; post-threshold → `flood_denied` + `ask_flood_throttled`; exactly **1** `ask-flood` event + 1 digest notification; pre-flood pendings answerable; **allowed + denied counts recorded** (with defaults: 20 allowed / 180 denied — not "200/200") | P/F |
 | FT-SC-14 | Legitimate burst is not an attack | 17 | ci | 20 asks, distinct identities, <2 s apart | all delivered + answerable; no throttle trip; **passes together with FT-SC-13** — the discriminator is behavior, not volume | P/F |
+| FT-SC-PAIR | The flood pair passes **together** | 17 | ci | reads both sibling verdicts in the same run | both `FT-SC-13` and `FT-SC-14` are `pass`; a lone pass is a failure (PRD 17 pair rule) | P/F |
 
 ### S5 — CI / headless (SC-15, 16 · PRD 17 G5 · #101/#401)
 
@@ -153,6 +178,7 @@ The **entire** SC-01–SC-26 block runs **before** any expansion case is evaluat
 |---|---|---|---|---|---|---|
 | FT-SC-15 | Pipeline halts on an ask | 17 | cli | `gate` in a release-job script | job log shows ask id + summary; second-surface answer → exit 0 → continues; audit names the pipeline and the approver | P/F |
 | FT-SC-16 | Deterministic exits | 17 | cli | matrix: deny/expiry/killed/pending/approved/cancelled | deny→2 · expiry→3 · killed→4 · pending→5 · approved→0; stable across a retry (idempotent same-ask `gate`); cancelled job → ask `cancelled`, not orphaned | P/F |
+| FT-SC-16-LIVE | Real `gate` exit matrix end-to-end | 17 | cli | host CLI: approve/deny/expire/pending | exit `0` approved · `2` denied · `3` expired · `5` pending, each through the real gate | P/F |
 
 ### S6 — Evidence (SC-20, 21 · PRD 17 G6 · #101/#401)
 
@@ -322,7 +348,7 @@ Do **not** fork the shipped harness. The additions this pass needs:
 
 ## 12. Report template
 
-`docs/field-test/v0.1.0/FIELD_TEST_REPORT.md` — published alongside this plan (hand-maintained marker at top): BLUF + release-gate verdict, run-status counts, small-group run journal, environment, what-was-tested, the **49-row master table** (all rows start `not run`), root-cause + defect sections, field notes, declared & blocked register, success metrics vs the pre-registered bars, action items, and reproducibility paths. Verdicts are entered **only** from committed result files.
+`docs/field-test/v0.1.0/FIELD_TEST_REPORT.md` — published alongside this plan (hand-maintained marker at top): BLUF + release-gate verdict, run-status counts, small-group run journal, environment, what-was-tested, the **55-row master table** (all rows start `not run`), root-cause + defect sections, field notes, declared & blocked register, success metrics vs the pre-registered bars, action items, and reproducibility paths. Verdicts are entered **only** from committed result files.
 
 ---
 

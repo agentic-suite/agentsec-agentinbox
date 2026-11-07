@@ -10,7 +10,7 @@
 > M32 sweep runs — not a generated scoreboard. Verdicts are entered **by hand, from committed result files
 > under `field-test/v0.1.0/results/`**; counts below are placeholders until real runs exist and are
 > never auto-filled. Nothing in this template claims a result it does not have.
-> **Current:** **0 ✅ PASS · 0 ❌ FAIL · 0 ⛔ BLOCKED · 49 ▫ not run (plan frozen 2026-11-07)** — every row of
+> **Current:** **0 ✅ PASS · 0 ❌ FAIL · 0 ⛔ BLOCKED · 55 ▫ not run (plan frozen 2026-11-07)** — every row of
 > the master table starts `not run`; the plan ([FIELD_TEST_PLAN.md](FIELD_TEST_PLAN.md) §6) is frozen and
 > reviewed; the field box + ≥10 study participants are **not yet provisioned** (recorded, not hidden).
 > **Structure:** follows the `agentpolicy` v0.1.0 `FIELD_TEST_REPORT.md` format (a journal, not a
@@ -37,7 +37,7 @@
 | — of which evidenced (asserted from committed result files, not exit-0) | 0 |
 | FAIL | 0 |
 | BLOCKED (P/F\|B, environment cannot provide — named + evidenced) | 0 |
-| not run | **49** (all rows of the master table below) |
+| not run | **55** (all rows of the master table below) |
 | Removed from scope (not claimed as supported) | 0 |
 
 ### Release gate verdict (M33 gate items; filled only as real runs land)
@@ -97,12 +97,45 @@ regression note) before the group closes. One run per case; a re-run is a **seco
 
 ---
 
+## OMLX LLM — the model choice, and why
+
+The only LLM in this field test is the **box-local OMLX** server (`http://127.0.0.1:8000`) driving the
+Tier-1 harness agents (Claude Code / Codex CLI). **No hosted model and no vendor key is used anywhere.**
+agentinbox's own decision path is deterministic — the LLM is a test subject (it emits the tool call the
+hook gates), never a decider.
+
+**Pinned model: `Qwen3-4B-Instruct-2507-4bit`.** Chosen on the same two criteria as agentpolicy's
+field test, in this order:
+
+| OMLX model (served on this box) | tool calls (3 trials) | p50 latency | verdict |
+|---|---|---|---|
+| **`Qwen3-4B-Instruct-2507-4bit`** | **3/3** | **~1.0 s** | ✅ **PINNED** |
+| `Qwen3.5-4B-4bit` / `mlx-community--Qwen3.5-4B-4bit` | 3/3 | ~6.6–6.8 s | fallback (~7× slower) |
+| `Qwen3.5-9B-MLX-4bit` | 3/3 | ~12.9 s | too slow |
+| `Qwen3-8B-4bit` | 3/3 | ~27.5 s | too slow (~27× slower) |
+| `Llama-3.2-3B-Instruct-4bit` | **0/3** | ~0.8 s | ❌ disqualified — never emits a tool call |
+| `MarkItDown` | — | — | document converter, not an LLM; excluded |
+
+**Justification:** tool-call reliability gates (a model that never calls the guarded tool proves
+nothing, however fast — hence Llama-3.2-3B is out despite the lowest latency); then latency decides
+(the pin is ~7× faster at p50 than the Qwen3.5-4B pair, ~27× faster than Qwen3-8B, which is the
+difference between minutes and an hour across a multi-call Tier-1 sweep). Provenance: it is exactly
+agentpolicy's field-test pin, so the choice is evidence-backed, not novel. Both harnesses route
+through `t1_proxy.py`, which logs every request/response pair (sanitized); the deep-validation gate
+fails any Tier-1 PASS without a balanced, 2xx, secret-free capture. Re-derive with a field-test-shaped
+request on a new box before re-pinning; a changed model is a new run, not a continuation. Full
+protocol: plan [§4.1](FIELD_TEST_PLAN.md).
+
+*(Benchmark figures to be re-measured and recorded here when the Tier-1 runs execute.)*
+
+---
+
 ## What Was Tested
 
 *(fills as groups close — state per group: which cases ran, on what build, with which drivers (plan §3), and
 what the assertions were grounded in: store diffs, resolve JSON, audit chain, scanner runs — never "exit 0")*
 
-- **Not yet run (honest): all 49 cases** — the plan is frozen ([FIELD_TEST_PLAN.md](FIELD_TEST_PLAN.md)) and
+- **Not yet run (honest): all 55 cases** — the plan is frozen ([FIELD_TEST_PLAN.md](FIELD_TEST_PLAN.md)) and
   the deterministic L0 suites were green at authoring (924 tests, 95.11%, `ruff` + `mypy --strict` clean at
   `2dedc7d`), but **no field case has run and no verdict exists**.
 - **Blocked (declared up front): the Tier-1 harness recipes and the study cohort** await the field box /
@@ -117,7 +150,7 @@ re-derived from the committed result files. **Class:** **P/F** = hard gate · **
 
 ## Scenario Results (Master Table)
 
-49 cases (SC-01–SC-26 core + SC-68–SC-90 expansion; IDs and pass conditions frozen in plan §6). **All rows
+55 cases (49 SC core/expansion + the flood-pair + 3 live daemon/fault cases + 2 Tier-1; IDs and pass conditions frozen in plan §6). **All rows
 start `not run`; verdicts are entered by hand, one per case, from `results/<suite>/<case>/`.**
 
 | Case | Suite | Class | Status | Notes |
@@ -132,12 +165,15 @@ start `not run`; verdicts are entered by hand, one per case, from `results/<suit
 | FT-SC-08 | cross-channel | P/F | ▫ not run | race: one decision, second rejected `late` |
 | FT-SC-09 | core-lifecycle | P/F | ▫ not run | timeout = deny + warning, jitter ≤1 s |
 | FT-SC-10 | core-lifecycle | P/F | ▫ not run | expiry survives crash + clock step-back |
+| FT-SC-10-LIVE | live | P/F | ▫ not run | real daemon kill -9 + restart, expired exactly once |
 | FT-SC-11 | escalation | P/F | ▫ not run | 3 a.m. drill, tier claims revoked |
 | FT-SC-12 | escalation | P/F | ▫ not run | ladder exhaustion denies, TTL never extended |
 | FT-SC-13 | flood | P/F | ▫ not run | attack pack: burst allowed / overflow denied (counts recorded) |
 | FT-SC-14 | flood | P/F | ▫ not run | legitimate burst — **passes together with SC-13** |
+| FT-SC-PAIR | flood | P/F | ▫ not run | paired verdict: SC-13 and SC-14 both pass |
 | FT-SC-15 | ci | P/F | ▫ not run | pipeline halts on `gate`, resumes on answer |
 | FT-SC-16 | ci | P/F | ▫ not run | deterministic exit matrix, idempotent retry |
+| FT-SC-16-LIVE | live | P/F | ▫ not run | real gate exit matrix 0/2/3/5 |
 | FT-SC-17 | governance | P/F | ▫ not run | self-review denied (+ allowed/audited variant) |
 | FT-SC-18 | cross-channel | P/F | ▫ not run | channel failover, no duplicate notify |
 | FT-SC-19 | cross-channel | P/F | ▫ not run | late answer = visible no-op |
@@ -146,6 +182,7 @@ start `not run`; verdicts are entered by hand, one per case, from `results/<suit
 | FT-SC-22 | attacks | P/F | ▫ not run | **release-gating** — 10 spoof/replay/forge attacks |
 | FT-SC-23 | attacks | P/F | ▫ not run | **release-gating** — 10 poisoned cards, 0 approvals |
 | FT-SC-24 | faults | P/F | ▫ not run | **release-gating** — fail-closed matrix, 0 silent allows |
+| FT-SC-24-LIVE | live | P/F | ▫ not run | corrupt + locked store each fail closed (4) |
 | FT-SC-25 | adapters | P/F | ▫ not run | LangGraph round-trip + crash-resume, one execution |
 | FT-SC-26 | offline | P/F | ▫ not run | offline day, doctor green, no outbound attempts |
 | FT-SC-68 | readiness | P/F | ▫ not run | pre-write bounce, nothing stored, repair contract |
@@ -214,7 +251,7 @@ empty.)*
 ## Coverage, Gaps, and Declared Limitations
 
 Status vocabulary: **not run | PASS | FAIL | BLOCKED** — this run so far: **0 PASS · 0 FAIL · 0 BLOCKED ·
-49 not run** (plan frozen; sweep pending).
+55 not run** (plan frozen; sweep pending).
 
 - **Coverage so far:** none — the plan ([FIELD_TEST_PLAN.md](FIELD_TEST_PLAN.md)) is frozen and reviewed,
   but no field case has executed. The L0 deterministic suites (924 tests) are green at authoring; they are
