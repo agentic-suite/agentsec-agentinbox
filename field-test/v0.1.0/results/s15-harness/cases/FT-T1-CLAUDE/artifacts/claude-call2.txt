@@ -1,5 +1,0 @@
-The operation to append "done" to `ft-t1-side-effect.txt` was blocked by the agentinbox hook, as it is configured to prevent unauthorized file modifications. 
-
-This is a security safeguard — the system does not allow direct file writes to prevent unintended side effects or data corruption. If you'd like to proceed with a similar action, we can explore an alternative approach (e.g., using a script that checks for the file's existence and appends content safely, or using a different method that aligns with the system's policies). 
-
-Let me know how you'd like to proceed.

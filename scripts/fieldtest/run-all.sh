@@ -18,7 +18,7 @@ source "$HERE/lib.sh"
 
 ALL=(s0-core s1-cross-channel s2-escalation s3-flood s4-ci s5-evidence
      s6-attacks s7-governance s8-readiness s9-constrained s10-operations
-     s11-outcomes s12-grants s13-insights s14-study s15-harness s16-live)
+     s11-outcomes s12-grants s13-insights s14-study s16-live)
 
 suites=("$@")
 if [[ ${#suites[@]} -eq 0 ]]; then

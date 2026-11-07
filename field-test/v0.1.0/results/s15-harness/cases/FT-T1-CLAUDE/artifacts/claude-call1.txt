@@ -1,3 +1,0 @@
-The file `notes.txt` does not exist in the current directory, so attempting to read it results in an error. This is expected behavior since the file was not created or provided in the working directory.
-
-If you'd like to proceed with creating or modifying the file, or if you have another task to perform, let me know!

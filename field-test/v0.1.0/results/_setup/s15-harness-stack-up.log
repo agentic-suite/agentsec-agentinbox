@@ -82,3 +82,169 @@
 agentinbox 0.1.0.dev0
 [2026-11-07T19:12:38Z] SUT answers: agentinbox --version OK
 [2026-11-07T19:12:38Z] stack READY
+ Image agentinbox-fieldtest:local Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 628B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from agentinbox.Dockerfile
+#2 transferring dockerfile: 41B
+#2 transferring dockerfile: 943B done
+#2 DONE 0.0s
+
+#3 [auth] library/python:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#4 [internal] load metadata for docker.io/library/python:3.13-slim
+#4 DONE 0.6s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 2B done
+#5 DONE 0.0s
+
+#6 [1/9] FROM docker.io/library/python:3.13-slim@sha256:09a17cad02668ae61ece136b4fd36ac3849e14f670ebedb637ea3e15580525bc
+#6 resolve docker.io/library/python:3.13-slim@sha256:09a17cad02668ae61ece136b4fd36ac3849e14f670ebedb637ea3e15580525bc 0.0s done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 38.05kB 0.0s done
+#7 DONE 0.0s
+
+#8 [7/9] RUN pip install --no-cache-dir -e ".[dev]"
+#8 CACHED
+
+#9 [5/9] COPY agentinbox /work/agentinbox
+#9 CACHED
+
+#10 [8/9] RUN mkdir -p /data/agentinbox/.agentinbox /ft/scripts /ft/tests
+#10 CACHED
+
+#11 [2/9] RUN apt-get update     && apt-get install -y --no-install-recommends git curl procps ca-certificates     && rm -rf /var/lib/apt/lists/*
+#11 CACHED
+
+#12 [4/9] COPY pyproject.toml README.md LICENSE /work/
+#12 CACHED
+
+#13 [6/9] COPY tests /work/tests
+#13 CACHED
+
+#14 [3/9] WORKDIR /work
+#14 CACHED
+
+#15 [9/9] WORKDIR /work
+#15 CACHED
+
+#16 exporting to image
+#16 exporting layers done
+#16 exporting manifest sha256:00e32b355b536f8e405a0847d7968d603442e62a69a9f94fa9bbae74c8bb85ab done
+#16 exporting config sha256:4a9710ebf31e36e85d6672b3c192c27d269e91900c1784fc53bce9d3e3ed3658 done
+#16 exporting attestation manifest sha256:c662565247751fa09ade93b09f029d72e4fda5647af68c84dff4bdc589280858 done
+#16 exporting manifest list sha256:8596dba85140911afb67010f66372cae506a980e5da5385463aebfe969bfa68b done
+#16 naming to docker.io/library/agentinbox-fieldtest:local done
+#16 unpacking to docker.io/library/agentinbox-fieldtest:local done
+#16 DONE 0.0s
+
+#17 resolving provenance for metadata file
+#17 DONE 0.0s
+ Image agentinbox-fieldtest:local Built 
+ Network agentinbox_default Creating 
+ Network agentinbox_default Creating 
+ Volume agentinbox_ftdata Creating 
+ Volume agentinbox_ftdata Creating 
+ Volume agentinbox_ftdata Created 
+ Volume agentinbox_ftdata Created 
+ Network agentinbox_default Created 
+ Network agentinbox_default Created 
+ Container agentinbox-agentinbox-1 Creating 
+ Container agentinbox-agentinbox-1 Created 
+ Container agentinbox-agentinbox-1 Starting 
+ Container agentinbox-agentinbox-1 Started 
+[2026-11-07T19:57:47Z] waiting for stack readiness (timeout 180s)
+[2026-11-07T19:57:47Z]   agentinbox: status=running health=starting
+[2026-11-07T19:57:49Z]   agentinbox: status=running health=starting
+[2026-11-07T19:57:51Z]   agentinbox: status=running health=starting
+[2026-11-07T19:57:53Z]   agentinbox: status=running health=healthy
+agentinbox 0.1.0.dev0
+[2026-11-07T19:57:54Z] SUT answers: agentinbox --version OK
+[2026-11-07T19:57:54Z] stack READY
+ Image agentinbox-fieldtest:local Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 628B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from agentinbox.Dockerfile
+#2 transferring dockerfile: 943B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.13-slim
+#3 DONE 0.4s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [1/9] FROM docker.io/library/python:3.13-slim@sha256:09a17cad02668ae61ece136b4fd36ac3849e14f670ebedb637ea3e15580525bc
+#5 resolve docker.io/library/python:3.13-slim@sha256:09a17cad02668ae61ece136b4fd36ac3849e14f670ebedb637ea3e15580525bc done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 38.05kB 0.0s done
+#6 DONE 0.0s
+
+#7 [3/9] WORKDIR /work
+#7 CACHED
+
+#8 [7/9] RUN pip install --no-cache-dir -e ".[dev]"
+#8 CACHED
+
+#9 [8/9] RUN mkdir -p /data/agentinbox/.agentinbox /ft/scripts /ft/tests
+#9 CACHED
+
+#10 [2/9] RUN apt-get update     && apt-get install -y --no-install-recommends git curl procps ca-certificates     && rm -rf /var/lib/apt/lists/*
+#10 CACHED
+
+#11 [4/9] COPY pyproject.toml README.md LICENSE /work/
+#11 CACHED
+
+#12 [5/9] COPY agentinbox /work/agentinbox
+#12 CACHED
+
+#13 [6/9] COPY tests /work/tests
+#13 CACHED
+
+#14 [9/9] WORKDIR /work
+#14 CACHED
+
+#15 exporting to image
+#15 exporting layers done
+#15 exporting manifest sha256:00e32b355b536f8e405a0847d7968d603442e62a69a9f94fa9bbae74c8bb85ab done
+#15 exporting config sha256:4a9710ebf31e36e85d6672b3c192c27d269e91900c1784fc53bce9d3e3ed3658 done
+#15 exporting attestation manifest sha256:4681105fd8608b8891ae896d3bd7eabce645c1137f8dcd1c0e472f146dca7a83 done
+#15 exporting manifest list sha256:78a68ca06397c635c1999165b248b7cbb7afd17ee654a8a00a9d502c78b5c339 done
+#15 naming to docker.io/library/agentinbox-fieldtest:local done
+#15 unpacking to docker.io/library/agentinbox-fieldtest:local done
+#15 DONE 0.0s
+
+#16 resolving provenance for metadata file
+#16 DONE 0.0s
+ Image agentinbox-fieldtest:local Built 
+ Volume agentinbox_ftdata Creating 
+ Volume agentinbox_ftdata Creating 
+ Network agentinbox_default Creating 
+ Network agentinbox_default Creating 
+ Volume agentinbox_ftdata Created 
+ Volume agentinbox_ftdata Created 
+ Network agentinbox_default Created 
+ Network agentinbox_default Created 
+ Container agentinbox-agentinbox-1 Creating 
+ Container agentinbox-agentinbox-1 Created 
+ Container agentinbox-agentinbox-1 Starting 
+ Container agentinbox-agentinbox-1 Started 
+[2026-11-07T20:00:18Z] waiting for stack readiness (timeout 180s)
+[2026-11-07T20:00:18Z]   agentinbox: status=running health=starting
+[2026-11-07T20:00:20Z]   agentinbox: status=running health=starting
+[2026-11-07T20:00:22Z]   agentinbox: status=running health=starting
+[2026-11-07T20:00:24Z]   agentinbox: status=running health=healthy
+agentinbox 0.1.0.dev0
+[2026-11-07T20:00:25Z] SUT answers: agentinbox --version OK
+[2026-11-07T20:00:25Z] stack READY

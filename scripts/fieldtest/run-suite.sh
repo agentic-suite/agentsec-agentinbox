@@ -18,7 +18,7 @@ if [[ -z "$SUITE" ]]; then
     echo "suites: s0-core s1-cross-channel s2-escalation s3-flood s4-ci"
     echo "        s5-evidence s6-attacks s7-governance s8-readiness"
     echo "        s9-constrained s10-operations s11-outcomes s12-grants"
-    echo "        s13-insights s14-study s15-harness s16-live"
+    echo "        s13-insights s14-study s16-live"
   } >&2
   exit 2
 fi

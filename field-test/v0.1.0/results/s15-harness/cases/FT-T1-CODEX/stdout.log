@@ -1,4 +1,0 @@
-call 1/2: benign read (approve -> executes)
-call 2/2: destructive op (deny -> blocked, target intact)
-HARNESS_OK audit=0 llm=5
-HELD

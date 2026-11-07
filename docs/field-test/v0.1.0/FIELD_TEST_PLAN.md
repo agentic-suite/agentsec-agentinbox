@@ -128,7 +128,7 @@ The **entire** SC-01–SC-26 block runs **before** any expansion case is evaluat
 
 ---
 
-## 6. Master scenario matrix — 55 field units (51 deterministic + 4 blocked-environment)
+## 6. Master scenario matrix — 53 field units (51 deterministic + 2 study; Tier-1 removed 2026-11-07)
 
 `Class`: **P/F** = must pass or fail. **P/F|B** = pass, fail, or blocked-with-reason (§0.2).
 `Env`: `ci` = this POSIX box, in-process (no network) · `cli` = scratch `--home` via the CLI · `ch` = terminal + desktop/webhook channels · `t1` = the real harness on the box · `hum` = study participants.

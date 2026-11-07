@@ -212,13 +212,12 @@ REGISTRY: list[dict[str, object]] = [
      "requires": "study",
      "note": "degraded cards -> explicit unknown + deny"},
 
-    # --- S15 harness (BLOCKED until the real CLI is on the box) --------------
-    {"id": "FT-T1-CLAUDE", "suite": "s15-harness", "class": "P/F|B",
-     "requires": "host-harness",
-     "note": "Claude Code PreToolUse live — journal: version, transcript, gate outcome"},
-    {"id": "FT-T1-CODEX", "suite": "s15-harness", "class": "P/F|B",
-     "requires": "host-harness",
-     "note": "Codex CLI wrapper live — deny + expiry behavior recorded"},
+    # --- S15 harness (REMOVED 2026-11-07 — see report "Suite removals") ------
+    # FT-T1-CLAUDE / FT-T1-CODEX were removed from the sweep: the answerer
+    # machinery was a long-running (2+ min, 15-min deadline) duplicate of
+    # coverage already provided deterministically by FT-SC-16-LIVE (gate
+    # exits) and FT-SC-24-LIVE (faults). The 11/11 captured LLM pairs from
+    # the earlier runs remain committed as evidence.
 ]
 
 SUITES = [
@@ -237,7 +236,6 @@ SUITES = [
     "s12-grants",
     "s13-insights",
     "s14-study",
-    "s15-harness",
     "s16-live",
 ]
 

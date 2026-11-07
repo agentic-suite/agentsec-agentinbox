@@ -28,7 +28,11 @@ deadline=$((SECONDS + TIMEOUT))
 
 while (( idx < ${#ACTIONS[@]} )) && (( SECONDS < deadline )); do
   # Pending asks in creation order (inbox --json lists pending).
-  mapfile -t pending < <("$FT_PY" - "$FT_CLI" --home "$HOME_DIR" <<'PY'
+  # bash 3.2 on macOS has no `mapfile`/`readarray` — read line by line.
+  pending=()
+  while IFS= read -r ask_id; do
+    [[ -n "$ask_id" ]] && pending+=("$ask_id")
+  done < <("$FT_PY" - "$FT_CLI" --home "$HOME_DIR" <<'PY'
 import json, subprocess, sys
 proc = subprocess.run(
     [sys.argv[1], "--home", sys.argv[2], "inbox", "--json"],
@@ -42,7 +46,7 @@ for row in rows:
     print(row["ask_id"])
 PY
 )
-  if [[ ${#pending[@]} -eq 0 ]]; then
+  if [[ "${#pending[@]}" -eq 0 ]]; then
     sleep 1
     continue
   fi

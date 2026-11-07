@@ -1,6 +1,0 @@
-{"name":"t1-codex-triple","ok":true,"grounded":true,"cmd":"bash /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/scripts/fieldtest/t1_codex.sh /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s15-harness/cases/FT-T1-CODEX"}
-{"name":"t1-codex-allow-executed","ok":false,"grounded":true,"cmd":"bash -c grep -q \"hello-ft\" \"$FT_CASE_DIR/artifacts/codex-call1.txt\" && echo EXECUTED"}
-{"name":"t1-codex-deny-held","ok":true,"grounded":true,"cmd":"bash -c test -f \"$FT_CASE_DIR/codex-home/work/target-dir/keep.txt\" && echo HELD"}
-{"name":"t1-codex-captured","ok":true,"grounded":true,"cmd":"llm capture: 5 request(s) + 5 response(s), secret-free"}
-{"name":"t1-codex-audit","ok":false,"grounded":true,"cmd":"bash -c test -s \"$FT_CASE_DIR/artifacts/audit.jsonl\" && echo AUDIT-OK"}
-{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}

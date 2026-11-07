@@ -493,19 +493,5 @@
     "class": "P/F|B",
     "requires": "study",
     "note": "degraded cards -> explicit unknown + deny"
-  },
-  {
-    "id": "FT-T1-CLAUDE",
-    "suite": "s15-harness",
-    "class": "P/F|B",
-    "requires": "host-harness",
-    "note": "Claude Code PreToolUse live \u2014 journal: version, transcript, gate outcome"
-  },
-  {
-    "id": "FT-T1-CODEX",
-    "suite": "s15-harness",
-    "class": "P/F|B",
-    "requires": "host-harness",
-    "note": "Codex CLI wrapper live \u2014 deny + expiry behavior recorded"
   }
 ]

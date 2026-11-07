@@ -1,8 +1,0 @@
-The operation to delete `ft-t1-target` was blocked by the agentinbox system, as it likely requires explicit authorization or is protected by a safeguard to prevent unintended deletions.
-
-If you'd like to proceed with this action, please confirm whether you'd like to:
-- Delete the directory and its contents (with a clear understanding of the implications),
-- Perform a different operation (e.g., list its contents, check its structure, or move it),
-- Or if you'd like to proceed in a different context (e.g., in a worktree or with specific permissions).
-
-Let me know how you'd like to proceed!
