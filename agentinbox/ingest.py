@@ -19,6 +19,7 @@ from agentinbox.contract import AskContract, ContractError, compute_action_ident
 from agentinbox.escalation import initial_escalation
 from agentinbox.flood import FLOOD_REASON, FloodGuard
 from agentinbox.lifecycle import transition
+from agentinbox.readiness import ReadinessRejection, evaluate, rejection_for
 from agentinbox.redaction import RedactionReceipt, redact_value
 from agentinbox.store import AskRecord, AskStatus, AskStore, canonical_json, utcnow
 from agentinbox.trust import ProducerIdentity, TrustMap, classify_trust
@@ -29,7 +30,7 @@ OBJECT_CAP_BYTES = 64 * 1024
 CLAUSE_CAP_BYTES = 8 * 1024
 
 ASK_ID_PATTERN = re.compile(r"^ask_[0-9a-f]{16}$")
-RESERVED_METADATA = frozenset({"_trust", "_redactions", "_producer"})
+RESERVED_METADATA = frozenset({"_trust", "_redactions", "_producer", "_readiness"})
 _IDENTITY_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
@@ -154,6 +155,19 @@ def ingest(
             f"class {contract.action_class!r} requires a signed producer adapter",
         )
 
+    readiness = evaluate(
+        contract.to_dict(),
+        config=config,
+        producer_authenticated=producer.authenticated,
+        now=moment,
+    )
+    if (
+        (ask_class.readiness_enforce and readiness.score < ask_class.readiness_min_score)
+        or (readiness.contradictions and ask_class.on_contradiction == "reject")
+    ):
+        # Reject before any write: zero rows, zero deliveries, one repair contract.
+        raise ReadinessRejection(rejection_for(readiness, ask_class))
+
     if contract.ask_id is not None:
         existing = store.get(contract.ask_id)
         if existing is not None and (
@@ -180,6 +194,7 @@ def ingest(
         payload[key] = value
     payload["_trust"] = trust.to_dict()
     payload["_redactions"] = [receipt.to_dict() for receipt in receipts]
+    payload["_readiness"] = readiness.to_dict()
     payload["_producer"] = {
         "adapter": producer.adapter,
         "authenticated": producer.authenticated,

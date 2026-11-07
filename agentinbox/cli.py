@@ -77,6 +77,7 @@ from agentinbox.ops import (
     write_daemon_lock,
 )
 from agentinbox.parity import prior_asks
+from agentinbox.readiness import similar_cases
 from agentinbox.reload import ConfigHolder
 from agentinbox.report import build_report
 from agentinbox.resolve import resolve
@@ -370,10 +371,16 @@ def _ask_impl(
             bus=publisher,
         )
     except ContractError as exc:
-        print(
-            f"{PROG}: {sanitize_log_line(exc.field)}: {sanitize_log_line(exc.message)}",
-            file=sys.stderr,
-        )
+        if exc.details:
+            payload = {"field": exc.field, "message": exc.message, **exc.details}
+            print(
+                json.dumps({"error": payload}, sort_keys=True), file=sys.stderr
+            )
+        else:
+            print(
+                f"{PROG}: {sanitize_log_line(exc.field)}: {sanitize_log_line(exc.message)}",
+                file=sys.stderr,
+            )
         return int(ExitCode.UNAVAILABLE)
     except StoreError as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)
@@ -457,6 +464,7 @@ def _gate(args: argparse.Namespace) -> int:
             now=utcnow(),
             transitions=store.transitions_for(ask.ask_id),
             prior_asks=prior_asks(store, ask),
+            similar_cases=similar_cases(store, ask),
         )
         sys.stdout.write(card.render("ci"))
     if result.code is ExitCode.UNAVAILABLE:

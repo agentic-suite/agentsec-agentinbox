@@ -88,6 +88,11 @@ signatures are `401`.
 | `flood_burst` | int | throttle default | per-class token-bucket capacity override |
 | `flood_rate_per_min` | int | throttle default | per-class refill-rate override |
 | `rescope_hint` | str | class/environment fallback | capped, control-stripped hint returned in `resolve` on expiry (labelled *not policy*) |
+| `readiness_enforce` | bool | `false` | reject below-threshold asks at ingest (M26) |
+| `readiness_min_score` | float 0..1 | `0.5` (required when enforcing) | readiness threshold for this class |
+| `required_evidence` | list[str] | `[]` | evidence dimensions the class demands (`diff`, `logs`, …) |
+| `evidence_max_age_seconds` | int | `86400` | older evidence renders `stale` |
+| `on_contradiction` | `deliver` \| `reject` | `deliver` | reject contradicting asks at ingest |
 | `require_signed_producer` | bool | `false` | reject unsigned producers for this class (makes the self-review anchor enforceable) |
 
 ```toml

@@ -302,6 +302,16 @@ every M26–M31 milestone carries its own gate. The 32.7 regression baseline bec
   the honest enterprise page state the v0.1.0 gaps before features; terminal captures are text from the
   real renderer; README install/usage/quickstart are live (PyPI/tag wait for M33). **M24/M25 absorbed into M32/M33.** Next: **M26** (`26.D0` readiness design).
 
+- **2026-11-07 — M26 Ask readiness & decision quality closed.** Issues #306–#317. Commit `TBD`.
+  **Gate:** 836 tests pass · coverage **95.09%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  Six deterministic dimensions (completeness, target specificity, reversibility, evidence, trust,
+  contradictions) score every ask; the score is derived and stored, never producer-asserted. A class can
+  reject below threshold before any write with a structured `ask_not_decisionable` repair contract (API +
+  CLI); otherwise the ask ships with a quality banner above the blocks, per-class evidence labels naming
+  the gap, explicit freshness (`stale`/`unknown freshness`/`mixed`), and up to three prior same-class/tool
+  asks as `precedent only`. `doctor --explain` prints the effective readiness settings. Next: **M27**
+  (`27.D0` constrained-allow design).
+
 ## PRD coverage matrix (every doc 00–30)
 
 | PRD | Topic | Milestone(s) |

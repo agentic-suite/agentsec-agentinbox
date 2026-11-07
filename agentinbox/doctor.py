@@ -284,7 +284,12 @@ def render_explain(report: Report, home: Path, config_path: Path) -> str | None:
             f"ladder_delays={list(effective_ladder_delays(ask_class))} "
             f"flood_burst={ask_class.flood_burst or config.throttle.per_agent_burst} "
             f"flood_rate_per_min="
-            f"{ask_class.flood_rate_per_min or config.throttle.per_agent_rate_per_min}"
+            f"{ask_class.flood_rate_per_min or config.throttle.per_agent_rate_per_min} "
+            f"readiness_enforce={ask_class.readiness_enforce} "
+            f"readiness_min_score={ask_class.readiness_min_score} "
+            f"required_evidence={list(ask_class.required_evidence)} "
+            f"evidence_max_age_seconds={ask_class.evidence_max_age_seconds} "
+            f"on_contradiction={ask_class.on_contradiction}"
         )
     lines.append(
         f"  throttle: burst={config.throttle.per_agent_burst} "

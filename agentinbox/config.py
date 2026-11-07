@@ -70,6 +70,11 @@ _CLASS_KEYS = frozenset(
         "flood_rate_per_min",
         "rescope_hint",
         "require_signed_producer",
+        "readiness_enforce",
+        "readiness_min_score",
+        "required_evidence",
+        "evidence_max_age_seconds",
+        "on_contradiction",
     }
 )
 _THROTTLE_KEYS = frozenset({"per_agent_burst", "per_agent_rate_per_min", "flood_window_seconds"})
@@ -106,6 +111,13 @@ class ClassConfig:
     rescope_hint: str | None = None
     #: When true, unsigned producers cannot create asks of this class (self-review anchor).
     require_signed_producer: bool = False
+    #: Readiness gating (M26). Opt-in per class; scoring is always computed and stored.
+    readiness_enforce: bool = False
+    readiness_min_score: float = 0.5
+    required_evidence: tuple[str, ...] = ()
+    evidence_max_age_seconds: int = 86400
+    #: ``deliver`` (default) or ``reject`` a contradicting ask at ingest.
+    on_contradiction: str = "deliver"
 
 
 def default_ladder_delays(count: int, ttl_seconds: int) -> tuple[int, ...]:
@@ -340,6 +352,38 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
         if not isinstance(require_signed, bool):
             raise ConfigError(f"{key_path}.require_signed_producer: must be a boolean")
 
+        readiness_enforce = table.get("readiness_enforce", False)
+        if not isinstance(readiness_enforce, bool):
+            raise ConfigError(f"{key_path}.readiness_enforce: must be a boolean")
+        readiness_min = table.get("readiness_min_score", 0.5)
+        if (
+            not isinstance(readiness_min, (int, float))
+            or isinstance(readiness_min, bool)
+            or not 0.0 <= float(readiness_min) <= 1.0
+        ):
+            raise ConfigError(f"{key_path}.readiness_min_score: must be between 0 and 1")
+        evidence = table.get("required_evidence", [])
+        if not isinstance(evidence, list) or not all(
+            isinstance(item, str) and item for item in evidence
+        ):
+            raise ConfigError(
+                f"{key_path}.required_evidence: must be a list of non-empty strings"
+            )
+        max_age = table.get("evidence_max_age_seconds", 86400)
+        if not isinstance(max_age, int) or isinstance(max_age, bool) or max_age <= 0:
+            raise ConfigError(
+                f"{key_path}.evidence_max_age_seconds: must be a positive integer"
+            )
+        on_contradiction = table.get("on_contradiction", "deliver")
+        if on_contradiction not in {"deliver", "reject"}:
+            raise ConfigError(
+                f"{key_path}.on_contradiction: must be 'deliver' or 'reject'"
+            )
+        if readiness_enforce and "readiness_min_score" not in table:
+            raise ConfigError(
+                f"{key_path}.readiness_min_score: required when readiness_enforce is true"
+            )
+
         rescope_hint = table.get("rescope_hint")
         if rescope_hint is not None:
             if not isinstance(rescope_hint, str) or not rescope_hint.strip():
@@ -360,6 +404,11 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
             flood_rate_per_min=flood_rate,
             rescope_hint=rescope_hint,
             require_signed_producer=require_signed,
+            readiness_enforce=readiness_enforce,
+            readiness_min_score=float(readiness_min),
+            required_evidence=tuple(evidence),
+            evidence_max_age_seconds=max_age,
+            on_contradiction=on_contradiction,
         )
     return classes
 

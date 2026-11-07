@@ -11,6 +11,7 @@ from agentinbox.bus.base import Job, JobKind
 from agentinbox.card import build_card
 from agentinbox.lifecycle import IllegalTransition, UnknownAsk, observe
 from agentinbox.parity import prior_asks
+from agentinbox.readiness import similar_cases
 from agentinbox.redaction import redact_value
 from agentinbox.store import (
     AskRecord,
@@ -60,6 +61,7 @@ class DeliveryWiring:
             now=self.now(),
             transitions=self.store.transitions_for(ask.ask_id),
             prior_asks=prior_asks(self.store, ask),
+            similar_cases=similar_cases(self.store, ask),
         )
         for channel in self.channels:
             if self._attempt(job, ask, channel, card):

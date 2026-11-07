@@ -57,11 +57,14 @@ def surface_outcome(
     ask = store.get(ask_id)
     if ask is None:
         raise KeyError(f"unknown ask: {ask_id}")
+    from agentinbox.readiness import similar_cases
+
     card = build_card(
         ask,
         now=now,
         transitions=store.transitions_for(ask_id),
         prior_asks=prior_asks(store, ask),
+        similar_cases=similar_cases(store, ask),
     )
     return card.render(surface)
 

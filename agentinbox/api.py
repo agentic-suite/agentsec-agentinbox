@@ -150,7 +150,9 @@ class _Handler(BaseHTTPRequestHandler):
                 flood_guard=self.server.flood_guard,
             )
         except ContractError as exc:
-            self._error(HTTPStatus(exc.status_code), exc.field, exc.message)
+            self._error(
+                HTTPStatus(exc.status_code), exc.field, exc.message, details=exc.details
+            )
             return
         except StoreError:
             self._error(
@@ -317,8 +319,18 @@ class _Handler(BaseHTTPRequestHandler):
             return None
         return self.rfile.read(length)
 
-    def _error(self, status: HTTPStatus, field: str, message: str) -> None:
-        self._send(status, {"error": {"field": field, "message": message}})
+    def _error(
+        self,
+        status: HTTPStatus,
+        field: str,
+        message: str,
+        *,
+        details: Mapping[str, object] | None = None,
+    ) -> None:
+        body: dict[str, object] = {"field": field, "message": message}
+        if details:
+            body.update(details)
+        self._send(status, {"error": body})
 
     def _send(self, status: HTTPStatus, payload: dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")

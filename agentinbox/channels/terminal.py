@@ -21,6 +21,7 @@ from agentinbox.claims import mint_claim
 from agentinbox.config import Config
 from agentinbox.exit_codes import ExitCode
 from agentinbox.parity import prior_asks
+from agentinbox.readiness import similar_cases
 from agentinbox.resolve import resolve
 from agentinbox.store import AskRecord, AskStore, utcnow
 
@@ -80,6 +81,7 @@ class TerminalChannel:
             now=moment,
             transitions=store.transitions_for(ask.ask_id),
             prior_asks=prior_asks(store, ask),
+            similar_cases=similar_cases(store, ask),
         )
         self.deliver(ask, card)
 

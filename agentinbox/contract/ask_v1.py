@@ -42,11 +42,19 @@ _KNOWN = frozenset(_REQUIRED) | {"ask_id", "traceparent"}
 class ContractError(Exception):
     """A rejected ask; ``field`` is stable so producers (and tests) can act on it."""
 
-    def __init__(self, field: str, message: str, *, status_code: int = 400) -> None:
+    def __init__(
+        self,
+        field: str,
+        message: str,
+        *,
+        status_code: int = 400,
+        details: Mapping[str, Any] | None = None,
+    ) -> None:
         super().__init__(f"{field}: {message}")
         self.field = field
         self.message = message
         self.status_code = status_code
+        self.details = dict(details) if details else None
 
 
 @dataclass(frozen=True, slots=True)

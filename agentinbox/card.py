@@ -58,6 +58,8 @@ class Card:
     alternatives: tuple[str, ...] = ()
     #: True once the ask is inside its pre-expiry warning window.
     warning: bool = False
+    #: One-line readiness banner (M26); ``None`` when readiness is fully green.
+    readiness_banner: str | None = None
 
     def render(self, surface: str = "text", *, color: bool = False) -> str:
         if surface not in SURFACES:
@@ -72,6 +74,7 @@ def build_card(
     transitions: Sequence[TransitionRecord] = (),
     status: AskStatus | None = None,
     prior_asks: Sequence[AskRecord] = (),
+    similar_cases: Sequence[Mapping[str, Any]] = (),
 ) -> Card:
     payload: Mapping[str, Any] = ask.payload
     trust = payload.get("_trust") or {}
@@ -130,6 +133,7 @@ def build_card(
         Field("tier", _text(ask.tier)),
         Field("escalations", _escalation_history(transitions)),
         Field("prior asks", _prior_asks(prior_asks)),
+        Field("similar cases", _similar_cases(similar_cases)),
         Field("session tail", _session_tail(context.get("session_tail")), untrusted=True),
         Field("flags", _text(", ".join(str(flag) for flag in context.get("flags") or []))),
         Field(
@@ -168,6 +172,7 @@ def build_card(
             and ask.warn_at is not None
             and ask.warn_at <= now
         ),
+        readiness_banner=_readiness_banner(payload.get("_readiness")),
     )
 
 
@@ -179,8 +184,10 @@ def _render(card: Card, *, surface: str, color: bool) -> str:
     lines = [
         f"ASKS: {card.ask_id}   status={card.status}   ttl={_ttl(card.ttl_seconds)}",
         f"fingerprint: {card.fingerprint}",
-        "",
     ]
+    if card.readiness_banner:
+        lines.append(card.readiness_banner)
+    lines.append("")
     for block in card.blocks:
         lines.append(block.title)
         for field in block.fields:
@@ -225,6 +232,25 @@ def _surface_footer(surface: str, card: Card) -> list[str]:
 
 
 # --------------------------------------------------------------------------- helpers
+
+
+def _readiness_banner(readiness: object) -> str | None:
+    if not isinstance(readiness, Mapping):
+        return None
+    from agentinbox.readiness import banner_for
+
+    return banner_for(readiness)
+
+
+def _similar_cases(cases: Sequence[Mapping[str, Any]]) -> str:
+    if not cases:
+        return "none (precedent only)"
+    rendered = "; ".join(
+        f"{case.get('ask_id')} {case.get('outcome')} "
+        f"(env={case.get('environment')}, criticality={case.get('criticality')})"
+        for case in cases
+    )
+    return "precedent only: " + rendered
 
 
 def _ttl(seconds: int | None) -> str:

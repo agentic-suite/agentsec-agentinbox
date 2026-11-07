@@ -1,0 +1,1 @@
+"""Readiness tests (M26)."""

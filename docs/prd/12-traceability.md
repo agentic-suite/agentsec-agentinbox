@@ -70,6 +70,17 @@ today** (they run in CI), not planned:
 | **N-22..N-25** (input/log/permission) | log sanitization, caps, forced private modes, no approval shortcut | `tests/security/test_hardening.py` |
 | **PRD 20 §D** (own posture) | zero-runtime-dependency/no-ML manifest, CycloneDX SBOM dry run, RFC 9116 security.txt | `tests/security/test_posture.py` |
 
+## M26 ask readiness (shipped tests, v0.1.0)
+
+| Req / invariant | What M26 ships | Acceptance test |
+|---|---|---|
+| **R78** readiness score | six deterministic dimensions, derived and stored | `tests/readiness/test_scorer.py` |
+| **R79/R84** rejection + repair | structured `ask_not_decisionable`, zero writes, API/CLI repair body | `tests/readiness/test_rejection.py` |
+| **R80** contradictions | 12-case corpus, deliver-with-flag or reject per class | `tests/readiness/test_contradictions.py` |
+| **R81/R82** evidence + freshness | per-class expectations, labels name the gap, no inferred freshness | `tests/readiness/test_evidence.py` |
+| **R83/R85** banner + precedent | banner above ACTION, up to 3 prior cases labelled precedent | `tests/readiness/test_banner.py` |
+| **R86** class config | opt-in enforcement, load error without a threshold, `doctor --explain` | `tests/readiness/test_class_config.py` |
+
 ## Forward slate traceability (R13–R47, PRDs 24–27)
 
 The product-depth requirements are traced **inside their own PRDs** (each carries a
