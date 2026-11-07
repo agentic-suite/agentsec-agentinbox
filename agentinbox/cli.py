@@ -11,15 +11,19 @@ Design of record: ``docs/design/v0.1.0/foundation.md`` §2-§3. Two rules are lo
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
+import os
+import signal
 import sys
 import threading
 from collections.abc import Callable, Sequence
-from typing import NoReturn
+from typing import Any, NoReturn
 
 from agentinbox import __version__
 from agentinbox.answers import AnswerVerifier
 from agentinbox.bus import BusError, DeliveryWiring, Job, load_bus
+from agentinbox.card import build_card
 from agentinbox.channels.base import ChannelError
 from agentinbox.channels.desktop import DesktopChannel
 from agentinbox.channels.terminal import TerminalChannel
@@ -33,6 +37,7 @@ from agentinbox.config import (
 )
 from agentinbox.doctor import render_explain, render_human, run_checks
 from agentinbox.exit_codes import ExitCode
+from agentinbox.gate import gate
 from agentinbox.scheduler import Scheduler
 from agentinbox.store import AskStore, StoreError, parse_iso, utcnow
 from agentinbox.store.loader import load_store
@@ -206,6 +211,51 @@ def _inbox(args: argparse.Namespace) -> int:
     return int(ExitCode.APPROVED if not pending else ExitCode.PENDING)
 
 
+def _gate(args: argparse.Namespace) -> int:
+    try:
+        _config, store = _runtime(args)
+    except (ConfigError, StoreError) as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    cancel = threading.Event()
+
+    def on_signal(_signum: int, _frame: object) -> None:
+        cancel.set()
+
+    previous: list[tuple[int, Any]] = []
+    for signum in (signal.SIGTERM, signal.SIGINT):
+        with contextlib.suppress(ValueError, OSError):
+            # Not the main thread (tests embed main()) — cancellation is simply unavailable.
+            previous.append((signum, signal.signal(signum, on_signal)))
+
+    try:
+        result = gate(
+            store,
+            args.ask,
+            wait=bool(args.wait),
+            timeout=args.timeout,
+            cancel=cancel,
+            principal=os.environ.get("USER"),
+        )
+    except Exception as exc:  # any failure is fail-closed exit 4
+        print(f"{PROG}: gate unavailable: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+    finally:
+        for previous_signum, handler in previous:
+            with contextlib.suppress(ValueError, OSError, TypeError):
+                signal.signal(previous_signum, handler)
+
+    ask = store.get(args.ask)
+    if ask is not None:
+        card = build_card(
+            ask, now=utcnow(), transitions=store.transitions_for(ask.ask_id)
+        )
+        sys.stdout.write(card.render("ci"))
+    print(f"{PROG}: ask {args.ask}: {result.status} ({result.reason})")
+    return int(result.code)
+
+
 def _serve(args: argparse.Namespace) -> int:
     try:
         config, store = _runtime(args)
@@ -315,6 +365,8 @@ def build_parser() -> argparse.ArgumentParser:
             handler = _inbox
         elif command == "serve":
             handler = _serve
+        elif command == "gate":
+            handler = _gate
         else:
             handler = _stub(command)
         sub.set_defaults(handler=handler)
@@ -336,6 +388,16 @@ def build_parser() -> argparse.ArgumentParser:
         if command == "serve":
             sub.add_argument(
                 "--once", action="store_true", help="drain the bus once and exit (tests/cron)"
+            )
+        if command == "gate":
+            sub.add_argument("--ask", required=True, metavar="ASK_ID")
+            sub.add_argument("--wait", action="store_true", help="block until resolved")
+            sub.add_argument(
+                "--timeout",
+                type=float,
+                default=None,
+                metavar="SECONDS",
+                help="CI wait budget (independent of the ask TTL)",
             )
 
     return parser
@@ -359,7 +421,15 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # A stub accepts the flags of the command it will become (and refuses); a real command
     # rejects anything it does not define.
-    if extra and args.command in {"version", "init", "doctor", "answer", "inbox", "serve"}:
+    if extra and args.command in {
+        "version",
+        "init",
+        "doctor",
+        "answer",
+        "inbox",
+        "serve",
+        "gate",
+    }:
         parser.print_usage(sys.stderr)
         print(f"{PROG}: error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)
         return int(ExitCode.USAGE)

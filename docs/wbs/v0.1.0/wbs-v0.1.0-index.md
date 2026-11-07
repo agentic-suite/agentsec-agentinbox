@@ -153,6 +153,11 @@ A milestone is **closed** only when all of these hold:
   `flock` single-owner refusal, crash resume, bounded poll, and aggressive `done/` pruning. A 200-ask flood
   publishes one rolling digest job; delivery wiring records every attempt (`ask-delivered`/`delivery-failed`),
   retries with bounded backoff, and fails over. `serve --once` drains the spool. Next: **M10** (`10.D0` gate design).
+- **2026-11-08 — M10 CI checkpoint (`gate`) closed.** Issues #215–#226. **Gate:** 453 tests pass ·
+  coverage **95.62%** · `ruff` clean · `mypy --strict` clean · DCO signed. `gate --ask --wait --timeout`
+  maps approved→0, denied/cancelled→2, expired/budget→3, unavailable→4, pending→5; a lapsed budget never
+  mutates the ask; SIGTERM/SIGINT records a `cancelled` transition; retries are read-only idempotent.
+  Four CI recipes documented. Next: **M11** (`11.D0` escalation design).
 
 ## PRD coverage matrix (every doc 00–30)
 
