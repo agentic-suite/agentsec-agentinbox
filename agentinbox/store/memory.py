@@ -125,6 +125,11 @@ class MemoryStore:
                 raise StoreError(f"claim already exists: {claim.claim_id}")
             self._claims[claim.claim_id] = claim
 
+    def get_claim(self, claim_id: str) -> ClaimRecord | None:
+        with self._lock:
+            self._require_open()
+            return self._claims.get(claim_id)
+
     def consume_claim(self, claim_id: str, *, ask_id: str, at: datetime) -> bool:
         with self._lock:
             self._require_open()
@@ -162,6 +167,21 @@ class MemoryStore:
             if delivery.delivery_id in self._deliveries:
                 raise StoreError(f"delivery already recorded: {delivery.delivery_id}")
             self._deliveries[delivery.delivery_id] = delivery
+
+    def revoke_claims(
+        self, ask_id: str, *, at: datetime, tier: str | None = None
+    ) -> int:
+        with self._lock:
+            self._require_open()
+            revoked = 0
+            for claim_id, claim in list(self._claims.items()):
+                if claim.ask_id != ask_id or claim.revoked_at is not None:
+                    continue
+                if tier is not None and claim.tier != tier:
+                    continue
+                self._claims[claim_id] = replace(claim, revoked_at=at)
+                revoked += 1
+            return revoked
 
     def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]:
         with self._lock:

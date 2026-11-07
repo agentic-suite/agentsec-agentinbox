@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Final, Protocol
 
 #: Version of the conformance suite a driver must declare to be admitted.
-CONFORMANCE_VERSION: Final = "2"
+CONFORMANCE_VERSION: Final = "3"
 
 
 class StoreError(Exception):
@@ -198,6 +198,8 @@ class AskStore(Protocol):
 
     def issue_claim(self, claim: ClaimRecord) -> None: ...
 
+    def get_claim(self, claim_id: str) -> ClaimRecord | None: ...
+
     def consume_claim(self, claim_id: str, *, ask_id: str, at: datetime) -> bool: ...
 
     def list_pending(self, *, now: datetime, limit: int = 100) -> list[AskRecord]: ...
@@ -207,6 +209,10 @@ class AskStore(Protocol):
     def transitions_for(self, ask_id: str) -> list[TransitionRecord]: ...
 
     def record_delivery(self, delivery: DeliveryRecord) -> None: ...
+
+    def revoke_claims(
+        self, ask_id: str, *, at: datetime, tier: str | None = None
+    ) -> int: ...
 
     def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]: ...
 

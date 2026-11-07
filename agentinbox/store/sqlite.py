@@ -336,6 +336,13 @@ class SqliteStore:
             except sqlite3.IntegrityError as exc:
                 raise StoreError(f"claim already exists: {claim.claim_id}") from exc
 
+    def get_claim(self, claim_id: str) -> ClaimRecord | None:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM claims WHERE claim_id = ?", (claim_id,)
+            ).fetchone()
+        return None if row is None else _row_to_claim(row)
+
     def consume_claim(self, claim_id: str, *, ask_id: str, at: datetime) -> bool:
         with self._transaction():
             cursor = self._conn.execute(
@@ -386,6 +393,20 @@ class SqliteStore:
                 )
             except sqlite3.IntegrityError as exc:
                 raise StoreError(f"delivery already recorded: {delivery.delivery_id}") from exc
+
+    def revoke_claims(
+        self, ask_id: str, *, at: datetime, tier: str | None = None
+    ) -> int:
+        statement = (
+            "UPDATE claims SET revoked_at = ? WHERE ask_id = ? AND revoked_at IS NULL"
+        )
+        parameters: list[object] = [to_iso(at), ask_id]
+        if tier is not None:
+            statement += " AND tier = ?"
+            parameters.append(tier)
+        with self._transaction():
+            cursor = self._conn.execute(statement, parameters)
+            return cursor.rowcount
 
     def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]:
         with self._lock:

@@ -256,6 +256,28 @@ def check_transition_read(store) -> None:  # type: ignore[no-untyped-def]
     assert [item.seq for item in transitions] == [1, 2]
 
 
+def check_claim_revocation(store) -> None:  # type: ignore[no-untyped-def]
+    ask = sample_ask()
+    store.create_or_get_by_identity(ask)
+    for index, tier in enumerate(("tier-1", "on-call")):
+        store.issue_claim(
+            ClaimRecord(
+                claim_id=f"claim_revoke_{index}",
+                ask_id=ask.ask_id,
+                channel="terminal",
+                tier=tier,
+                secret_hash="h" * 64,
+                issued_at=T0,
+                expires_at=T0 + timedelta(minutes=5),
+            )
+        )
+
+    assert store.revoke_claims(ask.ask_id, at=T0, tier="tier-1") == 1
+    assert store.revoke_claims(ask.ask_id, at=T0, tier="tier-1") == 0
+    assert store.consume_claim("claim_revoke_0", ask_id=ask.ask_id, at=T0) is False
+    assert store.consume_claim("claim_revoke_1", ask_id=ask.ask_id, at=T0) is True
+
+
 # --------------------------------------------------------------------------- 7. capabilities
 
 
