@@ -322,7 +322,7 @@ every M26–M31 milestone carries its own gate. The 32.7 regression baseline bec
   stays allow/deny for old clients; `decision`/`constraints`/`edits`/`repair` are additive. Next: **M28**
   (`28.D0` bundles/handoff design).
 
-- **2026-11-07 — M28 Operation bundles, handoff & incident review closed.** Issues #329–#340. Commit `TBD`.
+- **2026-11-07 — M28 Operation bundles, handoff & incident review closed.** Issues #329–#340. Commit `5536c98`.
   **Gate:** 881 tests pass · coverage **95.13%** · `ruff` clean · `mypy --strict` clean.
   Bundles are derived-on-read by declared `operation_id` (or labelled session+window), with counts,
   environments, phases, and the earliest-expiry critical path; no bundle-level decision exists.
