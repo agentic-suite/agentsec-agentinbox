@@ -370,6 +370,11 @@ ft_require_docker() {
 # rebuild 16 times. STACK_KEEP=1 defers teardown to the caller (the run
 # teardowns once, at the end).
 FT_STACK_BUILT="${FT_STACK_BUILT:-0}"
+# Clean slate once per suite: drop the container + its volume before boot, so a
+# case can never inherit another suite's store. Cases WITHIN a suite share the
+# one SUT (that is the point: 5 cases, 1 boot, 1 teardown). Set
+# FT_CLEAN_SLATE=0 only when deliberately debugging across suites.
+FT_CLEAN_SLATE="${FT_CLEAN_SLATE:-1}"
 
 _ft_stack_log() {
   if [[ -n "${FT_CASE_DIR:-}" ]]; then
@@ -387,13 +392,23 @@ stack_build() {
   FT_STACK_BUILT=1
 }
 
+stack_reset() {
+  # Clean setup: remove the prior container AND its named volume. This is
+  # per suite, never per case — cases inside a suite deliberately share the SUT.
+  if [[ "${FT_CLEAN_SLATE:-1}" == "1" ]]; then
+    ft_record "compose down -v (clean slate)"
+    _ft_stack_log down -v --remove-orphans >/dev/null 2>&1 || true
+  fi
+}
+
 stack_up() {
   # First boot in this process builds; every later boot is --no-build.
   if [[ "$FT_STACK_BUILT" != "1" ]]; then
     stack_build || return 1
   fi
-  ft_record "compose up (agentinbox, no-build=$FT_STACK_BUILT)"
-  _ft_stack_log up -d --no-build "$FT_SUT_SERVICE"
+  stack_reset
+  ft_record "compose up (agentinbox, no-build=$FT_STACK_BUILT, force-recreate)"
+  _ft_stack_log up -d --no-build --force-recreate "$FT_SUT_SERVICE"
 }
 
 stack_teardown() {

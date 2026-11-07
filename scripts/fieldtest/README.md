@@ -41,6 +41,16 @@ bash scripts/fieldtest/run-all.sh                # all suites
 Results land under `field-test/<FT_VERSION>/results/<suite>/`; raw setup
 logs under `results/_setup/`.
 
+### Docker lifecycle (not per test)
+
+| Scope | What happens |
+|---|---|
+| **Per run** | The image is built **once** (`FT_STACK_BUILT`); later suites use `--no-build`. |
+| **Per suite** | One clean boot: `down -v --remove-orphans`, then `up --force-recreate`, then one teardown. `FT_CLEAN_SLATE=1` (default) guarantees no store leaks between suites. |
+| **Per case** | **No** Docker restart. All cases in a suite share the one SUT (the 5-case group = 1 boot, 5 runs, 1 teardown). |
+
+So: no nuking per test; clean setup per suite; image once per run.
+
 ## Honesty rules
 
 - **No skips.** A case that cannot run is a failure, or `BLOCKED` for a `P/F|B`
