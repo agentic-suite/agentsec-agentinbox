@@ -50,7 +50,13 @@ fi
 
 REQUIRES="$(_reg requires)"
 CLASS="$(_reg class)"
+LLM="$(_reg llm)"
 export FT_CASE_CLASS="${CLASS:-P/F}"
+if [[ "$LLM" == "True" || "$LLM" == "true" || "$LLM" == "yes" || "$LLM" == "1" ]]; then
+  export FT_CASE_LLM=1
+else
+  export FT_CASE_LLM=0
+fi
 export FT_CASE_ID="$ID"
 export FT_CASE_REQUIRES="$REQUIRES"
 

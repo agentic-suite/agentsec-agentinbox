@@ -20,6 +20,7 @@ Sources: [WBS v0.1.0 Part 17](../../wbs/v0.1.0/wbs-v0.1.0-part17-expansion-field
 - **The report is hand-maintained.** `FIELD_TEST_REPORT.md` carries the `HAND-MAINTAINED` marker; no automation writes it (the M24 lesson — a build_report once destroyed hand notes — is already encoded in the repo rule). Verdicts are entered **by hand from the committed result files**.
 - **Fail-closed is the product.** Missing context, stale evidence, contradictory fields, no enforcer binding, revoked grants, store faults, clock skew, offline — each must produce `deny` or `pending`, never `allow`. Any silent allow anywhere is a release-blocking red.
 - **The five invariants hold for everything under test:** I-1 no answer without a claim + authenticated principal · I-2 approvals bind to the exact action identity · I-3 timeout = deny · I-4 agent-derived text is inert · I-5 no secret is persisted or rendered.
+- **LLM evidence is captured, never inferred.** Tier-1 harness cases route the real CLI through `t1_proxy.py`, which logs every request/response pair (sanitized). A PASS requires a balanced pair with 2xx responses and zero secrets; a case with no capture is a failure. The deep-validation gate re-checks this from disk.
 - **Attack packs are release gates.** SC-22 (spoof/replay/forge), SC-23 (injection), SC-24 (fault matrix) — a red pack means **no release**, full stop (32.7/#401 acceptance).
 
 ### 0.2 The BLOCKED / declare class

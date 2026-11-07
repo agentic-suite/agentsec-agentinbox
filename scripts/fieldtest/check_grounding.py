@@ -30,6 +30,55 @@ DEFAULT_ROOT = Path(
     or (REPO_ROOT / "field-test" / os.environ.get("FT_VERSION", "v0.1.0") / "results")
 )
 STATUSES = {"pass", "fail", "blocked"}
+REGISTRY = Path(__file__).resolve().parent / "cases" / "registry.json"
+_SECRET = __import__("re").compile(
+    r"sk-[A-Za-z0-9]{16,}|bearer\s+[A-Za-z0-9._-]{20,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}",
+    __import__("re").IGNORECASE,
+)
+
+
+def _llm_required(case_id: str, verdict: dict[str, object]) -> bool:
+    if verdict.get("llm_required") is True:
+        return True
+    try:
+        registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return any(
+        str(case.get("id")) == case_id
+        and case.get("llm") in (True, "yes", "true", "1")
+        for case in registry
+    )
+
+
+def _check_llm(case_id: str, case_dir: Path, verdict: dict[str, object]) -> list[str]:
+    if verdict.get("status") != "pass" or not _llm_required(case_id, verdict):
+        return []
+    problems: list[str] = []
+    llm_dir = case_dir / "artifacts" / "llm"
+    requests = sorted(llm_dir.glob("*-request.json")) if llm_dir.exists() else []
+    responses = sorted(llm_dir.glob("*-response.json")) if llm_dir.exists() else []
+    if not requests or not responses:
+        return [f"{case_id}: LLM-required PASS without request/response capture"]
+    if len(requests) != len(responses):
+        problems.append(
+            f"{case_id}: unbalanced LLM capture "
+            f"(requests={len(requests)}, responses={len(responses)})"
+        )
+    for path in responses:
+        try:
+            body = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            problems.append(f"{case_id}: unreadable LLM response {path.name} ({exc})")
+            continue
+        status = int(body.get("status_code", 0) or 0)
+        if not 200 <= status < 300:
+            problems.append(f"{case_id}: LLM response {path.name} is HTTP {status}")
+    for path in [*requests, *responses]:
+        text = path.read_text(encoding="utf-8", errors="replace")
+        if _SECRET.search(text):
+            problems.append(f"{case_id}: unmasked secret in LLM capture {path.name}")
+    return problems
 
 
 def _assertions(path: Path) -> list[dict[str, object]]:
@@ -68,6 +117,7 @@ def check_verdict(path: Path) -> list[str]:
     except ValueError as exc:
         problems.append(f"{case_id}: {exc}")
         return problems
+    problems.extend(_check_llm(case_id, path.parent, verdict))
 
     if status == "pass":
         if verdict.get("blocked") is True:

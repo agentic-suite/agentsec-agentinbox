@@ -73,6 +73,9 @@ FT_CASE_CLASS="${FT_CASE_CLASS:-P/F}"
 FT_CASE_BLOCKED=0
 FT_BLOCK_REASON=""
 FT_BLOCK_GATE=""
+FT_LLM_DIR=""
+FT_LLM_CAPTURED=0
+FT_CASE_LLM="${FT_CASE_LLM:-0}"
 
 # --- run directory -----------------------------------------------------------
 ft_run_init() {
@@ -118,6 +121,9 @@ ft_case_begin() {
   FT_CASE_BLOCKED=0
   FT_BLOCK_REASON=""
   FT_BLOCK_GATE=""
+  FT_LLM_DIR="$FT_CASE_DIR/artifacts/llm"
+  mkdir -p "$FT_LLM_DIR"
+  FT_LLM_CAPTURED=0
   echo "== case $id =="
 }
 
@@ -240,6 +246,8 @@ ft_case_end() {
     printf '  "grounded": %s,\n' "$([[ "${FT_ASSERT_GROUNDED:-0}" -ge 1 ]] && echo true || echo false)"
     printf '  "assertions_total": %s,\n' "$FT_ASSERT_TOTAL"
     printf '  "assertions_grounded": %s,\n' "$FT_ASSERT_GROUNDED"
+    printf '  "llm_captured": %s,\n' "$([[ "${FT_LLM_CAPTURED:-0}" -eq 1 ]] && echo true || echo false)"
+    printf '  "llm_required": %s,\n' "$([[ "${FT_CASE_LLM:-0}" -eq 1 ]] && echo true || echo false)"
     if [[ "$FT_CASE_BLOCKED" -eq 1 ]]; then
       printf '  "limitation": "%s",\n' "$(_ft_json_escape "$FT_BLOCK_REASON")"
       printf '  "release_gate_item": "%s",\n' "$(_ft_json_escape "$FT_BLOCK_GATE")"
@@ -270,6 +278,9 @@ ft_finalize() {
   elif [[ "${FT_STRICT_GROUNDING:-1}" == "1" && "$FT_ASSERT_GROUNDED" -eq 0 ]]; then
     FT_CASE_STATUS="fail"
     echo "  FAIL ungrounded (no grounded assertion; every assertion is plumbing)" >&2
+  elif [[ "${FT_CASE_LLM:-0}" == "1" && "$FT_LLM_CAPTURED" != "1" ]]; then
+    FT_CASE_STATUS="fail"
+    echo "  FAIL no-llm-capture (LLM case with no balanced request/response pair)" >&2
   else
     FT_CASE_STATUS="pass"
   fi
@@ -286,6 +297,30 @@ ft_teardown_on_exit() {
   fi
   stack_teardown
   exit "$code"
+}
+
+# --- LLM capture gate (Tier-1 harnesses only) --------------------------------
+# Every LLM-required case must have at least one real request/response pair,
+# balanced, 2xx, and secret-free. A silent fallback is not a pass.
+ft_assert_llm_capture() {
+  local name="${1:-llm-capture}"
+  local req resp bad
+  req=$(find "$FT_LLM_DIR" -name '*-request.json' 2>/dev/null | wc -l | tr -d ' ')
+  resp=$(find "$FT_LLM_DIR" -name '*-response.json' 2>/dev/null | wc -l | tr -d ' ')
+  bad=$(grep -rliE 'sk-[A-Za-z0-9]{16,}|Bearer +[A-Za-z0-9._-]{20,}|AKIA[0-9A-Z]{16}' "$FT_LLM_DIR" 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "$req" -ge 1 && "$resp" -ge 1 && "$req" == "$resp" && "$bad" -eq 0 ]]; then
+    FT_LLM_CAPTURED=1
+    FT_ASSERT_GROUNDED=$((FT_ASSERT_GROUNDED + 1))
+    printf '{"name":"%s","ok":true,"grounded":true,"cmd":"llm capture: %s request(s) + %s response(s), secret-free"}\n' \
+      "$name" "$req" "$resp" >> "$FT_CASE_DIR/assertions.ndjson"
+    echo "  PASS $name ($req request(s), $resp response(s), secret-free)"
+    return 0
+  fi
+  FT_ASSERT_FAILED=1
+  printf '{"name":"%s","ok":false,"grounded":true,"cmd":"llm capture: %s request(s) + %s response(s), secret-files=%s"}\n' \
+    "$name" "$req" "$resp" "$bad" >> "$FT_CASE_DIR/assertions.ndjson"
+  echo "  FAIL $name (requests=$req responses=$resp secret_files=$bad)" >&2
+  return 1
 }
 
 # --- docker SUT lifecycle -----------------------------------------------------

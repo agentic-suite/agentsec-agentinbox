@@ -240,7 +240,8 @@ Status vocabulary: **not run | PASS | FAIL | BLOCKED** — this run so far: **0 
 | Study: expansion cards | ≥9/12 correct per participant median ≥ 9/12 | ▫ pending | expansion-arm decisions |
 | Attack packs | 0 crafted allows (SC-22/23/24) | ▫ pending | pack result files |
 | Evidence hygiene | 0 scanner findings over any result | ▫ pending | per-case leak gate |
-| Harness journal | both recipes: version + transcript + outcome | ▫ pending | `journal/` |
+| Harness journal | both recipes: version + transcript + outcome | ▫ pending | `field-test/v0.1.0/journal/` |
+| LLM capture (Tier-1) | every real call logged: balanced, 2xx, secret-free | ▫ pending | `artifacts/llm/` + deep-validation gate |
 
 ---
 

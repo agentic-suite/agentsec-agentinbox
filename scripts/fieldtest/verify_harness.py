@@ -105,6 +105,73 @@ def main() -> int:
 
         _verdict(
             case,
+            {
+                "id": "FT-FAKE",
+                "status": "pass",
+                "grounded": True,
+                "assertions_total": 1,
+                "assertions_grounded": 1,
+                "llm_required": True,
+                "llm_captured": False,
+            },
+            [{"name": "a", "ok": True, "grounded": True}],
+        )
+        if _run("check_grounding.py", root).returncode == 0:
+            failures.append("check_grounding accepted an LLM PASS with no capture")
+
+        # 7) LLM-required PASS with a balanced 2xx capture is accepted.
+        llm = case / "artifacts" / "llm"
+        llm.mkdir(parents=True)
+        (llm / "call-0001-request.json").write_text(
+            json.dumps({"url": "/v1/messages", "body": {"model": "test"}}), encoding="utf-8"
+        )
+        (llm / "call-0001-response.json").write_text(
+            json.dumps({"status_code": 200, "body": {"ok": True}}), encoding="utf-8"
+        )
+        _verdict(
+            case,
+            {
+                "id": "FT-FAKE",
+                "status": "pass",
+                "grounded": True,
+                "assertions_total": 1,
+                "assertions_grounded": 1,
+                "llm_required": True,
+                "llm_captured": True,
+            },
+            [{"name": "a", "ok": True, "grounded": True}],
+        )
+        if _run("check_grounding.py", root).returncode != 0:
+            failures.append("check_grounding rejected a balanced 2xx LLM capture")
+
+        # 8) Unbalanced capture is rejected.
+        (llm / "call-0002-request.json").write_text("{}", encoding="utf-8")
+        if _run("check_grounding.py", root).returncode == 0:
+            failures.append("check_grounding accepted an unbalanced LLM capture")
+        (llm / "call-0002-request.json").unlink()
+
+        # 9) A secret in the capture is rejected.
+        (llm / "call-0001-request.json").write_text(
+            json.dumps({"body": {"token": "AKIA" + "A" * 16}}), encoding="utf-8"
+        )
+        if _run("check_grounding.py", root).returncode == 0:
+            failures.append("check_grounding accepted a secret in LLM capture")
+        (llm / "call-0001-request.json").write_text(
+            json.dumps({"url": "/v1/messages", "body": {"model": "test"}}), encoding="utf-8"
+        )
+
+        # 10) A non-2xx response is rejected.
+        (llm / "call-0001-response.json").write_text(
+            json.dumps({"status_code": 500, "body": {"error": "no"}}), encoding="utf-8"
+        )
+        if _run("check_grounding.py", root).returncode == 0:
+            failures.append("check_grounding accepted a non-2xx LLM response")
+        (llm / "call-0001-response.json").write_text(
+            json.dumps({"status_code": 200, "body": {"ok": True}}), encoding="utf-8"
+        )
+
+        _verdict(
+            case,
             {"id": "FT-FAKE", "status": "blocked", "class": "P/F|B"},
             [{"name": "blocked", "ok": True, "blocked": True}],
         )

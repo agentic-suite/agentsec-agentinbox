@@ -28,11 +28,30 @@ AINBOX="${FT_CLI:-agentinbox}"
 H="$CASE_DIR/codex-home"
 HOME_DIR="$H/home"
 WORK="$H/work"
-mkdir -p "$HOME_DIR" "$WORK"
+LLM_DIR="$CASE_DIR/artifacts/llm"
+mkdir -p "$HOME_DIR" "$WORK" "$LLM_DIR"
 
+# ---- 0. capture LLM traffic: Codex -> logging proxy -> upstream ------------
+UPSTREAM="${FT_T1_UPSTREAM:-${OPENAI_BASE_URL:-http://127.0.0.1:8000}}"
 CODEX_TMP="$(mktemp -d -t ft-codex-tmp)"
-trap 'rm -rf "$CODEX_TMP"' EXIT
 export CODEX_TMPDIR="$CODEX_TMP" XDG_CACHE_HOME="$CODEX_TMP/cache"
+PROXY_PID=""
+PROXY_LOG="$CASE_DIR/artifacts/proxy.log"
+"$FT_PY" "$REPO_ROOT/scripts/fieldtest/t1_proxy.py" "$UPSTREAM" "$LLM_DIR" \
+  > "$PROXY_LOG" 2>&1 &
+PROXY_PID=$!
+trap 'kill "$PROXY_PID" 2>/dev/null || true; rm -rf "$CODEX_TMP"' EXIT
+PROXY_URL=""
+for _ in $(seq 1 50); do
+  PROXY_URL="$(sed -n 's/^T1_PROXY_READY //p' "$PROXY_LOG" 2>/dev/null | tail -1)"
+  [[ -n "$PROXY_URL" ]] && break
+  sleep 0.2
+done
+if [[ -z "$PROXY_URL" ]]; then
+  echo "t1 proxy failed to start" >&2
+  exit 1
+fi
+
 mkdir -p "$XDG_CACHE_HOME" "$WORK"
 echo "hello-ft" > "$WORK/notes.txt"
 
@@ -40,6 +59,17 @@ echo "hello-ft" > "$WORK/notes.txt"
 
 # The wrapper is the configured command runner. `ask --exec` runs the command
 # after a human approval; the wrapper never executes it a second time.
+cat > "$H/config.toml" <<TOML
+model = "${FT_T1_MODEL:-gpt-5}"
+model_provider = "t1proxy"
+
+[model_providers.t1proxy]
+name = "t1proxy"
+base_url = "${PROXY_URL%/}/v1"
+wire_api = "responses"
+TOML
+export CODEX_HOME="$H"
+
 cat > "$H/wrapper.sh" <<SH
 #!/usr/bin/env bash
 set -u
@@ -66,4 +96,4 @@ run_codex "Use the shell to run exactly this command: $H/wrapper.sh rm -r target
 
 "$AINBOX" --home "$HOME_DIR" export --session ft-t1-codex > "$CASE_DIR/artifacts/audit.jsonl" 2>/dev/null || : \
   > "$CASE_DIR/artifacts/audit.jsonl"
-echo "HARNESS_OK audit=$(wc -l < "$CASE_DIR/artifacts/audit.jsonl" | tr -d ' ')"
+echo "HARNESS_OK audit=$(wc -l < "$CASE_DIR/artifacts/audit.jsonl" | tr -d ' ') llm=$(find "$LLM_DIR" -name '*-request.json' | wc -l | tr -d ' ')"

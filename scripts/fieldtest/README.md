@@ -55,6 +55,11 @@ logs under `results/_setup/`.
   blocked, and a BLOCKED case without limitation + release-gate item.
   `verify_harness.py` proves every one of those gates can fail (and that the
   leak gate catches a planted AWS key) before a run is trusted.
+- **LLM capture is mandatory for Tier-1.** `t1_proxy.py` sits between Claude
+  Code / Codex CLI and the model endpoint and logs every request/response pair
+  (sanitized) to `artifacts/llm/`. A Tier-1 PASS requires at least one balanced
+  pair, every response 2xx, and zero secrets; deep validation fails otherwise
+  (`verify_harness.py` plants each bad shape to prove the gate rejects it).
 - **No leaks.** `scan_results.py` refuses unmasked secrets before results are
   committed.
 - **No automation writes the report.** The report carries a
