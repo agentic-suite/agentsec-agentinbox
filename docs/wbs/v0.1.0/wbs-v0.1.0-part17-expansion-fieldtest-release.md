@@ -50,6 +50,8 @@ block release.
 
 **CUJ:** CUJ-14 · **PRD:** PRD 31 — 0.1.0 release gate (expanded) · **Milestone:** 0.1.0 — M33 Release readiness (tags `v0.1.0`)
 
+**Release plan:** [RELEASE_PLAN.md](../../release/v0.1.0/RELEASE_PLAN.md) (`33.D0`, #391).
+
 **Work items**
 
 | # | Task | Description | Deliverable | Acceptance | Issue | CUJ | Req |
