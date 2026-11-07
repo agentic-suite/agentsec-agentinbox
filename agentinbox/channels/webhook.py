@@ -6,8 +6,6 @@ terminal", carries no arguments, and cannot answer. The channel implements ``del
 
 from __future__ import annotations
 
-import hashlib
-import hmac
 import urllib.error
 import urllib.request
 from collections.abc import Callable, Mapping
@@ -19,6 +17,7 @@ from agentinbox.card import Card
 from agentinbox.channels.base import ChannelError
 from agentinbox.config import Config
 from agentinbox.secrets import SecretError, resolve_ref
+from agentinbox.signing import sign
 from agentinbox.store import AskRecord, canonical_json, to_iso, utcnow
 
 CONTRACT = "webhook/1.0"
@@ -43,10 +42,6 @@ def build_payload(ask: AskRecord, *, now: datetime) -> dict[str, Any]:
         "answer_channel": "terminal",
         "decision": None,
     }
-
-
-def sign(secret: str, body: bytes) -> str:
-    return "sha256=" + hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
 
 
 def _fingerprint(identity: str) -> str:

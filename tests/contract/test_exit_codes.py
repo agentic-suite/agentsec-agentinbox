@@ -33,7 +33,7 @@ def test_unavailable_is_fail_closed_not_usage() -> None:
 
 
 def test_stubs_use_the_contract_constant(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["ask"]) == exit_codes.ExitCode.UNAVAILABLE
+    assert main(["report"]) == exit_codes.ExitCode.UNAVAILABLE
     capsys.readouterr()
 
 

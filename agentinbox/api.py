@@ -7,12 +7,13 @@ bounded poll fallback, so a missed signal degrades to polling, never to a hang.
 
 from __future__ import annotations
 
+import hashlib
 import hmac
 import json
 import re
 import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -26,6 +27,7 @@ from agentinbox.contract import ContractError
 from agentinbox.flood import FloodGuard
 from agentinbox.ingest import TOTAL_CAP_BYTES, ingest
 from agentinbox.resolve import resolve
+from agentinbox.secrets import SecretError, resolve_ref
 from agentinbox.store import AskStatus, AskStore, StoreError, utcnow
 from agentinbox.trust import ProducerIdentity
 
@@ -71,6 +73,7 @@ class _ApiServer(ThreadingHTTPServer):
         now: Callable[[], Any],
         bus: AskBus | None = None,
         flood_guard: FloodGuard | None = None,
+        environ: Mapping[str, str] | None = None,
     ) -> None:
         super().__init__(address, _Handler)
         self.store = store
@@ -79,6 +82,7 @@ class _ApiServer(ThreadingHTTPServer):
         self.now = now
         self.bus = bus
         self.flood_guard = flood_guard
+        self.environ = environ
         self.waiters: dict[str, threading.Event] = {}
         self.waiters_lock = threading.Lock()
 
@@ -119,7 +123,14 @@ class _Handler(BaseHTTPRequestHandler):
             self._error(HTTPStatus.BAD_REQUEST, "body", "must be a JSON object")
             return
 
-        producer = ProducerIdentity.unauthenticated(remote_addr=self.client_address[0])
+        producer = self._producer_identity(raw)
+        if producer is None:
+            self._error(
+                HTTPStatus.UNAUTHORIZED,
+                "adapter",
+                "invalid or unknown adapter signature",
+            )
+            return
         try:
             result = ingest(
                 body,
@@ -246,6 +257,32 @@ class _Handler(BaseHTTPRequestHandler):
 
     # ------------------------------------------------------------------ helpers
 
+    def _producer_identity(self, raw: bytes) -> ProducerIdentity | None:
+        """Authenticate a signed producer adapter; unauthenticated otherwise."""
+        adapter = self.headers.get("X-AgentInbox-Adapter")
+        if not adapter:
+            return ProducerIdentity.unauthenticated(remote_addr=self.client_address[0])
+
+        producer_config = self.server.config.producers.get(adapter)
+        if producer_config is None:
+            return None
+        try:
+            key = resolve_ref(producer_config.key_ref, environ=self.server.environ)
+        except SecretError:
+            return None
+        expected = "sha256=" + hmac.new(
+            key.encode("utf-8"), raw, hashlib.sha256
+        ).hexdigest()
+        supplied = self.headers.get("X-AgentInbox-Signature", "")
+        if not hmac.compare_digest(supplied, expected):
+            return None
+        return ProducerIdentity(
+            adapter=adapter,
+            authenticated=True,
+            principal=self.headers.get("X-AgentInbox-Principal"),
+            remote_addr=self.client_address[0],
+        )
+
     def _authorized(self) -> bool:
         header = self.headers.get("Authorization", "")
         candidate = header[7:] if header.startswith("Bearer ") else ""
@@ -303,6 +340,7 @@ def start_api(
     now: Callable[[], Any] = utcnow,
     bus: AskBus | None = None,
     flood_guard: FloodGuard | None = None,
+    environ: Mapping[str, str] | None = None,
 ) -> IngestAPI:
     """Bind to loopback and start serving in a daemon thread."""
     guard = (
@@ -318,6 +356,7 @@ def start_api(
         now=now,
         bus=bus,
         flood_guard=guard,
+        environ=environ,
     )
     thread = threading.Thread(
         target=lambda: server.serve_forever(poll_interval=0.05), daemon=True

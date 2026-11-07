@@ -281,6 +281,21 @@ def test_hints_are_capped_and_stripped() -> None:
     assert "not policy" in hint
 
 
+def test_flood_retry_falls_back_to_the_configured_window(store) -> None:  # type: ignore[no-untyped-def]
+    from agentinbox.config import ClassConfig, Config, ThrottleConfig
+
+    ask_id = make_ask(store, command="echo floodfallback")
+    transition(store, ask_id, AskStatus.FLOOD_DENIED, kind="flood", at=NOW)
+    cfg = Config(
+        classes={"irreversible": ClassConfig(ttl_seconds=300)},
+        throttle=ThrottleConfig(flood_window_seconds=42),
+    )
+
+    result = resolve(store, ask_id, now=NOW, config=cfg)
+
+    assert result.retry_after == 42
+
+
 def test_double_resolve_is_identical(store) -> None:  # type: ignore[no-untyped-def]
     ask_id = make_ask(store)
     transition(store, ask_id, AskStatus.APPROVED, kind="answer", at=NOW)

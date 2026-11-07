@@ -197,6 +197,12 @@ A milestone is **closed** only when all of these hold:
   `resolve/1.0` carries `retryable`/`retry_after`/`rescope_hint`/`answered_by`/`action_identity`; class
   hints + deny-reason echo (capped, labelled, not policy); identity mismatch denied; the API long-poll
   returns resolve and handles unknown/mismatch; re-reads are idempotent. Next: **M18** (`18.D0` adapters).
+- **2026-11-08 — M18 Producer adapters (agentpolicy + CLI/HTTP) closed.** Issues #29–#39. **Gate:** 608
+  tests pass · coverage **95.30%** · `ruff` clean · `mypy --strict` clean · DCO signed. Signed agentpolicy
+  adapter (trusted fields, `401` on bad
+  signature) with a create→answer→allow round-trip; `ask --file`/`--exec` (executes only on allow); API
+  token/adapter/uid/caps/flood hardening; concurrent store open/migration race fixed; CUJ-1 measured;
+  producer guide. Next: **M19** (`19.D0` LangGraph + conformance kit).
 
 ## PRD coverage matrix (every doc 00–30)
 

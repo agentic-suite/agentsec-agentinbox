@@ -62,7 +62,8 @@ integers so the contract cannot drift.
 | `gate` | **works** (M10) — CI checkpoint with the reserved exit codes; see [gate.md](gate.md) |
 | `channels` | **works** (M13) — configured channels and health |
 | `export`, `verify-log` | **works** (M15) — ordered evidence + chain verification; see [audit.md](audit.md) |
-| `ask`, `report` | **stubs** — print `agentinbox: <command> is not implemented in v0.1.0 (scheduled: M<n>)` to stderr and exit `4` |
+| `ask` | **works** (M18) — `--file` / `--exec`; only executes on allow; see [producer-guide.md](../adapters/producer-guide.md) |
+| `report` | **stub** — prints `agentinbox: report is not implemented in v0.1.0 (scheduled: M21)` and exits `4` |
 
 Stub rules:
 

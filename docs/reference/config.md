@@ -60,6 +60,20 @@ unreadable.
 retention = "90d"
 ```
 
+### `[producers.<name>]` — signed producer adapters
+
+| Key | Type | Notes |
+|---|---|---|
+| `key_ref` | `env:NAME` \| `file:/abs/path` | **required**; HMAC key for `X-AgentInbox-Signature` |
+
+```toml
+[producers.agentpolicy]
+key_ref = "env:AGENTINBOX_ADAPTER_KEY"
+```
+
+A signed adapter makes the trusted fields (`class`, `criticality`, `data_class`, `environment`, `policy_ref`,
+`reason_code`) verified for rendering. Unknown adapters and bad signatures are `401`.
+
 ### `[classes.<name>]` — ask classes
 
 | Key | Type | Default | Notes |

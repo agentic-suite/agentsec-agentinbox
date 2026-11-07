@@ -42,6 +42,7 @@ _TOP_LEVEL = frozenset(
         "limits",
         "webui",
         "audit",
+        "producers",
     }
 )
 _FORWARD_SLATE = frozenset(
@@ -167,6 +168,13 @@ class AuditConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class ProducerConfig:
+    """An authenticated producer adapter and its signing-key reference."""
+
+    key_ref: str
+
+
+@dataclass(frozen=True, slots=True)
 class Config:
     classes: Mapping[str, ClassConfig] = field(default_factory=dict)
     roster: Mapping[str, Mapping[str, tuple[str, ...]]] = field(default_factory=dict)
@@ -177,6 +185,7 @@ class Config:
     limits: LimitsConfig = field(default_factory=LimitsConfig)
     webui: WebuiConfig = field(default_factory=WebuiConfig)
     audit: AuditConfig = field(default_factory=AuditConfig)
+    producers: Mapping[str, ProducerConfig] = field(default_factory=dict)
 
 
 # --------------------------------------------------------------------------- home paths
@@ -252,6 +261,7 @@ def _parse(data: dict[str, Any], path: Path) -> Config:
         limits=_parse_limits(_table(data.get("limits", {}), "limits")),
         webui=_parse_webui(_table(data.get("webui", {}), "webui")),
         audit=_parse_audit(_table(data.get("audit", {}), "audit")),
+        producers=_parse_producers(_table(data.get("producers", {}), "producers")),
     )
 
 
@@ -569,6 +579,19 @@ def _parse_audit(value: dict[str, Any]) -> AuditConfig:
             "[audit].retention: must be never, 1y, or a number of days like 90d"
         )
     return AuditConfig(retention=retention)
+
+
+def _parse_producers(value: dict[str, Any]) -> dict[str, ProducerConfig]:
+    producers: dict[str, ProducerConfig] = {}
+    for name, raw in value.items():
+        table = _table(raw, f"producers.{name}")
+        _reject_unknown(table, frozenset({"key_ref"}), f"producers.{name}")
+        key_ref = table.get("key_ref")
+        if key_ref is None:
+            raise ConfigError(f"[producers.{name}].key_ref: required")
+        _validate_ref(key_ref, f"[producers.{name}].key_ref")
+        producers[name] = ProducerConfig(key_ref=key_ref)
+    return producers
 
 
 def _validate_loopback_bind(bind: str) -> None:

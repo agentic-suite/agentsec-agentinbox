@@ -11,6 +11,7 @@ import os
 import sqlite3
 import stat
 import threading
+import time
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import replace
@@ -167,31 +168,34 @@ class SqliteStore:
             self.path, isolation_level=None, check_same_thread=False
         )
         self._conn.row_factory = sqlite3.Row
-        self._conn.execute("PRAGMA journal_mode=WAL")
+        # busy_timeout must precede the WAL switch: a second opener waits instead of failing.
+        self._conn.execute("PRAGMA busy_timeout=5000")
+        _enable_wal(self._conn)
         self._conn.execute("PRAGMA synchronous=FULL")
         self._conn.execute("PRAGMA foreign_keys=ON")
-        self._conn.execute("PRAGMA busy_timeout=5000")
         with self._lock:
             self._migrate()
 
     # ------------------------------------------------------------------ schema
 
     def _migrate(self) -> None:
-        current = self._schema_version()
-        if current > SCHEMA_VERSION:
-            raise SchemaVersionError(
-                f"store schema v{current} is newer than this build (v{SCHEMA_VERSION}); "
-                "downgrade is refused loudly — use a matching agentinbox release"
-            )
-        while current < SCHEMA_VERSION:
-            statements = MIGRATIONS[current]
-            with self._transaction():
-                for statement in statements:
+        # Take the write lock first, then read: two concurrent openers must not both apply
+        # migration 0 (the second waits on busy_timeout and sees the committed version).
+        with self._transaction():
+            current = self._schema_version()
+            if current > SCHEMA_VERSION:
+                raise SchemaVersionError(
+                    f"store schema v{current} is newer than this build "
+                    f"(v{SCHEMA_VERSION}); downgrade is refused loudly — use a matching "
+                    "agentinbox release"
+                )
+            while current < SCHEMA_VERSION:
+                for statement in MIGRATIONS[current]:
                     self._conn.execute(statement)
                 self._conn.execute(
                     "INSERT INTO schema_version (version) VALUES (?)", (current + 1,)
                 )
-            current += 1
+                current += 1
 
     def _schema_version(self) -> int:
         exists = self._conn.execute(
@@ -717,6 +721,21 @@ class SqliteStore:
             payload_digest=digest,
             payload=detail,
         )
+
+
+def _enable_wal(connection: sqlite3.Connection) -> None:
+    """Switch to WAL only when needed; a concurrent opener retries instead of failing."""
+    mode = connection.execute("PRAGMA journal_mode").fetchone()
+    if mode is not None and str(mode[0]).lower() == "wal":
+        return
+    for attempt in range(6):
+        try:
+            connection.execute("PRAGMA journal_mode=WAL")
+            return
+        except sqlite3.OperationalError as exc:
+            if "locked" not in str(exc).lower() or attempt == 5:
+                raise
+            time.sleep(0.05)
 
 
 def _chmod(path: Path, mode: int) -> None:

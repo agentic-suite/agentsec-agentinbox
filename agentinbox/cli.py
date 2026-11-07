@@ -12,12 +12,17 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import getpass
 import json
 import os
+import secrets as _secrets
+import shlex
 import signal
+import subprocess
 import sys
 import threading
 from collections.abc import Callable, Sequence
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, NoReturn
 
@@ -38,15 +43,27 @@ from agentinbox.config import (
     resolve_home,
 )
 from agentinbox.config_audit import record_config_change
+from agentinbox.contract import ContractError, compute_action_identity
 from agentinbox.doctor import render_explain, render_human, run_checks
 from agentinbox.escalation import Escalator
 from agentinbox.events import BufferedEventSink, EventTracer, JsonlEventSink
 from agentinbox.exit_codes import ExitCode
+from agentinbox.flood import FloodGuard
 from agentinbox.gate import gate
+from agentinbox.ingest import ingest
+from agentinbox.resolve import resolve
 from agentinbox.scheduler import Scheduler
 from agentinbox.secrets import SecretError, resolve_ref
-from agentinbox.store import AskStore, ChainHashMismatch, StoreError, parse_iso, utcnow
+from agentinbox.store import (
+    AskStore,
+    ChainHashMismatch,
+    StoreError,
+    parse_iso,
+    to_iso,
+    utcnow,
+)
 from agentinbox.store.loader import load_store
+from agentinbox.trust import ProducerIdentity
 
 PROG = "agentinbox"
 
@@ -215,6 +232,126 @@ def _inbox(args: argparse.Namespace) -> int:
             print(f"{ask.ask_id}  {ask.payload.get('class', 'unknown')}  "
                   f"{ask.payload.get('action', 'unknown')}  expires {ask.expires_at.isoformat()}")
     return int(ExitCode.APPROVED if not pending else ExitCode.PENDING)
+
+
+def _exec_ask_body(args: argparse.Namespace, config: Config) -> dict[str, Any]:
+    class_name = args.ask_class or "irreversible"
+    ask_class = config.classes.get(class_name)
+    if ask_class is None:
+        raise ConfigError(f"unknown class: {class_name!r}")
+    command = args.exec_command
+    if not command or not command.strip():
+        raise ValueError("--exec needs a non-empty command")
+    now = utcnow()
+    ttl = ask_class.ttl_seconds if args.ttl is None else args.ttl
+    if ttl <= 0 or ttl > ask_class.ttl_seconds:
+        raise ConfigError(
+            f"--ttl must be between 1 and the class ceiling ({ask_class.ttl_seconds}s)"
+        )
+    arguments = {"command": command}
+    return {
+        "contract": "ask/1.0",
+        "action_identity": compute_action_identity(
+            tool="shell", action="run_command", arguments=arguments
+        ),
+        "tool": "shell",
+        "action": "run_command",
+        "arguments": arguments,
+        "agent_id": args.agent_id or "agent://agentinbox-cli",
+        "session_id": args.session_id or f"cli_{_secrets.token_hex(8)}",
+        "environment": args.environment or "local",
+        "data_class": "unknown",
+        "class": class_name,
+        "reason_code": "human_gate_required",
+        "policy_ref": {
+            "rule_id": "cli-exec",
+            "policy_version": "v0.1.0",
+            "clause": "local CLI producer",
+        },
+        "criticality": "normal",
+        "requested_by": getpass.getuser(),
+        "expires_at": to_iso(now + timedelta(seconds=ttl)),
+        "context": {},
+    }
+
+
+def _ask(args: argparse.Namespace) -> int:
+    try:
+        config, store = _runtime(args)
+    except (ConfigError, StoreError) as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+    try:
+        return _ask_impl(args, config, store)
+    finally:
+        store.close()
+
+
+def _ask_impl(args: argparse.Namespace, config: Config, store: AskStore) -> int:
+    if args.file:
+        try:
+            body = json.loads(Path(args.file).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            print(f"{PROG}: cannot read --file: {exc}", file=sys.stderr)
+            return int(ExitCode.UNAVAILABLE)
+        if not isinstance(body, dict):
+            print(f"{PROG}: --file must contain a JSON object", file=sys.stderr)
+            return int(ExitCode.UNAVAILABLE)
+    else:
+        try:
+            body = _exec_ask_body(args, config)
+        except ConfigError as exc:
+            print(f"{PROG}: {exc}", file=sys.stderr)
+            return int(ExitCode.UNAVAILABLE)
+        except ValueError as exc:
+            print(f"{PROG}: {exc}", file=sys.stderr)
+            return int(ExitCode.USAGE)
+
+    try:
+        result = ingest(
+            body,
+            store=store,
+            config=config,
+            producer=ProducerIdentity.unauthenticated(),
+            flood_guard=FloodGuard(store, config),
+        )
+    except ContractError as exc:
+        print(f"{PROG}: {exc.field}: {exc.message}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+    except StoreError as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    ask_id = result.ask.ask_id
+    gate_result = gate(
+        store,
+        ask_id,
+        wait=True,
+        timeout=args.timeout,
+        principal=os.environ.get("USER"),
+    )
+    code = gate_result.code
+    outcome = resolve(store, ask_id, now=utcnow(), config=config)
+
+    if args.exec_command:
+        if code is not ExitCode.APPROVED:
+            print(
+                f"{PROG}: {outcome.reason_code}; command not executed",
+                file=sys.stderr,
+            )
+            return int(code)
+        argv = shlex.split(args.exec_command)
+        if not argv:
+            print(f"{PROG}: empty --exec command", file=sys.stderr)
+            return int(ExitCode.USAGE)
+        print(f"{PROG}: approved; executing: {args.exec_command}", file=sys.stderr)
+        return subprocess.run(argv, check=False).returncode  # noqa: S603 - gated argv
+
+    if getattr(args, "json", False):
+        print(json.dumps(outcome.to_dict(), sort_keys=True))
+    else:
+        print(f"{PROG}: ask {ask_id}: {outcome.status} ({outcome.reason_code})")
+    return int(code)
 
 
 def _gate(args: argparse.Namespace) -> int:
@@ -498,6 +635,8 @@ def build_parser() -> argparse.ArgumentParser:
             handler = _answer
         elif command == "inbox":
             handler = _inbox
+        elif command == "ask":
+            handler = _ask
         elif command == "serve":
             handler = _serve
         elif command == "gate":
@@ -526,6 +665,18 @@ def build_parser() -> argparse.ArgumentParser:
             choice.add_argument("--deny", action="store_true")
             sub.add_argument("--reason")
             sub.add_argument("--as", dest="as_name", metavar="NAME")
+        if command == "ask":
+            source = sub.add_mutually_exclusive_group(required=True)
+            source.add_argument("--file", metavar="PATH", help="an ask/1.0 JSON file")
+            source.add_argument(
+                "--exec", dest="exec_command", metavar="COMMAND", help="gate this command"
+            )
+            sub.add_argument("--class", dest="ask_class", default="irreversible")
+            sub.add_argument("--environment", default="local")
+            sub.add_argument("--agent-id", default=None)
+            sub.add_argument("--session-id", default=None)
+            sub.add_argument("--ttl", type=int, default=None)
+            sub.add_argument("--timeout", type=float, default=None)
         if command == "serve":
             sub.add_argument(
                 "--once", action="store_true", help="drain the bus once and exit (tests/cron)"
@@ -577,6 +728,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "answer",
         "inbox",
         "serve",
+        "ask",
         "gate",
         "channels",
         "export",

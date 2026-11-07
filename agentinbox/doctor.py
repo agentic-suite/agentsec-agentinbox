@@ -211,6 +211,9 @@ def render_explain(report: Report, home: Path, config_path: Path) -> str | None:
             f"{channel}={list(values)}" for channel, values in sorted(config.roster[tier].items())
         )
         lines.append(f"  roster {tier}: {principals}")
+    for producer_name in sorted(config.producers):
+        producer = config.producers[producer_name]
+        lines.append(f"  producer {producer_name}: key_ref={producer.key_ref}")
     for channel_name in sorted(config.channels):
         channel = config.channels[channel_name]
         refs = [

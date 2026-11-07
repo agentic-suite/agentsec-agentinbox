@@ -37,6 +37,7 @@ REAL = {
     "channels",
     "export",
     "verify-log",
+    "ask",
 }
 STUBS = [command for command in COMMANDS if command not in REAL]
 
@@ -70,7 +71,7 @@ def test_unimplemented_command_refuses_honestly(
 def test_stub_accepts_foreign_flags_and_still_refuses(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    assert main(["ask", "--file", "ask.json", "--channel", "terminal"]) == 4
+    assert main(["report", "--file", "ask.json", "--channel", "terminal"]) == 4
     assert "not implemented in v0.1.0" in capsys.readouterr().err
 
 
