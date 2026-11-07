@@ -195,8 +195,16 @@ def render_explain(report: Report, home: Path, config_path: Path) -> str | None:
             f"  class {name}: ttl={ask_class.ttl_seconds}s "
             f"warn={ask_class.warn_seconds} self_review={ask_class.self_review} "
             f"ladder={list(ask_class.ladder)} "
-            f"ladder_delays={list(effective_ladder_delays(ask_class))}"
+            f"ladder_delays={list(effective_ladder_delays(ask_class))} "
+            f"flood_burst={ask_class.flood_burst or config.throttle.per_agent_burst} "
+            f"flood_rate_per_min="
+            f"{ask_class.flood_rate_per_min or config.throttle.per_agent_rate_per_min}"
         )
+    lines.append(
+        f"  throttle: burst={config.throttle.per_agent_burst} "
+        f"rate_per_min={config.throttle.per_agent_rate_per_min} "
+        f"window={config.throttle.flood_window_seconds}s"
+    )
     for tier in sorted(config.roster):
         principals = ", ".join(
             f"{channel}={list(values)}" for channel, values in sorted(config.roster[tier].items())

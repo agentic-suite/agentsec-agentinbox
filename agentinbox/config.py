@@ -55,6 +55,8 @@ _CLASS_KEYS = frozenset(
         "require_reason_on_deny",
         "ladder",
         "ladder_delays",
+        "flood_burst",
+        "flood_rate_per_min",
     }
 )
 _THROTTLE_KEYS = frozenset({"per_agent_burst", "per_agent_rate_per_min", "flood_window_seconds"})
@@ -84,6 +86,9 @@ class ClassConfig:
     ladder: tuple[str, ...] = ()
     #: Absolute offsets from ingest, one per ladder tier; the first is always 0.
     ladder_delays: tuple[int, ...] = ()
+    #: Optional per-class flood thresholds; unset inherits ``[throttle]``.
+    flood_burst: int | None = None
+    flood_rate_per_min: int | None = None
 
 
 def default_ladder_delays(count: int, ttl_seconds: int) -> tuple[int, ...]:
@@ -291,6 +296,9 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
             table.get("ladder_delays"), key_path=key_path, ladder=ladder, ttl=ttl
         )
 
+        flood_burst = _optional_positive_int(table, "flood_burst", key_path)
+        flood_rate = _optional_positive_int(table, "flood_rate_per_min", key_path)
+
         classes[name] = ClassConfig(
             ttl_seconds=ttl,
             warn_seconds=warn,
@@ -298,6 +306,8 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
             require_reason_on_deny=require_reason,
             ladder=tuple(ladder),
             ladder_delays=delays,
+            flood_burst=flood_burst,
+            flood_rate_per_min=flood_rate,
         )
     return classes
 
@@ -373,6 +383,12 @@ def _validate_ladders(
                 raise ConfigError(
                     f"[roster.{tier}]: must list at least one channel and principal"
                 )
+
+
+def _optional_positive_int(table: Mapping[str, Any], key: str, path: str) -> int | None:
+    if key not in table:
+        return None
+    return _positive_int(table, key, path)
 
 
 def _positive_int(table: Mapping[str, Any], key: str, path: str) -> int:

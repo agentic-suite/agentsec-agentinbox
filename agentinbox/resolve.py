@@ -96,8 +96,8 @@ def resolve_ask(
             ask_id=ask.ask_id,
             status="deny",
             reason_code=REASON_FLOOD,
-            explanation="denied by flood protection",
-            retryable=False,
+            explanation="denied by flood protection; retry after the flood window",
+            retryable=True,
             action_identity=ask.action_identity,
         )
     if status is AskStatus.CANCELLED:

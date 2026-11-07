@@ -27,6 +27,7 @@ from agentinbox.store.base import (
     CreateResult,
     DeliveryRecord,
     DriverSpec,
+    FloodRecord,
     SchemaVersionError,
     SessionExport,
     StoreCapabilities,
@@ -466,6 +467,58 @@ class SqliteStore:
                 )
             )
             return revoked
+
+    def record_flood(self, flood: FloodRecord) -> bool:
+        with self._transaction():
+            existing = self._conn.execute(
+                "SELECT 1 FROM floods WHERE flood_id = ?", (flood.flood_id,)
+            ).fetchone()
+            if existing is not None:
+                self._conn.execute(
+                    "UPDATE floods SET denied_count = ?, window_end = ?, at = ? "
+                    "WHERE flood_id = ?",
+                    (
+                        flood.denied_count,
+                        to_iso(flood.window_end),
+                        to_iso(flood.at),
+                        flood.flood_id,
+                    ),
+                )
+                return False
+            self._conn.execute(
+                "INSERT INTO floods (flood_id, agent_id, session_id, window_start,"
+                " window_end, denied_count, first_ask_id, at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    flood.flood_id,
+                    flood.agent_id,
+                    flood.session_id,
+                    to_iso(flood.window_start),
+                    to_iso(flood.window_end),
+                    flood.denied_count,
+                    flood.first_ask_id,
+                    to_iso(flood.at),
+                ),
+            )
+            return True
+
+    def get_flood(self, flood_id: str) -> FloodRecord | None:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM floods WHERE flood_id = ?", (flood_id,)
+            ).fetchone()
+        if row is None:
+            return None
+        return FloodRecord(
+            flood_id=row["flood_id"],
+            agent_id=row["agent_id"],
+            session_id=row["session_id"],
+            window_start=parse_iso(row["window_start"]),
+            window_end=parse_iso(row["window_end"]),
+            denied_count=int(row["denied_count"]),
+            first_ask_id=row["first_ask_id"],
+            at=parse_iso(row["at"]),
+        )
 
     def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]:
         with self._lock:

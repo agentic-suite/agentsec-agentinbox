@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import itertools
 import threading
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from agentinbox.store import (
@@ -349,6 +350,30 @@ def check_escalation_cas(store) -> None:  # type: ignore[no-untyped-def]
         )
         == -1
     )
+
+
+def check_flood_accounting(store) -> None:  # type: ignore[no-untyped-def]
+    from agentinbox.store import FloodRecord
+
+    flood = FloodRecord(
+        flood_id="flood_1",
+        agent_id="agent://conformance/1",
+        session_id="sess_0",
+        window_start=T0,
+        window_end=T0 + timedelta(seconds=30),
+        denied_count=1,
+        first_ask_id="ask_0000000000000000",
+        at=T0,
+    )
+    assert store.record_flood(flood) is True
+    assert store.get_flood(flood.flood_id) == flood
+
+    updated = replace(flood, denied_count=7)
+    assert store.record_flood(updated) is False
+    stored = store.get_flood(flood.flood_id)
+    assert stored is not None
+    assert stored.denied_count == 7
+    assert store.get_flood("flood_missing") is None
 
 
 def check_capabilities_fail_closed(store) -> None:  # type: ignore[no-untyped-def]

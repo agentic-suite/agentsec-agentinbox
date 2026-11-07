@@ -21,6 +21,7 @@ from agentinbox.store.base import (
     CreateResult,
     DeliveryRecord,
     DriverSpec,
+    FloodRecord,
     SessionExport,
     StoreCapabilities,
     StoreError,
@@ -45,6 +46,7 @@ class MemoryStore:
         self._transitions: dict[str, list[TransitionRecord]] = {}
         self._claims: dict[str, ClaimRecord] = {}
         self._deliveries: dict[str, DeliveryRecord] = {}
+        self._floods: dict[str, FloodRecord] = {}
         self._audit: list[AuditEntry] = []
         self._closed = False
 
@@ -225,6 +227,18 @@ class MemoryStore:
                 )
             )
             return revoked
+
+    def record_flood(self, flood: FloodRecord) -> bool:
+        with self._lock:
+            self._require_open()
+            created = flood.flood_id not in self._floods
+            self._floods[flood.flood_id] = flood
+            return created
+
+    def get_flood(self, flood_id: str) -> FloodRecord | None:
+        with self._lock:
+            self._require_open()
+            return self._floods.get(flood_id)
 
     def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]:
         with self._lock:

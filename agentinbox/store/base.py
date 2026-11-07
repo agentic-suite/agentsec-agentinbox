@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Final, Protocol
 
 #: Version of the conformance suite a driver must declare to be admitted.
-CONFORMANCE_VERSION: Final = "4"
+CONFORMANCE_VERSION: Final = "5"
 
 
 class StoreError(Exception):
@@ -150,6 +150,20 @@ class DeliveryRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class FloodRecord:
+    """One aggregated flood window (one event, one digest, N denials)."""
+
+    flood_id: str
+    agent_id: str
+    session_id: str | None
+    window_start: datetime
+    window_end: datetime
+    denied_count: int
+    first_ask_id: str | None
+    at: datetime
+
+
+@dataclass(frozen=True, slots=True)
 class AuditEntry:
     """The hash-chained evidence row."""
 
@@ -232,6 +246,12 @@ class AskStore(Protocol):
         ...
 
     def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]: ...
+
+    def record_flood(self, flood: FloodRecord) -> bool:
+        """Insert or update a flood window; ``True`` only for the creating call."""
+        ...
+
+    def get_flood(self, flood_id: str) -> FloodRecord | None: ...
 
     def export_session(self, session_id: str) -> SessionExport: ...
 

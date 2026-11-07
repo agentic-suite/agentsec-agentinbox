@@ -13,11 +13,14 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
+from agentinbox.bus.base import AskBus, JobKind, new_job
 from agentinbox.config import ClassConfig, Config
 from agentinbox.contract import AskContract, ContractError, compute_action_identity, parse_ask
 from agentinbox.escalation import initial_escalation
+from agentinbox.flood import FLOOD_REASON, FloodGuard
+from agentinbox.lifecycle import transition
 from agentinbox.redaction import RedactionReceipt, redact_value
-from agentinbox.store import AskRecord, AskStore, canonical_json, utcnow
+from agentinbox.store import AskRecord, AskStatus, AskStore, canonical_json, utcnow
 from agentinbox.trust import ProducerIdentity, TrustMap, classify_trust
 
 TOTAL_CAP_BYTES = 256 * 1024
@@ -139,6 +142,8 @@ def ingest(
     config: Config,
     producer: ProducerIdentity,
     now: datetime | None = None,
+    bus: AskBus | None = None,
+    flood_guard: FloodGuard | None = None,
 ) -> IngestResult:
     moment = now or utcnow()
     contract = validate_ask(raw, now=moment, config=config)
@@ -197,6 +202,40 @@ def ingest(
         tier=tier,
     )
     result = store.create_or_get_by_identity(record)
+    if result.created and flood_guard is not None:
+        decision = flood_guard.check(result.ask, producer=producer, now=moment)
+        if decision.denied:
+            transition(
+                store,
+                result.ask.ask_id,
+                AskStatus.FLOOD_DENIED,
+                kind="flood-denied",
+                at=moment,
+                reason=FLOOD_REASON,
+                detail={
+                    "retry_after_s": decision.retry_after_s,
+                    "flood_id": decision.flood_id,
+                },
+            )
+            denied = store.get(result.ask.ask_id)
+            assert denied is not None
+            return IngestResult(
+                ask=denied,
+                created=True,
+                trust=trust,
+                receipts=receipts,
+            )
+
+    if result.created and bus is not None:
+        # One delivery job per *new* ask: a deduplicated retry never re-notifies.
+        bus.publish(
+            new_job(
+                JobKind.DELIVER,
+                ask_id=result.ask.ask_id,
+                now=moment,
+                job_id=f"deliver:{result.ask.ask_id}",
+            )
+        )
     return IngestResult(
         ask=result.ask,
         created=result.created,

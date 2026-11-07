@@ -20,8 +20,10 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from agentinbox.answers import AnswerRejected, AnswerRequest, AnswerVerifier
+from agentinbox.bus.base import AskBus
 from agentinbox.config import Config
 from agentinbox.contract import ContractError
+from agentinbox.flood import FloodGuard
 from agentinbox.ingest import TOTAL_CAP_BYTES, ingest
 from agentinbox.store import AskStatus, AskStore, StoreError, utcnow
 from agentinbox.trust import ProducerIdentity
@@ -66,12 +68,16 @@ class _ApiServer(ThreadingHTTPServer):
         config: Config,
         token: str,
         now: Callable[[], Any],
+        bus: AskBus | None = None,
+        flood_guard: FloodGuard | None = None,
     ) -> None:
         super().__init__(address, _Handler)
         self.store = store
         self.config = config
         self.token = token
         self.now = now
+        self.bus = bus
+        self.flood_guard = flood_guard
         self.waiters: dict[str, threading.Event] = {}
         self.waiters_lock = threading.Lock()
 
@@ -120,6 +126,8 @@ class _Handler(BaseHTTPRequestHandler):
                 config=self.server.config,
                 producer=producer,
                 now=self.server.now(),
+                bus=self.server.bus,
+                flood_guard=self.server.flood_guard,
             )
         except ContractError as exc:
             self._error(HTTPStatus(exc.status_code), exc.field, exc.message)
@@ -278,10 +286,23 @@ def start_api(
     token: str,
     port: int = 0,
     now: Callable[[], Any] = utcnow,
+    bus: AskBus | None = None,
+    flood_guard: FloodGuard | None = None,
 ) -> IngestAPI:
     """Bind to loopback and start serving in a daemon thread."""
+    guard = (
+        flood_guard
+        if flood_guard is not None
+        else FloodGuard(store, config, now=now, bus=bus)
+    )
     server = _ApiServer(
-        ("127.0.0.1", port), store=store, config=config, token=token, now=now
+        ("127.0.0.1", port),
+        store=store,
+        config=config,
+        token=token,
+        now=now,
+        bus=bus,
+        flood_guard=guard,
     )
     thread = threading.Thread(
         target=lambda: server.serve_forever(poll_interval=0.05), daemon=True

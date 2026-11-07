@@ -164,6 +164,12 @@ A milestone is **closed** only when all of these hold:
   every tier has a roster), `escalate_at` fired by the M4 scheduler, atomic tier change + prior-tier claim
   revocation, tier-aware authorization, one `renotify` job/notification per tier, `expires_at` immutable
   through exhaustion (SC-12), and digested `inbox-config-changed` evidence. Next: **M12** (`12.D0` flood design).
+- **2026-11-08 — M12 Flood guard closed.** Issues #238–#248. **Gate:** 509 tests pass · coverage
+  **95.79%** · `ruff` clean · `mypy --strict` clean · DCO signed. Coalescing first (retries never consume tokens), then per-key token buckets
+  (`agent|session|environment|producer-uid`) with per-class overrides; over-threshold asks auto-deny with
+  `ask_flood_throttled` + `retry_after_s`; one `ask-flood` event and one rolling digest per window; the
+  200-ask pack yields 180 denies, 1 event, 1 digest; a 20-action migration survives; flood denials can never
+  be resurrected. Next: **M13** (`13.D0` webhook design).
 
 ## PRD coverage matrix (every doc 00–30)
 
