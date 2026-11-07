@@ -161,11 +161,21 @@ class SqliteStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         _chmod(self.path.parent, 0o700)
         if not self.path.exists():
-            # A *new* db is created private. An *existing* db is never re-chmod'ed:
-            # a permission-locked store must FAIL CLOSED, not silently self-heal
-            # (M32 field finding FT-SC-24-LIVE / Defect #5).
+            # A *new* db is created private (M32 field finding FT-SC-24-LIVE).
             descriptor = os.open(self.path, os.O_CREAT | os.O_RDWR, 0o600)
             os.close(descriptor)
+        else:
+            # Tighten a *readable* db that is more permissive than 0600 — but
+            # NEVER chmod an existing locked file: a permission-locked store
+            # must FAIL CLOSED, not silently self-heal (Defect #5). The
+            # unreadable case surfaces below as sqlite3.OperationalError.
+            try:
+                mode = stat.S_IMODE(self.path.stat().st_mode)
+            except OSError as exc:
+                raise StoreError(f"store unavailable: {exc}") from exc
+            if mode & 0o444:
+                # owner-readable but too permissive (e.g. 0644): tighten only.
+                _chmod(self.path, 0o600)
 
         try:
             self._conn = sqlite3.connect(

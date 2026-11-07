@@ -31,11 +31,13 @@ ____________________ test_schema_mismatch_refuses_downgrade ____________________
   |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
   |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 77, in collect_unraisable
   |     raise ExceptionGroup("multiple unraisable exception warnings", errors)
-  | ExceptionGroup: multiple unraisable exception warnings (7 sub-exceptions)
+  | ExceptionGroup: multiple unraisable exception warnings (3 sub-exceptions)
   +-+---------------- 1 ----------------
     | Traceback (most recent call last):
-    |   File "<frozen os>", line 717, in __getitem__
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa62d8d60>
+    |   File "/usr/local/lib/python3.13/argparse.py", line 1666, in _check_conflict
+    |     if option_string in self._option_string_actions:
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa88147c0>
     | 
     | The above exception was the direct cause of the following exception:
     | 
@@ -43,13 +45,15 @@ ____________________ test_schema_mismatch_refuses_downgrade ____________________
     |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
     |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
     |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa62d8d60>
+    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa88147c0>
     | Enable tracemalloc to get traceback where the object was allocated.
     | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
     +---------------- 2 ----------------
     | Traceback (most recent call last):
-    |   File "<frozen os>", line 717, in __getitem__
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa62d8a90>
+    |   File "/usr/local/lib/python3.13/argparse.py", line 1666, in _check_conflict
+    |     if option_string in self._option_string_actions:
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa88146d0>
     | 
     | The above exception was the direct cause of the following exception:
     | 
@@ -57,13 +61,15 @@ ____________________ test_schema_mismatch_refuses_downgrade ____________________
     |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
     |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
     |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa62d8a90>
+    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa88146d0>
     | Enable tracemalloc to get traceback where the object was allocated.
     | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
     +---------------- 3 ----------------
     | Traceback (most recent call last):
-    |   File "<frozen os>", line 717, in __getitem__
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa62d8b80>
+    |   File "/usr/local/lib/python3.13/argparse.py", line 1666, in _check_conflict
+    |     if option_string in self._option_string_actions:
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa88145e0>
     | 
     | The above exception was the direct cause of the following exception:
     | 
@@ -71,73 +77,11 @@ ____________________ test_schema_mismatch_refuses_downgrade ____________________
     |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
     |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
     |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa62d8b80>
-    | Enable tracemalloc to get traceback where the object was allocated.
-    | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
-    +---------------- 4 ----------------
-    | Traceback (most recent call last):
-    |   File "<frozen os>", line 717, in __getitem__
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa62d89a0>
-    | 
-    | The above exception was the direct cause of the following exception:
-    | 
-    | Traceback (most recent call last):
-    |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
-    |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
-    |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa62d89a0>
-    | Enable tracemalloc to get traceback where the object was allocated.
-    | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
-    +---------------- 5 ----------------
-    | Traceback (most recent call last):
-    |   File "<frozen os>", line 717, in __getitem__
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa62d88b0>
-    | 
-    | The above exception was the direct cause of the following exception:
-    | 
-    | Traceback (most recent call last):
-    |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
-    |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
-    |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa62d88b0>
-    | Enable tracemalloc to get traceback where the object was allocated.
-    | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
-    +---------------- 6 ----------------
-    | Traceback (most recent call last):
-    |   File "<frozen os>", line 717, in __getitem__
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa62d87c0>
-    | 
-    | The above exception was the direct cause of the following exception:
-    | 
-    | Traceback (most recent call last):
-    |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
-    |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
-    |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa62d87c0>
-    | Enable tracemalloc to get traceback where the object was allocated.
-    | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
-    +---------------- 7 ----------------
-    | Traceback (most recent call last):
-    |   File "<frozen os>", line 714, in __getitem__
-    | KeyError: b'LANGUAGE'
-    | 
-    | During handling of the above exception, another exception occurred:
-    | 
-    | Traceback (most recent call last):
-    |   File "<frozen os>", line 717, in __getitem__
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa6c06020>
-    | 
-    | The above exception was the direct cause of the following exception:
-    | 
-    | Traceback (most recent call last):
-    |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
-    |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
-    |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa6c06020>
+    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa88145e0>
     | Enable tracemalloc to get traceback where the object was allocated.
     | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
     +------------------------------------
-1 failed, 10 passed in 5.43s
+1 failed, 10 passed in 5.37s
   + Exception Group Traceback (most recent call last):
   |   File "<frozen runpy>", line 203, in _run_module_as_main
   |   File "<frozen runpy>", line 88, in _run_code
@@ -190,13 +134,13 @@ ____________________ test_schema_mismatch_refuses_downgrade ____________________
   |     ~~~~~~~~~~~~~~~~~~^^^^^^^^
   |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 77, in collect_unraisable
   |     raise ExceptionGroup("multiple unraisable exception warnings", errors)
-  | ExceptionGroup: multiple unraisable exception warnings (7 sub-exceptions)
+  | ExceptionGroup: multiple unraisable exception warnings (4 sub-exceptions)
   +-+---------------- 1 ----------------
     | Traceback (most recent call last):
     |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 29, in gc_collect_harder
     |     gc.collect()
     |     ~~~~~~~~~~^^
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa62dab60>
+    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa8815c60>
     | 
     | The above exception was the direct cause of the following exception:
     | 
@@ -204,7 +148,7 @@ ____________________ test_schema_mismatch_refuses_downgrade ____________________
     |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
     |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
     |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa62dab60>
+    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa8815c60>
     | Enable tracemalloc to get traceback where the object was allocated.
     | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
     +---------------- 2 ----------------
@@ -212,7 +156,7 @@ ____________________ test_schema_mismatch_refuses_downgrade ____________________
     |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 29, in gc_collect_harder
     |     gc.collect()
     |     ~~~~~~~~~~^^
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa62d9f30>
+    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa9286020>
     | 
     | The above exception was the direct cause of the following exception:
     | 
@@ -220,7 +164,7 @@ ____________________ test_schema_mismatch_refuses_downgrade ____________________
     |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
     |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
     |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa62d9f30>
+    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa9286020>
     | Enable tracemalloc to get traceback where the object was allocated.
     | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
     +---------------- 3 ----------------
@@ -228,7 +172,7 @@ ____________________ test_schema_mismatch_refuses_downgrade ____________________
     |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 29, in gc_collect_harder
     |     gc.collect()
     |     ~~~~~~~~~~^^
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa62d88b0>
+    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa8a42980>
     | 
     | The above exception was the direct cause of the following exception:
     | 
@@ -236,7 +180,7 @@ ____________________ test_schema_mismatch_refuses_downgrade ____________________
     |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
     |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
     |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa62d88b0>
+    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa8a42980>
     | Enable tracemalloc to get traceback where the object was allocated.
     | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
     +---------------- 4 ----------------
@@ -244,7 +188,7 @@ ____________________ test_schema_mismatch_refuses_downgrade ____________________
     |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 29, in gc_collect_harder
     |     gc.collect()
     |     ~~~~~~~~~~^^
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa62d8b80>
+    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa8a42f20>
     | 
     | The above exception was the direct cause of the following exception:
     | 
@@ -252,55 +196,7 @@ ____________________ test_schema_mismatch_refuses_downgrade ____________________
     |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
     |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
     |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa62d8b80>
-    | Enable tracemalloc to get traceback where the object was allocated.
-    | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
-    +---------------- 5 ----------------
-    | Traceback (most recent call last):
-    |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 29, in gc_collect_harder
-    |     gc.collect()
-    |     ~~~~~~~~~~^^
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa62d8d60>
-    | 
-    | The above exception was the direct cause of the following exception:
-    | 
-    | Traceback (most recent call last):
-    |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
-    |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
-    |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa62d8d60>
-    | Enable tracemalloc to get traceback where the object was allocated.
-    | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
-    +---------------- 6 ----------------
-    | Traceback (most recent call last):
-    |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 29, in gc_collect_harder
-    |     gc.collect()
-    |     ~~~~~~~~~~^^
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa6c06020>
-    | 
-    | The above exception was the direct cause of the following exception:
-    | 
-    | Traceback (most recent call last):
-    |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
-    |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
-    |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa6c06020>
-    | Enable tracemalloc to get traceback where the object was allocated.
-    | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
-    +---------------- 7 ----------------
-    | Traceback (most recent call last):
-    |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 29, in gc_collect_harder
-    |     gc.collect()
-    |     ~~~~~~~~~~^^
-    | ResourceWarning: unclosed database in <sqlite3.Connection object at 0xffffa63bf010>
-    | 
-    | The above exception was the direct cause of the following exception:
-    | 
-    | Traceback (most recent call last):
-    |   File "/usr/local/lib/python3.13/site-packages/_pytest/unraisableexception.py", line 63, in collect_unraisable
-    |     warnings.warn(pytest.PytestUnraisableExceptionWarning(msg))
-    |     ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa63bf010>
+    | pytest.PytestUnraisableExceptionWarning: Exception ignored in: <sqlite3.Connection object at 0xffffa8a42f20>
     | Enable tracemalloc to get traceback where the object was allocated.
     | See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
     +------------------------------------

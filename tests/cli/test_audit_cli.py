@@ -72,14 +72,18 @@ def test_verify_log_is_read_only_on_an_old_store(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     home = make_home(tmp_path)
+    # sqlite3's `with connection:` commits on exit; contextlib.closing only closes —
+    # commit explicitly so the hand-made schema survives.
     with contextlib.closing(sqlite3.connect(home / "inbox.db")) as connection:
         connection.execute("CREATE TABLE schema_version (version INTEGER NOT NULL)")
         connection.execute("INSERT INTO schema_version VALUES (1)")
+        connection.commit()
 
     assert main(["--home", str(home), "verify-log"]) == 0
     assert "ok: 0 audit entries verify" in capsys.readouterr().out
 
     with contextlib.closing(sqlite3.connect(home / "inbox.db")) as connection:
+        # verify-log must not have migrated: still v1, still no audit table.
         version = connection.execute("SELECT MAX(version) FROM schema_version").fetchone()[0]
         tables = {
             row[0]

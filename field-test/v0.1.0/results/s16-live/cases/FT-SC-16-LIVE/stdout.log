@@ -1,4 +1,4 @@
-ASKS: ask_2cf460882c428bca   status=pending   ttl=0m59s
+ASKS: ask_109b42a13278989c   status=pending   ttl=0m59s
 fingerprint: sha256:824319222009…
 READINESS: yellow · missing completeness, target_specificity, reversibility_clarity, trust_provenance · contradictions: none · evidence: strong
 
@@ -43,8 +43,8 @@ SESSION SO FAR
   transitions: 1
 
 Answer with: agentinbox answer <id> --approve|--deny  (q leaves it pending)
-type the action name to confirm (run_command): ask ask_2cf460882c428bca: approved (assumed principal)
-ASKS: ask_8e0945c4f4bb4657   status=pending   ttl=0m59s
+type the action name to confirm (run_command): ask ask_109b42a13278989c: approved (assumed principal)
+ASKS: ask_0d2f998020bbcf3b   status=pending   ttl=0m59s
 fingerprint: sha256:824319222009…
 READINESS: yellow · missing completeness, target_specificity, reversibility_clarity, trust_provenance · contradictions: none · evidence: strong
 
@@ -81,7 +81,7 @@ SESSION SO FAR
   tier: unknown
   escalations: none
   prior asks: none
-  similar cases: precedent only: ask_2cf460882c428bca approved (env=production, criticality=normal)
+  similar cases: precedent only: ask_109b42a13278989c approved (env=production, criticality=normal)
   prior objection: none
   session tail: unknown
   flags: unknown
@@ -89,4 +89,4 @@ SESSION SO FAR
   transitions: 1
 
 Answer with: agentinbox answer <id> --approve|--deny  (q leaves it pending)
-ask ask_8e0945c4f4bb4657: denied (assumed principal)
+ask ask_0d2f998020bbcf3b: denied (assumed principal)

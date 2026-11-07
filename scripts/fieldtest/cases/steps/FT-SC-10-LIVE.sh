@@ -4,6 +4,9 @@
 # The pytest suites mock the crash; this case does it for real on the host.
 LIVE="$FT_CASE_DIR/live"
 HOME_DIR="$LIVE/home"
+# Fresh home every run: the prior run's db (same session id) would coexist with
+# this run's ask and break the exactly-once assertion (found in re-runs).
+rm -rf "$LIVE"
 mkdir -p "$LIVE"
 "$FT_CLI" --home "$HOME_DIR" init >/dev/null 2>&1 || true
 

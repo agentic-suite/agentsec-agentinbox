@@ -88,7 +88,7 @@
           "cmd": "bash -c \n  \"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/agentinbox\" --home \"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s16-live/cases/FT-SC-24-LIVE/live/locked\" inbox >/dev/null 2>&1\n  rc=$?\n  test $rc -eq 4 && echo FAIL-CLOSED-4",
           "grounded": true,
           "name": "fault-locked-store-fails-closed",
-          "ok": false
+          "ok": true
         },
         {
           "cmd": "bash -c \n  test ! -x \"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s16-live/cases/FT-SC-24-LIVE/live/corrupt/allow-marker\" && echo NO-SILENT-ALLOW",
@@ -112,7 +112,7 @@
       "llm_captured": false,
       "llm_required": false,
       "run_id": "s16-live",
-      "status": "fail"
+      "status": "pass"
     }
   ],
   "env": {
@@ -125,13 +125,13 @@
     "run_id": "s16-live",
     "version": "v0.1.0"
   },
-  "generated_at": "2026-11-07T19:38:49.559322+00:00",
-  "green": false,
+  "generated_at": "2026-11-07T19:53:06.338021+00:00",
+  "green": true,
   "run_id": "s16-live",
   "totals": {
     "blocked": 0,
-    "fail": 1,
+    "fail": 0,
     "over_claimed": 0,
-    "pass": 2
+    "pass": 3
   }
 }

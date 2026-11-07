@@ -342,6 +342,9 @@ def test_export_packet_cli_paths(
         approve(store, ask)
         close(store, ask.ask_id, state="executed", principal="ci")
         monkeypatch.setattr(cli, "_runtime", lambda args: (config(), store))
+        # _export now closes the store on every exit path; give it a fresh
+        # store per call so the fixture's store is never closed under it.
+        monkeypatch.setattr(cli, "_close_store", lambda _store: None)
         args = Namespace(
             ask=ask.ask_id, packet=True, out=None, format="jsonl", session=None
         )
