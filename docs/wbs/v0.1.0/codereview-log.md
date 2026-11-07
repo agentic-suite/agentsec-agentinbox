@@ -292,3 +292,17 @@ regression test):
 | 2026-11-07 | M32 | 32.CR | A permission-locked store silently self-healed: `SqliteStore.__init__` re-chmod'ed an existing db to 0600 before connecting, so a deliberate lockout exited 0 (FT-SC-24-LIVE, Defect #5) | High | chmod only on create; an existing db is tightened only when readable-but-permissive; an owner-unreadable db raises `StoreError` and the CLI exits 4. Locked-store regression test added |
 | 2026-11-07 | M32 | 32.CR | CLI `gate` returned from its fail-closed exception path without closing the store, leaving the sqlite connection to GC (promoted to an unraisable warning by pytest 9) | Medium | `_gate` now closes on the exception path and in a `finally` around card/render output; direct test asserts close on a forced gate failure |
 | 2026-11-07 | M32 | 32.T/32.C/32.L | Milestone gate run: ruff clean, mypy --strict clean, **931 passed**, coverage **95.08%** (required 95%) | — | Gate green; the four container-only `ResourceWarning` reds are recorded as KNOWN test-setup/env in the field-test report, not product failures |
+
+## M33 release-readiness review (2026-11-07)
+
+| Date | M | Item | Finding | Severity | Resolution |
+|---|---|---|---|---|---|
+| 2026-11-07 | M33 | 33.2 | `python -m agentinbox.packs`, `scanner`, and `posture` had no `__main__` guard, so the advertised CI security gates were silent no-ops | High | Added `__main__` guards; subprocess tests pin the real entry points |
+| 2026-11-07 | M33 | 33.2 | The evidence scanner could only read a store or archive, not a release/evidence tree | Medium | Added read-only `scan_path`/`--path`; wired into `make evidence` and CI |
+| 2026-11-07 | M33 | 33.1 | PRD 19 still claimed Claude Code/Codex as field-tested after the s15 suite was removed | High | Downgraded to documented/capture-verified; matrix is generated and CI-checked |
+| 2026-11-07 | M33 | 33.5 | The demo's first draft used `load_store` (entry-point driver) and a callable/`datetime` mix-up | Medium | Uses `SqliteStore` directly and passes `utcnow` as the callable; demo runs green |
+| 2026-11-07 | M33 | 33.3 | README still said "in development" and linked a pre-release status | Medium | Updated to released state with the known-issue caveat; identity guard updated |
+| 2026-11-07 | M33 | 33.4 | Release artifacts were built at `0.1.0.dev0` | Medium | Bumped to `0.1.0`, rebuilt, published to PyPI, tagged `v0.1.0` |
+| 2026-11-07 | M33 | 33.4 | Git-history secret scan had not been run | High | TruffleHog: 0 verified; gitleaks: 8 false positives (`prompt_cache_key` UUIDs); recorded in the security audit |
+
+**No open findings.** Gate on the release commit: ruff clean, `mypy --strict` clean, 975 passed, coverage 95.03%, claims lint 0, evidence scan 0, matrix current.
