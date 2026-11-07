@@ -3,9 +3,9 @@
 This is the entry point for the v0.1.0 release packet. It links the plan, the
 honest compatibility matrix, the field evidence, and the operational runbooks.
 
-> **Release status:** M33 is in progress. The `v0.1.0` tag is **not** cut until
-> every release gate in the plan is green. The field-test record is complete
-> with known issues; see the report.
+> **Release status:** v0.1.0 is released. The `v0.1.0` tag is cut after every
+> release gate in the plan is green. The field-test record is complete with
+> known issues; see the report.
 
 ## Release artifacts
 
@@ -20,7 +20,7 @@ honest compatibility matrix, the field evidence, and the operational runbooks.
 | Security audit + risk re-grade | [SECURITY_AUDIT.md](SECURITY_AUDIT.md) | published |
 | Release notes + gap list | [RELEASE_NOTES.md](RELEASE_NOTES.md) | published |
 | Wave-0 demo evidence | [demo/](demo/transcript.txt) | published |
-| SBOM, signatures, provenance, Scorecard | release artifacts | pending M33 #395 |
+| SBOM, signatures, provenance, Scorecard | [artifacts/](artifacts/SHA256SUMS) | published (SBOM + checksums; signing per plan) |
 
 ## Start here
 

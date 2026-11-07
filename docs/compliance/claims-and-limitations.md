@@ -1,7 +1,8 @@
-# Claims and limitations — v0.1.0 (M0–M20)
+# Claims and limitations — v0.1.0
 
 **BLUF:** code conformance is not a field-test claim. This document separates what the repository proves with
-tests from what still requires the field-test box, real harnesses, and the release pipeline.
+tests from what the field test proved, and what remains unproven. The v0.1.0 field test is complete **with
+known issues**; the release notes and the field-test report carry the honest verdict.
 
 ## Verified in this repository (tests + gates)
 
@@ -24,19 +25,22 @@ tests from what still requires the field-test box, real harnesses, and the relea
 
 | Area | Why | Where it is verified |
 |---|---|---|
-| Zero-context study (≥9/10, <15 s), injection corpus approval rate | needs human participants | M24/M32 field study (PRD 21) |
-| SC-01–SC-26 (and SC-68–SC-90) executed end-to-end | needs the field-test box | M24 (baseline) and M32 (final) |
-| Real agentwatch/agentpolicy joins | only contract fixtures here | M16/M17 integration on the field-test box |
-| Claude Code / Codex recipes | documented, not field-tested | M24 (labels updated at M25) |
-| `serve --install` units, backup/restore, `report`, offline day, benches | M21 not built | M21, re-run at M24/M32 |
-| Signed releases, SBOM, SLSA/Sigstore, OpenSSF Scorecard, claims lint | release pipeline | M33 (PRD 20/23) |
+| Zero-context study (≥9/10, <15 s), injection corpus approval rate | needs human participants | **Not run** — no cohort; the study claim is not made (M32) |
+| SC-01–SC-26 (and SC-68–SC-90) executed end-to-end | needs the field-test box | M32 field test: 47 PASS / 6 FAIL (4 KNOWN env + 2 study by design) |
+| Real agentwatch/agentpolicy joins | only contract fixtures here | M32 Wave-0 demo (agentpolicy → ask → deny → events → export/verify) |
+| Claude Code / Codex recipes | documented, not field-tested | **Not field-tested** — s15 suite removed; 11 LLM pairs retained |
+| `serve --install` units, backup/restore, `report`, offline day, benches | M21 built | M21 + M32; benches published in the release notes |
+| Signed releases, SBOM, SLSA/Sigstore, OpenSSF Scorecard, claims lint | release pipeline | M33: claims lint + evidence scanner + generated matrix are live; SBOM/checksums published |
 | Chat adapters (Matrix/Slack/Teams), web UI, server mode | not shipped in v0.1.0 | v0.1.x / v0.2.0 |
 
 ## Honest labels for the compatibility matrix
 
 Use only: **field-tested** (executed on the field-test box with recorded verdicts), **conformance-tested**
 (green `agentinbox conformance` + the relevant fixtures), **documented** (recipe exists, not field-tested),
-**not-supported**. M25 publishes the matrix from these labels; until then, treat every recipe as documented.
+**not-supported**. The v0.1.0 matrix is generated and published at
+[`docs/release/v0.1.0/COMPATIBILITY.md`](../release/v0.1.0/COMPATIBILITY.md); the agentpolicy reference path
+is field-tested by the Wave-0 demo, and the Claude Code / Codex CLI rows are **documented /
+capture-verified, not field-tested**.
 
 ## Standing limitations
 
