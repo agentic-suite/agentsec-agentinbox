@@ -23,7 +23,9 @@ LEGAL_EDGES: Mapping[AskStatus, frozenset[AskStatus]] = {
 }
 
 #: Evidence-only observations that remain meaningful after the decision (movement ≠ truth).
-POST_TERMINAL_OBSERVATIONS = frozenset({"late-answer", "delivery-skipped", "delivery-failed"})
+POST_TERMINAL_OBSERVATIONS = frozenset(
+    {"late-answer", "delivery-skipped", "delivery-failed", "outcome", "divergence-acked"}
+)
 
 
 class LifecycleError(Exception):

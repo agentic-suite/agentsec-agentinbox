@@ -332,6 +332,17 @@ every M26–M31 milestone carries its own gate. The 32.7 regression baseline bec
   extend. Narratives reconstruct the decision from stored transitions; timelines export with the
   bundle (`bundle/1.0`). Next: **M29** (`29.D0` outcome-closure design).
 
+- **2026-11-07 — M29 Outcome closure & execution proof closed.** Issues #341–#352. Commit `TBD`.
+  **Gate:** 897 tests pass · coverage **95.06%** · `ruff` clean · `mypy --strict` clean.
+  Approved asks close via post-terminal `outcome` observations (`executed/failed/cancelled/rolled_back/
+  superseded`); status and decision never change and silence stays `unknown`. Receipts are whitelisted,
+  capped, and credential-scanned. Approved-vs-executed comparison is derived (`match/partial/exceeded/
+  divergent/unknown`) and names exceeding resources; divergence writes a chained `outcome-divergence`
+  and requires explicit acknowledgement. `decision-packet/1.0` exports ask, decision, narrative, outcome,
+  timeline, trace, and the audit chain with offline verification (`export --ask --packet`). Trace joins
+  ask→policy→decision→execution→divergence; per-class closure SLA surfaces `outcome-pending-past-sla`
+  in doctor without auto-closing. Next: **M30** (`30.D0` grants/compression design).
+
 ## PRD coverage matrix (every doc 00–30)
 
 | PRD | Topic | Milestone(s) |

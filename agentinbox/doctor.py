@@ -69,8 +69,32 @@ def run_checks(home: Path, config_path: Path) -> Report:
         _keys(config),
         _clock(),
         _clock_skew(home / "inbox.db"),
+        _outcome_sla(home, config),
     )
     return Report(checks=checks, config=config)
+
+
+def _outcome_sla(home: Path, config: Config | None) -> Check:
+    if config is None:
+        return Check("outcome-sla", WARN, "config invalid; SLA not evaluated")
+    database = home / "inbox.db"
+    if not database.exists():
+        return Check("outcome-sla", OK, "no store yet")
+    from agentinbox.outcomes import outcome_sla_pending
+    from agentinbox.store.loader import load_store
+
+    try:
+        store = load_store(config.store.driver, home=home)
+    except Exception as exc:  # pragma: no cover - driver/setup failure
+        return Check("outcome-sla", WARN, f"cannot open store: {exc}")
+    try:
+        pending = outcome_sla_pending(store, config)
+    finally:
+        store.close()
+    if pending:
+        ids = ", ".join(item["ask_id"] for item in pending)
+        return Check("outcome-sla", WARN, f"{len(pending)} approved ask(s) past closure SLA: {ids}")
+    return Check("outcome-sla", OK, "no approved ask past its closure SLA")
 
 
 def _platform() -> Check:

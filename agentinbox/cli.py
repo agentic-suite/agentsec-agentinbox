@@ -78,6 +78,7 @@ from agentinbox.ops import (
     restore_home,
     write_daemon_lock,
 )
+from agentinbox.outcomes import decision_packet, packet_json
 from agentinbox.parity import prior_asks
 from agentinbox.readiness import similar_cases
 from agentinbox.reload import ConfigHolder
@@ -703,6 +704,29 @@ def _export(args: argparse.Namespace) -> int:
         print(f"{PROG}: {exc}", file=sys.stderr)
         return int(ExitCode.UNAVAILABLE)
 
+    if getattr(args, "packet", False):
+        if not args.ask:
+            print(f"{PROG}: --packet requires --ask", file=sys.stderr)
+            return int(ExitCode.USAGE)
+        try:
+            packet = decision_packet(store, args.ask)
+        except KeyError as exc:
+            print(f"{PROG}: {exc.args[0]}", file=sys.stderr)
+            return int(ExitCode.UNAVAILABLE)
+        text = packet_json(packet)
+        if args.out:
+            path = Path(args.out)
+            if not path.is_absolute():
+                print(f"{PROG}: --out must be an absolute path", file=sys.stderr)
+                return int(ExitCode.USAGE)
+            path.write_text(text, encoding="utf-8")
+            with contextlib.suppress(OSError):  # pragma: no cover
+                os.chmod(path, 0o600)
+            print(f"{PROG}: wrote {path}")
+        else:
+            sys.stdout.write(text)
+        return int(ExitCode.APPROVED)
+
     try:
         records = export_records(
             store,
@@ -979,6 +1003,11 @@ def build_parser() -> argparse.ArgumentParser:
                 "--format", choices=("jsonl", "csv"), default="jsonl"
             )
             sub.add_argument("--out", metavar="PATH", help="absolute output path")
+            sub.add_argument(
+                "--packet",
+                action="store_true",
+                help="emit a self-contained decision packet for --ask",
+            )
         if command == "gate":
             sub.add_argument("--ask", required=True, metavar="ASK_ID")
             sub.add_argument("--wait", action="store_true", help="block until resolved")

@@ -172,6 +172,9 @@ def build_card(
             (
                 *(() if handoff is None else (Block("HANDOFF", _handoff_fields(handoff)),)),
                 Block("ACTION", action_fields),
+                *(() if _outcome_fields(transitions) is None else (
+                    Block("OUTCOME", _outcome_fields(transitions) or ()),
+                )),
                 Block("POLICY", policy_fields),
                 Block("BLAST RADIUS", blast_fields),
                 Block("SESSION SO FAR", session_fields),
@@ -245,6 +248,21 @@ def _surface_footer(surface: str, card: Card) -> list[str]:
 
 
 # --------------------------------------------------------------------------- helpers
+
+
+def _outcome_fields(transitions: Sequence[TransitionRecord]) -> tuple[Field, ...] | None:
+    from agentinbox.outcomes import outcome_block
+
+    block = outcome_block(transitions)
+    if block is None:
+        return None
+    state, comparison, divergence, receipt = block
+    return (
+        Field("state", state),
+        Field("comparison", comparison),
+        Field("divergence", divergence),
+        Field("receipt", receipt),
+    )
 
 
 def _handoff_fields(handoff: Mapping[str, Any]) -> tuple[Field, ...]:

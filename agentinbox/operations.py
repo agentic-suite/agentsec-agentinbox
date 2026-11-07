@@ -336,6 +336,19 @@ def narrative(ask: AskRecord, transitions: Sequence[TransitionRecord]) -> str:
             )
         if detail.get("edits"):
             lines.append("Edits: " + ", ".join(sorted(detail["edits"])))
+        outcome = next(
+            (item for item in reversed(transitions) if item.kind == "outcome"), None
+        )
+        if outcome is not None:
+            comparison = outcome.detail.get("comparison") or {}
+            lines.append(
+                f"Execution: {outcome.detail.get('state')} "
+                f"(comparison={comparison.get('status', 'unknown')})"
+            )
+            if comparison.get("exceeding"):
+                lines.append(
+                    "Exceeding: " + ", ".join(str(item) for item in comparison["exceeding"])
+                )
     else:
         lines.append("Outcome: still pending")
     return "\n".join(lines)

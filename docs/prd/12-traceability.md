@@ -100,6 +100,17 @@ today** (they run in CI), not planned:
 | **R98** | bounded config overlay, chained `incident-on/off`, denies unchanged | `tests/bundles/test_operations.py` |
 | **R99/R100** | narrative from stored transitions; ordered exportable timeline | `tests/bundles/test_operations.py` |
 
+## M29 outcome closure & execution proof (shipped tests, v0.1.0)
+
+| Req | What M29 ships | Acceptance test |
+|---|---|---|
+| **R101** | closure observations on approved asks; unknown until closed; decision immutable | `tests/outcomes/test_outcomes.py` |
+| **R102** | whitelisted, capped receipts; credential shapes refused; card + narrative | `tests/outcomes/test_outcomes.py` |
+| **R103** | derived match/partial/exceeded/divergent comparison; exceeding resources named | `tests/outcomes/test_outcomes.py` |
+| **R104** | chained `outcome-divergence`, card alert, acknowledgement observation | `tests/outcomes/test_outcomes.py` |
+| **R105** | self-contained `decision-packet/1.0`, offline chain verification, CLI `--packet` | `tests/outcomes/test_outcomes.py` |
+| **R106/R107** | ask→decision→execution→divergence trace; closure SLA + doctor finding | `tests/outcomes/test_outcomes.py` |
+
 ## Forward slate traceability (R13–R47, PRDs 24–27)
 
 The product-depth requirements are traced **inside their own PRDs** (each carries a

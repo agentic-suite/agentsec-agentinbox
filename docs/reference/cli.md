@@ -176,7 +176,7 @@ POSIX (macOS, Linux). Python 3.11–3.13. Windows is not supported in v0.1.0 and
 | `inbox` | `--json` |
 | `serve` | `--once`; `--install`; `--api-port PORT`; `--no-api` |
 | `gate` | `--ask ASK_ID` (required); `--wait`; `--timeout SECONDS` |
-| `export` | `--session ID` \| `--ask ID` (one required); `--format jsonl\|csv`; `--out PATH` |
+| `export` | `--session ID` \| `--ask ID` (one required); `--format jsonl\|csv`; `--out PATH`; `--packet` (with `--ask`) |
 | `report` | `--json` |
 | `channels`, `verify-log`, `conformance`, `version` | no command-specific options (global options apply) |
 

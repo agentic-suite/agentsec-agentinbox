@@ -94,6 +94,8 @@ signatures are `401`.
 | `evidence_max_age_seconds` | int | `86400` | older evidence renders `stale` |
 | `on_contradiction` | `deliver` \| `reject` | `deliver` | reject contradicting asks at ingest |
 | `edit_schema` | list[str] | `[]` | argument fields an approver may edit (M27); empty = no edits |
+| `closure_sla_seconds` | int | unset | expected closure window (M29); unclosed approved asks surface in `doctor` |
+| `require_ack_on_divergence` | bool | `false` | an exceeded/divergent outcome needs acknowledgement before review counts as complete |
 | `require_signed_producer` | bool | `false` | reject unsigned producers for this class (makes the self-review anchor enforceable) |
 
 ```toml

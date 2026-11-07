@@ -245,3 +245,15 @@ regression test):
 | 2026-11-07 | M28 | 28.4 | Incident mode becoming an unbounded bypass | High | Config-declared owner/reason, scale capped at 1.0, chained `incident-on/off`, denies still deny |
 | 2026-11-07 | M28 | 28.5 | A narrative drifting from the stored chain | Medium | Built only from transitions + `_readiness`; no recomputation of the decision |
 | 2026-11-07 | M28 | 28.6 | Timeline order diverging from seqs | Medium | Ordered by `(at, ask_id, seq)` and exported with the bundle (test) |
+
+## M29 outcome closure review (2026-11-07)
+
+| Date | M | Item | Finding | Severity | Resolution |
+|---|---|---|---|---|---|
+| 2026-11-07 | M29 | 29.1 | A closure could reopen or rewrite the decision | High | Closures are post-terminal observations; status/decision immutable (test) |
+| 2026-11-07 | M29 | 29.1 | Silence rendering as success | High | No outcome renders `OUTCOME` absent / `outcome: unknown`; nothing auto-closes |
+| 2026-11-07 | M29 | 29.2 | Receipts becoming a secret store | High | Whitelist + caps + shared scanner; any credential shape refuses the closure |
+| 2026-11-07 | M29 | 29.3 | Trusting the producer's manifest | High | Comparison is derived from stored approved identity/resources; unknown manifest stays unknown |
+| 2026-11-07 | M29 | 29.4 | Divergence silently absorbed | High | Chained `outcome-divergence`, card `UNACKNOWLEDGED`, explicit acknowledgement; no approval path |
+| 2026-11-07 | M29 | 29.5 | A packet that needs the store to understand | High | Self-contained packet + offline chain verification; tamper test raises |
+| 2026-11-07 | M29 | 29.6 | SLA auto-closing or hiding unclosed asks | Medium | `outcome_sla_pending` + doctor WARN; never writes a closure |

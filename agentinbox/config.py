@@ -76,6 +76,8 @@ _CLASS_KEYS = frozenset(
         "evidence_max_age_seconds",
         "on_contradiction",
         "edit_schema",
+        "closure_sla_seconds",
+        "require_ack_on_divergence",
     }
 )
 _THROTTLE_KEYS = frozenset({"per_agent_burst", "per_agent_rate_per_min", "flood_window_seconds"})
@@ -121,6 +123,10 @@ class ClassConfig:
     on_contradiction: str = "deliver"
     #: Argument fields an approver may edit for this class (M27); empty = no edits.
     edit_schema: tuple[str, ...] = ()
+    #: Closure expectation in seconds (M29); unclosed approved asks surface past it.
+    closure_sla_seconds: int | None = None
+    #: When true, a divergence must be acknowledged before it counts as reviewed.
+    require_ack_on_divergence: bool = False
 
 
 def default_ladder_delays(count: int, ttl_seconds: int) -> tuple[int, ...]:
@@ -404,6 +410,18 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
             isinstance(item, str) and item for item in edit_schema
         ):
             raise ConfigError(f"{key_path}.edit_schema: must be a list of non-empty strings")
+        closure_sla = table.get("closure_sla_seconds")
+        if closure_sla is not None and (
+            not isinstance(closure_sla, int)
+            or isinstance(closure_sla, bool)
+            or closure_sla < 1
+        ):
+            raise ConfigError(f"{key_path}.closure_sla_seconds: must be a positive integer")
+        require_ack = table.get("require_ack_on_divergence", False)
+        if not isinstance(require_ack, bool):
+            raise ConfigError(
+                f"{key_path}.require_ack_on_divergence: must be a boolean"
+            )
 
         rescope_hint = table.get("rescope_hint")
         if rescope_hint is not None:
@@ -431,6 +449,8 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
             evidence_max_age_seconds=max_age,
             on_contradiction=on_contradiction,
             edit_schema=tuple(edit_schema),
+            closure_sla_seconds=closure_sla,
+            require_ack_on_divergence=require_ack,
         )
     return classes
 
