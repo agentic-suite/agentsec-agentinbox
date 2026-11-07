@@ -241,7 +241,7 @@ A milestone is **closed** only when all of these hold:
   offline day runs with non-loopback sockets blocked. Benches record N-1..N-7. Next: **M22** (`22.D0` security sweep).
 
 - **2026-11-07 — M22 Security hardening sweep + evidence scanner closed.** Issues #74–#85. Commit
-  `TBD`. **Gate:** 793 tests pass · coverage **95.19%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  `88bf037`. **Gate:** 793 tests pass · coverage **95.19%** · `ruff` clean · `mypy --strict` clean · DCO signed.
   The evidence scanner shares the redaction pattern set and scans store dumps (read-only), rendered
   terminal/desktop/CI/webhook payloads, audit exports, and backup archives; a seeded leak fails and CI runs
   the self-test. Spoof/replay/forge, injection, and flood packs are release-blocking (`python -m
