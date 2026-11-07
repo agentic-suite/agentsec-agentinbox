@@ -52,12 +52,14 @@ integers so the contract cannot drift.
 
 ## Commands
 
-| Command | M0 behavior |
+| Command | Status |
 |---|---|
 | `init` | **works** — creates the private home skeleton and a valid `config.toml`; refuses an existing config unless `--force` |
 | `doctor` | **works** — exit-coded install checks; `--explain` prints the effective config; `--json` emits records |
 | `version` | **works** — prints `agentinbox <version>` (or JSON with `--json`) |
-| `serve`, `ask`, `inbox`, `answer`, `gate`, `export`, `verify-log`, `channels`, `report` | **stubs** — print `agentinbox: <command> is not implemented in v0.1.0 (scheduled: M<n>)` to stderr and exit `4` |
+| `inbox`, `answer` | **works** (M7) — list pending asks; answer via the terminal channel |
+| `serve` | **works** (M9) — scheduler + bus consumer; `--once` drains and exits; see [bus.md](bus.md) |
+| `ask`, `gate`, `export`, `verify-log`, `channels`, `report` | **stubs** — print `agentinbox: <command> is not implemented in v0.1.0 (scheduled: M<n>)` to stderr and exit `4` |
 
 Stub rules:
 
@@ -98,9 +100,20 @@ agentinbox --json doctor
 | `store-path` | `inbox.db` is `0600` when present | `mode 644 exposes the store; expected 600` |
 | `schema` | `schema_version` is readable when a store exists | `unreadable schema version` |
 | `clock` | UTC clock and monotonic time are sane | `system clock unavailable` |
+| `desktop` | enabled desktop channel is reachable (disabled is `ok`) | `headless SSH session` |
 
 Overall exit: `0` when no check fails (warnings allowed), `4` when any check fails. `--explain`
 prints the effective config with secret **references** shown and never resolved.
+
+## `serve`
+
+```sh
+agentinbox serve            # scheduler + bus consumer until interrupted
+agentinbox serve --once     # tick the scheduler, drain the bus, exit
+```
+
+Exit `0` on a clean drain/stop; `4` for a bad config, an unavailable store, or a spool already owned by
+another daemon. See [bus.md](bus.md).
 
 ## Environment
 

@@ -147,6 +147,12 @@ A milestone is **closed** only when all of these hold:
   fingerprint + TTL + tier only; `authenticate()` never returns a principal (no answer path); once-per-tier
   and single-digest fixtures green; `doctor` reports `desktop` and fails closed when enabled-but-headless.
   Next: **M9** (`9.D0` bus design).
+- **2026-11-08 — M9 AskBus contract + drivers closed.** Issues #203–#214. **Gate:** 434 tests pass ·
+  coverage **95.82%** · `ruff` clean · `mypy --strict` clean · DCO signed. In-proc default; filesystem spool
+  with rename-CAS publish, fsync,
+  `flock` single-owner refusal, crash resume, bounded poll, and aggressive `done/` pruning. A 200-ask flood
+  publishes one rolling digest job; delivery wiring records every attempt (`ask-delivered`/`delivery-failed`),
+  retries with bounded backoff, and fails over. `serve --once` drains the spool. Next: **M10** (`10.D0` gate design).
 
 ## PRD coverage matrix (every doc 00–30)
 

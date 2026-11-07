@@ -26,11 +26,8 @@ COMMANDS = [
     "version",
 ]
 
-STUBS = [
-    command
-    for command in COMMANDS
-    if command not in {"version", "init", "doctor", "answer", "inbox"}
-]
+REAL = {"version", "init", "doctor", "answer", "inbox", "serve"}
+STUBS = [command for command in COMMANDS if command not in REAL]
 
 
 def test_help_lists_every_command(capsys: pytest.CaptureFixture[str]) -> None:

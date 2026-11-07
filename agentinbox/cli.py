@@ -13,12 +13,15 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import threading
 from collections.abc import Callable, Sequence
 from typing import NoReturn
 
 from agentinbox import __version__
 from agentinbox.answers import AnswerVerifier
+from agentinbox.bus import BusError, DeliveryWiring, Job, load_bus
 from agentinbox.channels.base import ChannelError
+from agentinbox.channels.desktop import DesktopChannel
 from agentinbox.channels.terminal import TerminalChannel
 from agentinbox.config import (
     Config,
@@ -30,7 +33,8 @@ from agentinbox.config import (
 )
 from agentinbox.doctor import render_explain, render_human, run_checks
 from agentinbox.exit_codes import ExitCode
-from agentinbox.store import AskStore, StoreError, utcnow
+from agentinbox.scheduler import Scheduler
+from agentinbox.store import AskStore, StoreError, parse_iso, utcnow
 from agentinbox.store.loader import load_store
 
 PROG = "agentinbox"
@@ -202,6 +206,60 @@ def _inbox(args: argparse.Namespace) -> int:
     return int(ExitCode.APPROVED if not pending else ExitCode.PENDING)
 
 
+def _serve(args: argparse.Namespace) -> int:
+    try:
+        config, store = _runtime(args)
+        home = resolve_home(args.home)
+        bus = load_bus(config, home=home)
+    except (ConfigError, StoreError, BusError) as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    desktop_config = config.channels.get("desktop")
+    desktop = (
+        DesktopChannel(config=config)
+        if desktop_config is not None and desktop_config.enabled
+        else None
+    )
+    channels: list[object] = [desktop] if desktop is not None else []
+
+    def on_digest(job: Job) -> None:
+        if desktop is None:
+            return
+        payload = job.payload
+        try:
+            window_start = parse_iso(str(payload["window_start"]))
+            desktop.notify_digest(
+                window_start=window_start,
+                first_ask_id=job.ask_id,
+                count=int(payload.get("count", 0)),
+            )
+        except (KeyError, ValueError, ChannelError) as exc:
+            print(f"{PROG}: digest delivery failed: {exc}", file=sys.stderr)
+
+    wiring = DeliveryWiring(store, channels, on_digest=on_digest)
+    scheduler = Scheduler(store)
+    try:
+        if args.once:
+            scheduler.tick()
+            bus.consume(wiring.handle)
+            return int(ExitCode.APPROVED)
+
+        stop = threading.Event()
+        thread, scheduler_stop = scheduler.start()
+        try:
+            bus.run(wiring.handle, stop)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            scheduler_stop.set()
+            thread.join(timeout=2)
+        return int(ExitCode.APPROVED)
+    finally:
+        bus.close()
+        store.close()
+
+
 def _version(args: argparse.Namespace) -> int:
     if getattr(args, "json", False):
         print(
@@ -255,6 +313,8 @@ def build_parser() -> argparse.ArgumentParser:
             handler = _answer
         elif command == "inbox":
             handler = _inbox
+        elif command == "serve":
+            handler = _serve
         else:
             handler = _stub(command)
         sub.set_defaults(handler=handler)
@@ -273,6 +333,10 @@ def build_parser() -> argparse.ArgumentParser:
             choice.add_argument("--deny", action="store_true")
             sub.add_argument("--reason")
             sub.add_argument("--as", dest="as_name", metavar="NAME")
+        if command == "serve":
+            sub.add_argument(
+                "--once", action="store_true", help="drain the bus once and exit (tests/cron)"
+            )
 
     return parser
 
@@ -295,7 +359,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # A stub accepts the flags of the command it will become (and refuses); a real command
     # rejects anything it does not define.
-    if extra and args.command in {"version", "init", "doctor", "answer", "inbox"}:
+    if extra and args.command in {"version", "init", "doctor", "answer", "inbox", "serve"}:
         parser.print_usage(sys.stderr)
         print(f"{PROG}: error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)
         return int(ExitCode.USAGE)
