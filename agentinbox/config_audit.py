@@ -106,6 +106,29 @@ def record_config_change(
     return digest
 
 
+def record_config_failure(
+    home: Path,
+    error: str,
+    *,
+    now: Callable[[], datetime] = utcnow,
+) -> None:
+    """Record one refused reload; the last-good config remains in force."""
+    logs = home / "logs"
+    logs.mkdir(parents=True, exist_ok=True)
+    _chmod(logs, 0o700)
+    event = {
+        "kind": EVENT_KIND,
+        "at": to_iso(now()),
+        "failed": True,
+        "error": error[:500],
+    }
+    descriptor = os.open(
+        logs / EVENT_FILE, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600
+    )
+    with os.fdopen(descriptor, "a", encoding="utf-8") as handle:
+        handle.write(canonical_json(event) + "\n")
+
+
 def _chmod(path: Path, mode: int) -> None:
     try:
         os.chmod(path, mode)
@@ -120,4 +143,5 @@ __all__ = [
     "policy_digest",
     "policy_material",
     "record_config_change",
+    "record_config_failure",
 ]

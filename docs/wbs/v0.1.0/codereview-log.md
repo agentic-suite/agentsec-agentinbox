@@ -112,3 +112,9 @@ reason) before a milestone closes.
 | 2026-11-08 | M19 | 19.3 | A broken adapter could crash the kit instead of failing it | Medium | Each check is wrapped; a failure is recorded as a red check with the exception, and the CLI exits `4` |
 | 2026-11-08 | M19 | 19.3 | The shipped fixture could drift from the contract | Medium | A test ingests `tests/fixtures/conformance/ask.json` through the real pipeline |
 | 2026-11-08 | M19 | 19.1 | A framework adapter could grow answer/claim code | High | The adapter has `create`/`resolve` only; the conformance kit gates `deliver`/`authenticate` and no `decide`/`submit` |
+| 2026-11-08 | M20 | 20.3 | A locked/unreadable SQLite file escaped as a raw `sqlite3` exception, so the CLI could crash instead of exiting `4` | High | `SqliteStore` wraps connection/migration failures in `StoreError`; every CLI runtime path maps that to exit `4`, and the API maps it to `503` |
+| 2026-11-08 | M20 | 20.4 | The chain check would have failed an old store that predates the audit table, before the migration could run | Medium | A missing `audit` table is `ok` ("migrates on open"); real hash/seq faults still name the seq |
+| 2026-11-08 | M20 | 20.4 | An enabled webhook/producer with an unresolvable key looked healthy | High | `keys` resolves every reference and turns red with the named env/file reference |
+| 2026-11-08 | M20 | 20.5 | A bad reload could have replaced the effective policy with a broken config | High | `ConfigHolder` keeps the last-good config, returns the error, and the daemon records `inbox-config-changed(failed)` |
+| 2026-11-08 | M20 | 20.2 | The matrix could silently skip a fault or allow through a sink/channel path | High | `FAILURE_MATRIX` is complete over `Fault`; tests assert no case allows by itself and the scheduler's zero-allow counter stays `0` |
+| 2026-11-08 | M20 | 20.4 | A slow doctor would be ignored in cron | Medium | The healthy path is asserted under two seconds and every check is read-only |

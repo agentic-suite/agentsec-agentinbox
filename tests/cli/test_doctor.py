@@ -108,8 +108,11 @@ def test_non_database_store_file_fails(
 
 
 def test_explain_prints_effective_config_without_resolving_secrets(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setenv("AGENTINBOX_WEBHOOK_URL", "https://hooks.example/abc")
     home = make_home(tmp_path)
     (home / "config.toml").write_text(
         """

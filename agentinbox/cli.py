@@ -42,7 +42,7 @@ from agentinbox.config import (
     resolve_config_path,
     resolve_home,
 )
-from agentinbox.config_audit import record_config_change
+from agentinbox.config_audit import record_config_change, record_config_failure
 from agentinbox.conformance import run_conformance
 from agentinbox.contract import ContractError, compute_action_identity
 from agentinbox.doctor import render_explain, render_human, run_checks
@@ -52,6 +52,7 @@ from agentinbox.exit_codes import ExitCode
 from agentinbox.flood import FloodGuard
 from agentinbox.gate import gate
 from agentinbox.ingest import ingest
+from agentinbox.reload import ConfigHolder
 from agentinbox.resolve import resolve
 from agentinbox.scheduler import Scheduler
 from agentinbox.secrets import SecretError, resolve_ref
@@ -406,6 +407,8 @@ def _serve(args: argparse.Namespace) -> int:
     try:
         config, store = _runtime(args)
         home = resolve_home(args.home)
+        config_path = resolve_config_path(home, args.config)
+        holder = ConfigHolder(config_path)
         bus = load_bus(config, home=home)
     except (ConfigError, StoreError, BusError) as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)
@@ -445,6 +448,20 @@ def _serve(args: argparse.Namespace) -> int:
 
     wiring = DeliveryWiring(store, channels, on_digest=on_digest)
     scheduler = Scheduler(store, escalator=Escalator(store, config, bus=bus))
+
+    def on_hup(_signum: int, _frame: object) -> None:
+        result = holder.reload()
+        if result.ok:
+            scheduler.escalator = Escalator(store, result.config, bus=bus)
+            record_config_change(home, result.config)
+            print(f"{PROG}: config reloaded")
+        else:
+            record_config_failure(home, result.error or "invalid config")
+            print(f"{PROG}: config reload refused: {result.error}", file=sys.stderr)
+
+    with contextlib.suppress(ValueError, OSError):
+        signal.signal(signal.SIGHUP, on_hup)
+
     tracer = EventTracer(
         store,
         sink=BufferedEventSink(

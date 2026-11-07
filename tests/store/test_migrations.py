@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from agentinbox.store import SchemaVersionError
+from agentinbox.store import SchemaVersionError, StoreError
 from agentinbox.store.sqlite import MIGRATIONS, SCHEMA_VERSION, SqliteStore
 
 
@@ -101,7 +101,7 @@ def test_failed_migration_leaves_the_old_version(tmp_path: Path) -> None:
         # No asks table: the v1→v2 ALTER must fail and roll back.
     path.chmod(0o600)
 
-    with pytest.raises(sqlite3.Error):
+    with pytest.raises(StoreError, match="store unavailable"):
         SqliteStore(path)
 
     with sqlite3.connect(path) as connection:

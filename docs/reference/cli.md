@@ -106,6 +106,9 @@ agentinbox --json doctor
 | `schema` | `schema_version` is readable when a store exists | `unreadable schema version` |
 | `clock` | UTC clock and monotonic time are sane | `system clock unavailable` |
 | `desktop` | enabled desktop channel is reachable (disabled is `ok`) | `headless SSH session` |
+| `chain` | the audit hash chain verifies read-only | `audit seq 7: entry_hash does not verify` |
+| `spool` | pending/done/staging counts; missing lock or staging is a warning | — |
+| `keys` | producer/webhook references resolve | `env reference … is not set` |
 
 Overall exit: `0` when no check fails (warnings allowed), `4` when any check fails. `--explain`
 prints the effective config with secret **references** shown and never resolved.

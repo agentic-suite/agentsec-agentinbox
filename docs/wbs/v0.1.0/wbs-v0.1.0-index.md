@@ -209,6 +209,13 @@ A milestone is **closed** only when all of these hold:
   resume-by-id; `ExecutionJournal` makes tool execution at-most-once across crashes; the `conformance` kit
   (9 checks against a fresh store) gates channels/producers/contract/redaction/idempotency/exit codes/events;
   broken store fails red; example graph, adapter template, Claude Code/Codex recipes. Next: **M20**.
+- **2026-11-08 — M20 Fail-closed fault matrix + doctor hardening closed.** Issues #51–#61. **Gate:** 641
+  tests pass · coverage **95.10%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  `FAILURE_MATRIX` covers eight faults (store locked/corrupt,
+  schema, sink, channel 500, scheduler kill, invalid reload, clock skew); store open errors now fail closed
+  (`StoreError` → `503`/exit 4); doctor adds `chain`, `spool`, `keys`, downgrade refusal and stays <2 s;
+  `ConfigHolder` keeps the last-good config and records `inbox-config-changed(failed)`; zero-allow counter
+  stays 0. Next: **M21**. 
 
 ## PRD coverage matrix (every doc 00–30)
 

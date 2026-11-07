@@ -164,17 +164,21 @@ class SqliteStore:
         else:
             _chmod(self.path, 0o600)
 
-        self._conn = sqlite3.connect(
-            self.path, isolation_level=None, check_same_thread=False
-        )
-        self._conn.row_factory = sqlite3.Row
-        # busy_timeout must precede the WAL switch: a second opener waits instead of failing.
-        self._conn.execute("PRAGMA busy_timeout=5000")
-        _enable_wal(self._conn)
-        self._conn.execute("PRAGMA synchronous=FULL")
-        self._conn.execute("PRAGMA foreign_keys=ON")
-        with self._lock:
-            self._migrate()
+        try:
+            self._conn = sqlite3.connect(
+                self.path, isolation_level=None, check_same_thread=False
+            )
+            self._conn.row_factory = sqlite3.Row
+            # busy_timeout must precede the WAL switch: a second opener waits instead of
+            # failing.
+            self._conn.execute("PRAGMA busy_timeout=5000")
+            _enable_wal(self._conn)
+            self._conn.execute("PRAGMA synchronous=FULL")
+            self._conn.execute("PRAGMA foreign_keys=ON")
+            with self._lock:
+                self._migrate()
+        except sqlite3.Error as exc:
+            raise StoreError(f"store unavailable: {exc}") from exc
 
     # ------------------------------------------------------------------ schema
 

@@ -18,6 +18,9 @@ from pathlib import Path
 
 from agentinbox.channels.desktop import desktop_availability
 from agentinbox.config import Config, ConfigError, effective_ladder_delays, load_config
+from agentinbox.secrets import SecretError, resolve_ref
+from agentinbox.store import AuditEntry, ChainHashMismatch, verify_audit_chain
+from agentinbox.store.sqlite import SCHEMA_VERSION
 
 OK = "ok"
 WARN = "warn"
@@ -58,6 +61,9 @@ def run_checks(home: Path, config_path: Path) -> Report:
         _desktop(config),
         _store_path(home),
         _schema(home / "inbox.db"),
+        _chain(home / "inbox.db"),
+        _spool(home),
+        _keys(config),
         _clock(),
         _clock_skew(home / "inbox.db"),
     )
@@ -127,7 +133,104 @@ def _schema(database: Path) -> Check:
         return Check("schema", FAIL, f"{database}: unreadable schema version ({exc})")
     if row is None:
         return Check("schema", FAIL, f"{database}: schema_version is empty")
-    return Check("schema", OK, f"schema version {row[0]}")
+    version = int(row[0])
+    if version > SCHEMA_VERSION:
+        return Check(
+            "schema",
+            FAIL,
+            f"{database}: schema v{version} is newer than this build "
+            f"(v{SCHEMA_VERSION}); downgrade is refused loudly",
+        )
+    if version < SCHEMA_VERSION:
+        return Check(
+            "schema", WARN, f"{database}: schema v{version}; migrates to v{SCHEMA_VERSION}"
+        )
+    return Check("schema", OK, f"schema version {version}")
+
+
+def _chain(database: Path) -> Check:
+    if not database.exists():
+        return Check("chain", OK, "no store yet")
+    try:
+        with sqlite3.connect(f"file:{database}?mode=ro", uri=True) as connection:
+            rows = connection.execute(
+                "SELECT seq, prev_hash, entry_hash, kind, ref_id, at, payload_digest"
+                " FROM audit ORDER BY seq ASC"
+            ).fetchall()
+    except sqlite3.OperationalError as exc:
+        if "no such table: audit" in str(exc).lower():
+            return Check("chain", OK, "audit table not present yet (migrates on open)")
+        return Check("chain", FAIL, f"{database}: cannot read the audit chain ({exc})")
+    except sqlite3.Error as exc:
+        return Check("chain", FAIL, f"{database}: cannot read the audit chain ({exc})")
+
+    entries = [
+        AuditEntry(
+            seq=int(row[0]),
+            prev_hash=str(row[1]),
+            entry_hash=str(row[2]),
+            kind=str(row[3]),
+            ref_id=str(row[4]),
+            at=_parse_moment(str(row[5])),
+            payload_digest=str(row[6]),
+        )
+        for row in rows
+    ]
+    try:
+        verify_audit_chain(entries)
+    except ChainHashMismatch as exc:
+        return Check("chain", FAIL, f"{database}: {exc}")
+    return Check("chain", OK, f"{len(entries)} entries verify")
+
+
+def _parse_moment(text: str) -> datetime:
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return datetime.now(UTC)
+
+
+def _spool(home: Path) -> Check:
+    spool = home / "spool"
+    if not spool.exists():
+        return Check("spool", OK, "no spool yet (created by `agentinbox init`)")
+    pending = _count(spool / "jobs", "*.json")
+    done = _count(spool / "done", "*.json")
+    staging = _count(spool / "tmp", "*.tmp")
+    lock = spool / "locks" / "bus.lock"
+    if not lock.exists():
+        return Check("spool", WARN, f"{spool}: bus.lock missing; run `agentinbox serve`")
+    if staging:
+        return Check(
+            "spool", WARN, f"{spool}: {staging} staging files (swept on daemon boot)"
+        )
+    return Check("spool", OK, f"{pending} pending, {done} done")
+
+
+def _count(directory: Path, pattern: str) -> int:
+    return len(list(directory.glob(pattern))) if directory.exists() else 0
+
+
+def _keys(config: Config | None) -> Check:
+    if config is None:
+        return Check("keys", WARN, "config is invalid; secret references unchecked")
+    refs: list[tuple[str, str]] = []
+    for name, producer in config.producers.items():
+        refs.append((f"producer.{name}.key_ref", producer.key_ref))
+    webhook = config.channels.get("webhook")
+    if webhook is not None and webhook.enabled:
+        for label, ref in (
+            ("channels.webhook.url_ref", webhook.url_ref),
+            ("channels.webhook.hmac_key_ref", webhook.hmac_key_ref),
+        ):
+            if ref is not None:
+                refs.append((label, ref))
+    for label, ref in refs:
+        try:
+            resolve_ref(ref)
+        except SecretError as exc:
+            return Check("keys", FAIL, f"{label}: {exc}")
+    return Check("keys", OK, f"{len(refs)} references resolve")
 
 
 def _clock() -> Check:
