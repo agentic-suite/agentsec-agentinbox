@@ -251,7 +251,7 @@ A milestone is **closed** only when all of these hold:
   `--yes`. Own-posture checks prove zero runtime dependencies/no ML, emit a CycloneDX SBOM dry run, and
   validate the committed `security.txt` (SLA in `SECURITY.md`). Next: **M23** (`23.D0` docs plan).
 
-- **2026-11-07 — M23 Docs completion closed.** Issues #86–#97. Commit `TBD`. **Gate:** 799 tests pass ·
+- **2026-11-07 — M23 Docs completion closed.** Issues #86–#97. Commit `df42a7b`. **Gate:** 799 tests pass ·
   coverage **95.19%** · `ruff` clean · `mypy --strict` clean · DCO signed. The quickstart is step-tested
   through a pty (first approval recorded in ~1.5 s, hard limit 300 s); a doc-coverage test walks the CLI
   parser and config dataclasses so no flag/key can ship undocumented; eight runbooks (RB-1..RB-8) carry
