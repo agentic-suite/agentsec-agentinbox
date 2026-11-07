@@ -217,13 +217,15 @@ def _parse(data: dict[str, Any], path: Path) -> Config:
 
     classes = _parse_classes(_table(data.get("classes", {}), "classes"))
     roster = _parse_roster(_table(data.get("roster", {}), "roster"))
+    channels = _parse_channels(_table(data.get("channels", {}), "channels"))
     _validate_ladders(classes, roster)
+    _validate_routable(classes, roster, channels)
 
     return Config(
         classes=classes,
         roster=roster,
         throttle=_parse_throttle(_table(data.get("throttle", {}), "throttle")),
-        channels=_parse_channels(_table(data.get("channels", {}), "channels")),
+        channels=channels,
         bus=_parse_bus(_table(data.get("bus", {}), "bus")),
         store=_parse_store(_table(data.get("store", {}), "store")),
         limits=_parse_limits(_table(data.get("limits", {}), "limits")),
@@ -383,6 +385,28 @@ def _validate_ladders(
                 raise ConfigError(
                     f"[roster.{tier}]: must list at least one channel and principal"
                 )
+
+
+def _validate_routable(
+    classes: Mapping[str, ClassConfig],
+    roster: Mapping[str, Mapping[str, tuple[str, ...]]],
+    channels: Mapping[str, ChannelConfig],
+) -> None:
+    """If channels and a roster are configured, every class must reach an enabled channel."""
+    if not channels or not roster:
+        return
+    enabled = {name for name, channel in channels.items() if channel.enabled}
+    for name, ask_class in classes.items():
+        tiers = ask_class.ladder or tuple(roster.keys())
+        reachable = {
+            channel for tier in tiers for channel in roster.get(tier, {})
+        }
+        if not (reachable & enabled):
+            configured = ", ".join(sorted(reachable)) or "none"
+            raise ConfigError(
+                f"[classes.{name}]: resolves to no enabled channel "
+                f"(configured channels: {configured})"
+            )
 
 
 def _optional_positive_int(table: Mapping[str, Any], key: str, path: str) -> int | None:

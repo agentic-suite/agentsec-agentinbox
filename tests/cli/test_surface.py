@@ -26,7 +26,7 @@ COMMANDS = [
     "version",
 ]
 
-REAL = {"version", "init", "doctor", "answer", "inbox", "serve", "gate"}
+REAL = {"version", "init", "doctor", "answer", "inbox", "serve", "gate", "channels"}
 STUBS = [command for command in COMMANDS if command not in REAL]
 
 

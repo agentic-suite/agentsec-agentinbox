@@ -25,7 +25,7 @@ from agentinbox.answers import AnswerVerifier
 from agentinbox.bus import BusError, DeliveryWiring, Job, load_bus
 from agentinbox.card import build_card
 from agentinbox.channels.base import ChannelError
-from agentinbox.channels.desktop import DesktopChannel
+from agentinbox.channels.desktop import DesktopChannel, desktop_availability
 from agentinbox.channels.terminal import TerminalChannel
 from agentinbox.config import (
     Config,
@@ -41,6 +41,7 @@ from agentinbox.escalation import Escalator
 from agentinbox.exit_codes import ExitCode
 from agentinbox.gate import gate
 from agentinbox.scheduler import Scheduler
+from agentinbox.secrets import SecretError, resolve_ref
 from agentinbox.store import AskStore, StoreError, parse_iso, utcnow
 from agentinbox.store.loader import load_store
 
@@ -317,6 +318,47 @@ def _serve(args: argparse.Namespace) -> int:
         store.close()
 
 
+def _channels(args: argparse.Namespace) -> int:
+    try:
+        home = resolve_home(args.home)
+        config = load_config(resolve_config_path(home, args.config))
+    except ConfigError as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    healthy = True
+    rows: list[str] = []
+    for name in sorted(config.channels):
+        channel = config.channels[name]
+        if not channel.enabled:
+            rows.append(f"{name}: disabled")
+            continue
+        if name == "terminal":
+            rows.append(f"{name}: enabled (ok)")
+            continue
+        if name == "desktop":
+            available, detail = desktop_availability()
+            rows.append(
+                f"{name}: enabled ({'ok' if available else 'unavailable: ' + detail})"
+            )
+            healthy = healthy and available
+            continue
+        if name == "webhook":
+            try:
+                resolve_ref(channel.url_ref)
+                resolve_ref(channel.hmac_key_ref)
+            except (SecretError, TypeError) as exc:
+                rows.append(f"{name}: enabled (unavailable: {exc})")
+                healthy = False
+            else:
+                rows.append(f"{name}: enabled (references resolve)")
+            continue
+        rows.append(f"{name}: enabled")
+
+    print("\n".join(rows) if rows else "no channels configured")
+    return int(ExitCode.APPROVED if healthy else ExitCode.UNAVAILABLE)
+
+
 def _version(args: argparse.Namespace) -> int:
     if getattr(args, "json", False):
         print(
@@ -374,6 +416,8 @@ def build_parser() -> argparse.ArgumentParser:
             handler = _serve
         elif command == "gate":
             handler = _gate
+        elif command == "channels":
+            handler = _channels
         else:
             handler = _stub(command)
         sub.set_defaults(handler=handler)
@@ -436,6 +480,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "inbox",
         "serve",
         "gate",
+        "channels",
     }:
         parser.print_usage(sys.stderr)
         print(f"{PROG}: error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)

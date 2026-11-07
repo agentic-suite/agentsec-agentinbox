@@ -170,6 +170,11 @@ A milestone is **closed** only when all of these hold:
   `ask_flood_throttled` + `retry_after_s`; one `ask-flood` event and one rolling digest per window; the
   200-ask pack yields 180 denies, 1 event, 1 digest; a 20-action migration survives; flood denials can never
   be resurrected. Next: **M13** (`13.D0` webhook design).
+- **2026-11-08 — M13 Webhook channel + delivery accounting closed.** Issues #249–#259. **Gate:** 524 tests
+  pass · coverage **95.47%** · `ruff` clean · `mypy --strict` clean · DCO signed. HMAC-signed `webhook/1.0` POST with an allow-listed
+  display-only payload, refs-only secrets, http(s)-only URLs, `deliver()`-only adapter (no answer path),
+  bounded retries + per-attempt Delivery records/events + failover, unroutable classes refused at load,
+  `channels` health command, and five receiver recipes. Next: **M14** (`14.D0` parity design).
 
 ## PRD coverage matrix (every doc 00–30)
 

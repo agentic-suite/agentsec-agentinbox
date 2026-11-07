@@ -89,7 +89,7 @@ ttl_seconds = 300
 [roster.tier-1]
 terminal = ["alice"]
 
-[channels.desktop]
+[channels.terminal]
 enabled = true
 """,
         encoding="utf-8",
@@ -98,7 +98,7 @@ enabled = true
     assert main(["--home", str(home), "doctor", "--explain"]) == 0
     out = capsys.readouterr().out
     assert "roster tier-1" in out
-    assert "channel desktop: enabled=True" in out
+    assert "channel terminal: enabled=True" in out
 
 
 def test_explain_with_invalid_config_says_so(
