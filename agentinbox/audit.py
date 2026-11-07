@@ -68,11 +68,12 @@ def export_records(
         ref_id = ask_id
 
     ask_ids = [item.ask_id for item in asks]
-    known = set(ask_ids)
     deliveries = [
         delivery for item in ask_ids for delivery in store.list_deliveries(item)
     ]
-    audit = [entry for entry in store.audit_entries() if entry.ref_id in known]
+    # The chain is global: exporting a contiguous slice would break offline verification
+    # whenever another ask's delivery/flood entry is interleaved.
+    audit = store.audit_entries()
 
     moment = now()
     records: list[dict[str, Any]] = [
@@ -148,6 +149,9 @@ def export_records(
                 "ref_id": entry.ref_id,
                 "at": to_iso(entry.at),
                 "payload_digest": entry.payload_digest,
+                "payload": (
+                    None if entry.payload is None else dict(entry.payload)
+                ),
             }
         )
 

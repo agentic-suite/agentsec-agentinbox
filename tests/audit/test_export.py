@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+from datetime import datetime
 
 from agentinbox.audit import EXPORT_CONTRACT, export_csv, export_jsonl, export_records
 from agentinbox.config import ClassConfig, Config
@@ -69,6 +70,44 @@ def test_csv_has_the_same_chain_columns(store) -> None:  # type: ignore[no-untyp
     assert audit_rows
     assert all(row["entry_hash"] for row in audit_rows)
     assert all(row["prev_hash"] for row in audit_rows)
+
+
+def test_the_exported_chain_is_complete_and_offline_verifiable(store) -> None:  # type: ignore[no-untyped-def]
+    from agentinbox.store import AuditEntry, FloodRecord, verify_audit_chain
+
+    seed(store)
+    # An interleaved entry that does not belong to the exported ask.
+    store.record_flood(
+        FloodRecord(
+            flood_id="flood_interleaved",
+            agent_id="agent://other",
+            session_id="sess_other",
+            window_start=NOW,
+            window_end=NOW,
+            denied_count=1,
+            first_ask_id=None,
+            at=NOW,
+        )
+    )
+
+    records = export_records(store, ask_id=ASK_ID, now=lambda: NOW)
+    entries = [
+        AuditEntry(
+            seq=record["seq"],
+            prev_hash=record["prev_hash"],
+            entry_hash=record["entry_hash"],
+            kind=record["kind"],
+            ref_id=record["ref_id"],
+            at=datetime.fromisoformat(record["at"].replace("Z", "+00:00")),
+            payload_digest=record["payload_digest"],
+            payload=record["payload"],
+        )
+        for record in records
+        if record["type"] == "audit"
+    ]
+
+    assert [entry.seq for entry in entries] == list(range(1, len(entries) + 1))
+    verify_audit_chain(entries)
 
 
 def test_export_is_itself_audited(store) -> None:  # type: ignore[no-untyped-def]

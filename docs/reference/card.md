@@ -18,9 +18,9 @@ ACTION
   action: [untrusted: tool output] run_command
   arguments: [untrusted: tool output] command=psql prod -c 'DROP TABLE customers'; timeout_s=30
   fingerprint: sha256:5c1f4a2b9d01…
-  class: irreversible
-  criticality: critical
-  requested by: maya@team
+  class: [unverified] irreversible
+  criticality: [unverified] critical
+  requested by: [unverified] maya@team
 
 POLICY
   reason code: human_gate_required
@@ -32,12 +32,16 @@ BLAST RADIUS
   resource: [untrusted: tool output] db:prod/customers
   reversibility: irreversible
   affected estimate: [untrusted: tool output] unknown
-  environment: production
-  data class: customer-pii
+  environment: [unverified] production
+  data class: [unverified] customer-pii
+  credential class: prod-deploy
 
 SESSION SO FAR
   session: sess_20261106T030412Z
   agent: agent://ops-agent/7f31
+  tier: tier-1
+  escalations: tier-1 did not answer → on-call
+  prior asks: ask_…0f2d approved, ask_…9a11 denied
   session tail: [untrusted: tool output] read_file.read
   flags: code_freeze_window
   alternatives: staging database
@@ -56,6 +60,9 @@ Answer with: agentinbox answer <id> --approve|--deny  (q leaves it pending)
 | missing field | literal `unknown` (no blank line) |
 | unknown reversibility on irreversible class | `unknown (irreversible class)` |
 | untrusted text | `[untrusted: tool output]` prefix, plain text, no markup/links/buttons |
+| trusted-class field from an unauthenticated producer | `[unverified] value` (class, criticality, reason code, rule, policy version, environment, data class, requested by) |
+| prior asks | the last 3 other asks in the session with their status, else `none` |
+| warning window | `card.warning` is set once `warn_at <= now`; desktop/webhook warn once in addition to the ask |
 | control / zero-width / bidi chars | stripped |
 | field / card size | 512 chars / 4000 chars, visible `+N chars omitted` |
 | redactions | `field: [CLASS xN]` — never the value |

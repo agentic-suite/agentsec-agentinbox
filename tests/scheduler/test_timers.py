@@ -55,6 +55,25 @@ def test_warning_fires_at_warn_at_and_only_once(store) -> None:  # type: ignore[
     assert warned[0].detail["remaining_s"] == 60
 
 
+def test_warning_publishes_one_delivery_job(store) -> None:  # type: ignore[no-untyped-def]
+    from agentinbox.bus import InProcBus, JobKind
+
+    ask_id = make_ask(store)
+    clock = [NOW + timedelta(seconds=240)]
+    bus = InProcBus(now=lambda: clock[0])
+    scheduler = Scheduler(store, now=lambda: clock[0], bus=bus)
+
+    assert scheduler.tick().warned == 1
+    assert scheduler.tick().warned == 0
+
+    jobs = []
+    bus.consume(jobs.append)
+    assert [job.kind for job in jobs] == [JobKind.RENOTIFY]
+    assert jobs[0].ask_id == ask_id
+    assert jobs[0].payload["reason"] == "warning"
+    assert jobs[0].payload["remaining_s"] == 60
+
+
 def test_expiry_fires_exactly_at_expires_at(store) -> None:  # type: ignore[no-untyped-def]
     ask_id = make_ask(store)
     ask = store.get(ask_id)

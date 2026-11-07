@@ -106,14 +106,20 @@ class Job:
 Handler = Callable[[Job], None]
 
 
-class AskBus(Protocol):
-    name: str
+class JobPublisher(Protocol):
+    """Anything a producer may publish through (a bus or a lock-free spool writer)."""
 
     def publish(self, job: Job) -> bool: ...
 
     def upsert(self, job: Job) -> bool:
         """Publish, replacing an existing job with the same id (rolling digests)."""
         ...
+
+    def close(self) -> None: ...
+
+
+class AskBus(JobPublisher, Protocol):
+    name: str
 
     def consume(self, handler: Handler) -> int: ...
 
@@ -142,7 +148,7 @@ def new_job(
 
 
 def publish_digest(
-    bus: AskBus,
+    bus: JobPublisher,
     *,
     window_start: datetime,
     first_ask_id: str,
@@ -327,27 +333,9 @@ class SpoolBus:
     # ------------------------------------------------------------------ internals
 
     def _write(self, job: Job, *, replace: bool) -> bool:
-        staging = self.tmp_dir / f"{job.job_id}.{uuid.uuid4().hex}.tmp"
-        target = self.jobs_dir / f"{job.job_id}.json"
-        data = job.to_json().encode("utf-8")
-        descriptor = os.open(staging, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        try:
-            os.write(descriptor, data)
-            os.fsync(descriptor)
-        finally:
-            os.close(descriptor)
-        try:
-            if replace:
-                os.replace(staging, target)
-            else:
-                # rename-CAS: link() is atomic and fails loudly if the id already exists.
-                os.link(staging, target)
-                os.unlink(staging)
-        except FileExistsError:
-            staging.unlink(missing_ok=True)
-            return False
-        _fsync_dir(self.jobs_dir)
-        return True
+        return _write_job_file(
+            self.jobs_dir, self.tmp_dir, job, replace=replace
+        )
 
     def _pending(self) -> list[Job]:
         jobs = []
@@ -370,6 +358,62 @@ class SpoolBus:
     def _require_open(self) -> None:
         if self._closed:
             raise BusError("bus is closed")
+
+
+class SpoolPublisher:
+    """Lock-free producer side of the filesystem spool (the daemon owns the consume lock)."""
+
+    name = "filesystem"
+
+    def __init__(self, root: Path | str) -> None:
+        self.root = Path(root)
+        self.jobs_dir = self.root / "jobs"
+        self.done_dir = self.root / "done"
+        self.tmp_dir = self.root / "tmp"
+        for directory in (self.root, self.jobs_dir, self.done_dir, self.tmp_dir):
+            directory.mkdir(parents=True, exist_ok=True)
+            _chmod(directory, 0o700)
+
+    def publish(self, job: Job) -> bool:
+        target = self.jobs_dir / f"{job.job_id}.json"
+        if target.exists() or (self.done_dir / target.name).exists():
+            return False
+        return _write_job_file(self.jobs_dir, self.tmp_dir, job, replace=False)
+
+    def upsert(self, job: Job) -> bool:
+        target = self.jobs_dir / f"{job.job_id}.json"
+        if (self.done_dir / target.name).exists():
+            return False
+        return _write_job_file(self.jobs_dir, self.tmp_dir, job, replace=True)
+
+    def close(self) -> None:
+        return None
+
+
+def _write_job_file(
+    jobs_dir: Path, tmp_dir: Path, job: Job, *, replace: bool
+) -> bool:
+    staging = tmp_dir / f"{job.job_id}.{uuid.uuid4().hex}.tmp"
+    target = jobs_dir / f"{job.job_id}.json"
+    data = job.to_json().encode("utf-8")
+    descriptor = os.open(staging, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        os.write(descriptor, data)
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+    try:
+        if replace:
+            os.replace(staging, target)
+        else:
+            # rename-CAS: link() is atomic and fails loudly if the id already exists.
+            os.link(staging, target)
+            os.unlink(staging)
+    except FileExistsError:
+        staging.unlink(missing_ok=True)
+        return False
+    _fsync_dir(jobs_dir)
+    return True
 
 
 def _fsync_dir(path: Path) -> None:
@@ -396,7 +440,9 @@ __all__ = [
     "InProcBus",
     "Job",
     "JobKind",
+    "JobPublisher",
     "SpoolBus",
+    "SpoolPublisher",
     "new_job",
     "publish_digest",
 ]

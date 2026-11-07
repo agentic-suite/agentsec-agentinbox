@@ -90,6 +90,36 @@ def test_verify_log_detects_tampering(
     assert "seq 2" in capsys.readouterr().err
 
 
+def test_verify_log_detects_a_corrupt_payload(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    home = make_home(tmp_path)
+    seed(home)
+    connection = sqlite3.connect(home / "inbox.db")
+    connection.execute("UPDATE audit SET payload = '{not json' WHERE seq = 2")
+    connection.commit()
+    connection.close()
+
+    assert main(["--home", str(home), "verify-log"]) == 4
+    assert "corrupt" in capsys.readouterr().err
+
+
+def test_verify_log_detects_a_payload_body_edit(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    home = make_home(tmp_path)
+    seed(home)
+    connection = sqlite3.connect(home / "inbox.db")
+    connection.execute(
+        "UPDATE audit SET payload = ? WHERE seq = 2", (json.dumps({"x": 1}),)
+    )
+    connection.commit()
+    connection.close()
+
+    assert main(["--home", str(home), "verify-log"]) == 4
+    assert "seq 2" in capsys.readouterr().err
+
+
 def test_export_jsonl_by_session(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

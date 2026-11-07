@@ -29,10 +29,12 @@ Poster = Callable[[str, bytes, dict[str, str]], object]
 def build_payload(ask: AskRecord, *, now: datetime) -> dict[str, Any]:
     """The display-only view. It deliberately has no arguments and no decision affordance."""
     remaining = max(0, int((ask.expires_at - now).total_seconds()))
+    trust = ask.payload.get("_trust") or {}
     return {
         "contract": CONTRACT,
         "ask_id": ask.ask_id,
         "class": str(ask.payload.get("class", "unknown")),
+        "trust": {"unverified": list(trust.get("unverified") or [])},
         "action": str(ask.payload.get("action", "unknown")),
         "fingerprint": _fingerprint(ask.action_identity),
         "status": ask.status.value,
@@ -94,8 +96,15 @@ class WebhookChannel:
         }
         try:
             self.post(url, body, headers)
+        except urllib.error.HTTPError as exc:
+            raise ChannelError(
+                f"webhook receiver returned HTTP {exc.code}"
+            ) from None
         except (OSError, urllib.error.URLError) as exc:
-            raise ChannelError(f"webhook delivery failed: {exc}") from None
+            # Never echo the URL: receivers often carry a token in the path/query.
+            raise ChannelError(
+                f"webhook delivery failed ({type(exc).__name__})"
+            ) from None
 
     def authenticate(self, *, as_name: str | None = None) -> str | None:
         del as_name

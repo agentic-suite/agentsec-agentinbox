@@ -28,8 +28,16 @@ from typing import Any, NoReturn
 
 from agentinbox import __version__
 from agentinbox.answers import AnswerVerifier
+from agentinbox.api import start_api
 from agentinbox.audit import apply_retention, export_csv, export_jsonl, export_records
-from agentinbox.bus import BusError, DeliveryWiring, Job, load_bus
+from agentinbox.bus import (
+    BusError,
+    DeliveryWiring,
+    Job,
+    JobPublisher,
+    load_bus,
+    load_publisher,
+)
 from agentinbox.card import build_card
 from agentinbox.channels.base import ChannelError
 from agentinbox.channels.desktop import DesktopChannel, desktop_availability
@@ -52,6 +60,7 @@ from agentinbox.exit_codes import ExitCode
 from agentinbox.flood import FloodGuard
 from agentinbox.gate import gate
 from agentinbox.ingest import ingest
+from agentinbox.parity import prior_asks
 from agentinbox.reload import ConfigHolder
 from agentinbox.resolve import resolve
 from agentinbox.scheduler import Scheduler
@@ -282,16 +291,23 @@ def _exec_ask_body(args: argparse.Namespace, config: Config) -> dict[str, Any]:
 def _ask(args: argparse.Namespace) -> int:
     try:
         config, store = _runtime(args)
+        publisher = load_publisher(config, home=resolve_home(args.home))
     except (ConfigError, StoreError) as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)
         return int(ExitCode.UNAVAILABLE)
     try:
-        return _ask_impl(args, config, store)
+        return _ask_impl(args, config, store, publisher)
     finally:
         store.close()
+        publisher.close()
 
 
-def _ask_impl(args: argparse.Namespace, config: Config, store: AskStore) -> int:
+def _ask_impl(
+    args: argparse.Namespace,
+    config: Config,
+    store: AskStore,
+    publisher: JobPublisher,
+) -> int:
     if args.file:
         try:
             body = json.loads(Path(args.file).read_text(encoding="utf-8"))
@@ -318,6 +334,7 @@ def _ask_impl(args: argparse.Namespace, config: Config, store: AskStore) -> int:
             config=config,
             producer=ProducerIdentity.unauthenticated(),
             flood_guard=FloodGuard(store, config),
+            bus=publisher,
         )
     except ContractError as exc:
         print(f"{PROG}: {exc.field}: {exc.message}", file=sys.stderr)
@@ -396,7 +413,10 @@ def _gate(args: argparse.Namespace) -> int:
     ask = store.get(args.ask)
     if ask is not None:
         card = build_card(
-            ask, now=utcnow(), transitions=store.transitions_for(ask.ask_id)
+            ask,
+            now=utcnow(),
+            transitions=store.transitions_for(ask.ask_id),
+            prior_asks=prior_asks(store, ask),
         )
         sys.stdout.write(card.render("ci"))
     print(f"{PROG}: ask {args.ask}: {result.status} ({result.reason})")
@@ -447,7 +467,9 @@ def _serve(args: argparse.Namespace) -> int:
         print(f"{PROG}: retention failed: {exc}", file=sys.stderr)
 
     wiring = DeliveryWiring(store, channels, on_digest=on_digest)
-    scheduler = Scheduler(store, escalator=Escalator(store, config, bus=bus))
+    scheduler = Scheduler(
+        store, escalator=Escalator(store, config, bus=bus), bus=bus
+    )
 
     def on_hup(_signum: int, _frame: object) -> None:
         result = holder.reload()
@@ -476,6 +498,30 @@ def _serve(args: argparse.Namespace) -> int:
             tracer.sink.flush()
             return int(ExitCode.APPROVED)
 
+        api = None
+        if not args.no_api:
+            token = os.environ.get("AGENTINBOX_API_TOKEN") or _secrets.token_hex(32)
+            token_path = home / "api-token"
+            token_path.parent.mkdir(parents=True, exist_ok=True)
+            descriptor = os.open(
+                token_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600
+            )
+            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                handle.write(token + "\n")
+            try:
+                api = start_api(
+                    store=store,
+                    config=config,
+                    token=token,
+                    port=args.api_port,
+                    bus=bus,
+                    flood_guard=FloodGuard(store, config, bus=bus),
+                )
+            except OSError as exc:
+                print(f"{PROG}: API bind failed: {exc}", file=sys.stderr)
+                return int(ExitCode.UNAVAILABLE)
+            print(f"{PROG}: api {api.url} (token: {token_path})")
+
         stop = threading.Event()
         thread, scheduler_stop = scheduler.start()
         trace_stop = threading.Event()
@@ -497,6 +543,8 @@ def _serve(args: argparse.Namespace) -> int:
             trace_stop.set()
             thread.join(timeout=2)
             trace_thread.join(timeout=2)
+            if api is not None:
+                api.stop()
         return int(ExitCode.APPROVED)
     finally:
         bus.close()
@@ -726,6 +774,15 @@ def build_parser() -> argparse.ArgumentParser:
         if command == "serve":
             sub.add_argument(
                 "--once", action="store_true", help="drain the bus once and exit (tests/cron)"
+            )
+            sub.add_argument(
+                "--api-port",
+                type=int,
+                default=8377,
+                help="loopback API port (default 8377)",
+            )
+            sub.add_argument(
+                "--no-api", action="store_true", help="do not start the loopback API"
             )
         if command == "export":
             scope = sub.add_mutually_exclusive_group(required=True)

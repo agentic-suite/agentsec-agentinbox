@@ -126,12 +126,16 @@ Runs the contract kit against a fresh in-memory store and exits `0` when every c
 ## `serve`
 
 ```sh
-agentinbox serve            # scheduler + bus consumer until interrupted
-agentinbox serve --once     # tick the scheduler, drain the bus, exit
+agentinbox serve                    # loopback API + scheduler + bus consumer
+agentinbox serve --once             # tick the scheduler, drain the bus, exit
+agentinbox serve --api-port 9000    # choose the loopback API port (default 8377)
+agentinbox serve --no-api           # consumer only
 ```
 
-Exit `0` on a clean drain/stop; `4` for a bad config, an unavailable store, or a spool already owned by
-another daemon. See [bus.md](bus.md).
+The daemon starts the loopback ingest API (127.0.0.1) and writes its bearer token to `<home>/api-token` (mode
+`0600`); the token is never printed. `AGENTINBOX_API_TOKEN` overrides a generated token. Exit `0` on a clean
+drain/stop; `4` for a bad config, an unavailable store, an occupied API port, or a spool already owned by another
+daemon. See [bus.md](bus.md) and [producer-guide.md](../adapters/producer-guide.md).
 
 ## Environment
 

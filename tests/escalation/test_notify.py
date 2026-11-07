@@ -104,4 +104,4 @@ def test_escalated_card_carries_history(store) -> None:  # type: ignore[no-untyp
         if field.label == "tier"
     ]
     assert [field.value for field in tier_fields] == ["on-call"]
-    assert "tier-1 → on-call" in card.render("text")
+    assert "tier-1 did not answer → on-call" in card.render("text")

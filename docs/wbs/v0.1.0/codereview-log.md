@@ -118,3 +118,39 @@ reason) before a milestone closes.
 | 2026-11-08 | M20 | 20.5 | A bad reload could have replaced the effective policy with a broken config | High | `ConfigHolder` keeps the last-good config, returns the error, and the daemon records `inbox-config-changed(failed)` |
 | 2026-11-08 | M20 | 20.2 | The matrix could silently skip a fault or allow through a sink/channel path | High | `FAILURE_MATRIX` is complete over `Fault`; tests assert no case allows by itself and the scheduler's zero-allow counter stays `0` |
 | 2026-11-08 | M20 | 20.4 | A slow doctor would be ignored in cron | Medium | The healthy path is asserted under two seconds and every check is read-only |
+
+## PRD conformance review (M0–M20, 2026-11-08)
+
+Audit of the built milestones against PRDs 02/05/06/11/13/15/16/18/19/20/22. **Fixed in this pass** (each with a
+regression test):
+
+| Area | Finding | Fix |
+|---|---|---|
+| R5 / T7 | The audit chain re-hashed the stored digest but never the stored **payload body**, so editing a body while leaving the digest intact verified cleanly | New entries store the canonical payload; `verify_audit_chain` re-hashes it (exact seq); legacy v3 rows are `payload: null` and verify by digest only |
+| R5 / E9 | A corrupt audit `payload` JSON raised a raw `JSONDecodeError`, crashing `verify-log` | `audit_entries` raises `StoreError` ("payload is corrupt"); `verify-log`/`doctor` fail closed with exit `4` |
+| R5 / SC-20 | `export` included only audit rows whose `ref_id` matched the exported ask; interleaved delivery/flood rows broke `prev_hash` linkage, so the export was not offline-verifiable | Export carries the **whole chain in seq order**; a fixture verifies the exported chain offline |
+| R1 / T2 / E5 | Trusted-class fields from an unauthenticated producer rendered **without** the promised "unverified" label | Card/desktop now render `[unverified] …` for class, criticality, reason code, rule, policy version, environment, data class, requested by; the webhook payload carries `trust.unverified` |
+| R1 | The card lacked the PRD's "prior asks in this session" and "credential class" fields | Added (unknown when absent); terminal/desktop/webhook/CI card builders pass session history |
+| R3 | The pre-expiry warning was recorded as a `warned` transition but **never delivered to a channel** | Scheduler publishes one `warn:<ask>` renotify job; the desktop sends a distinct "expiring soon" notification once (card warning flag); other channels re-render |
+| R4 | The escalated card said "tier-1 → on-call", not the PRD's "tier 1 did not answer" | Escalation history now reads `tier-1 did not answer → on-call` |
+| E6 / I-5 | Delivery errors could persist a channel URL (and its token) in the delivery record/audit | Channel errors are redacted (`CONNECTION_STRING`/secret patterns) before the record/event; the webhook no longer echoes the URL |
+| R2 / E12 | CLI `ask` ingested without publishing a delivery job, so no channel was notified; and a producer could not publish while the daemon owned the spool lock | Added a lock-free `SpoolPublisher`; `ask` publishes through it (the daemon keeps the consumer lock) |
+| PRD 18 binding | Claims were bound to ask/channel/tier but not to `action_identity` | `ClaimRecord.action_identity` is persisted (schema v5) and checked in the verifier; a forged identity is `identity_mismatch` |
+| PRD 02 delivery modes | `serve` never started the loopback ingest API, so remote producers could not POST | `serve` starts the API on 127.0.0.1 (default 8377), writes a `0600` token to `<home>/api-token`, fails closed on a port conflict; `--no-api` opts out |
+
+**Noted, deliberately unchanged or deferred:**
+
+- **Claim entropy:** PRD 05 E3 says "256-bit"; PRD 18 §guessing and the claims design say **128-bit**. The
+  implementation follows PRD 18 (128 bits, OS CSPRNG, hashed at rest). PRD 05's wording should be reconciled.
+- **Flood pack:** R7's literal "200 asks/30 s → 200 denies" conflicts with the same paragraph's "a 20-action
+  migration burst remains fully answerable". With burst 20 the pack yields 180 denies + 20 burst-capacity asks,
+  one event, one digest. Documented in the flood reference; SC-13 should be written as "N denies + one
+  event/digest, no more than the burst capacity reaches the approver".
+- **`requested_by` trust:** it is producer-supplied (not a signed trusted field), so `self_review=deny` is
+  best-effort against an agent owner who lies; the card labels it unverified.
+- **Event sink restart:** the JSONL sink is at-least-once across a restart (stable `event_id = agentinbox:<seq>`);
+  a cursor file is a small follow-up if exact-once local logs are wanted.
+- **Reload scope:** a valid SIGHUP reload swaps the escalation policy and records the change; channels/API pick up
+  other policy on restart. Documented in the fail-closed reference.
+- **M21+:** service units, backup/restore, `report`, offline day, benches, and the final field tests (M32/M33)
+  remain out of this pass.

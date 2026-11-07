@@ -20,6 +20,7 @@ from agentinbox.channels.base import ChannelError
 from agentinbox.claims import mint_claim
 from agentinbox.config import Config
 from agentinbox.exit_codes import ExitCode
+from agentinbox.parity import prior_asks
 from agentinbox.resolve import resolve
 from agentinbox.store import AskRecord, AskStore, utcnow
 
@@ -74,7 +75,12 @@ class TerminalChannel:
         minted = mint_claim(
             store, ask, channel=self.name, tier=ask.tier, now=moment
         )
-        card = build_card(ask, now=moment, transitions=store.transitions_for(ask.ask_id))
+        card = build_card(
+            ask,
+            now=moment,
+            transitions=store.transitions_for(ask.ask_id),
+            prior_asks=prior_asks(store, ask),
+        )
         self.deliver(ask, card)
 
         chosen = decision or self._choose()

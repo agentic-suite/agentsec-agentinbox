@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from agentinbox.store import (
     ChainHashMismatch,
     DeliveryRecord,
     FloodRecord,
+    StoreError,
     TransitionRecord,
 )
 from agentinbox.store.sqlite import SqliteStore
@@ -74,6 +76,46 @@ def test_append_audit_is_chained(store) -> None:  # type: ignore[no-untyped-def]
     assert second.seq == first.seq + 1
     assert second.prev_hash == first.entry_hash
     store.verify_chain()
+
+
+def test_editing_the_payload_body_is_detected(tmp_path: Path) -> None:
+    database = tmp_path / "inbox.db"
+    store = SqliteStore(database)
+    make_ask(store)
+    store.close()
+
+    connection = sqlite3.connect(database)
+    connection.execute(
+        "UPDATE audit SET payload = ? WHERE seq = 1", (json.dumps({"tampered": True}),)
+    )
+    connection.commit()
+    connection.close()
+
+    reopened = SqliteStore(database)
+    try:
+        with pytest.raises(ChainHashMismatch, match="payload_digest"):
+            reopened.verify_chain()
+    finally:
+        reopened.close()
+
+
+def test_a_corrupt_payload_json_fails_closed(tmp_path: Path) -> None:
+    database = tmp_path / "inbox.db"
+    store = SqliteStore(database)
+    make_ask(store)
+    store.close()
+
+    connection = sqlite3.connect(database)
+    connection.execute("UPDATE audit SET payload = '{not json' WHERE seq = 1")
+    connection.commit()
+    connection.close()
+
+    reopened = SqliteStore(database)
+    try:
+        with pytest.raises(StoreError, match="corrupt"):
+            reopened.audit_entries()
+    finally:
+        reopened.close()
 
 
 def test_tampering_is_detected_by_exact_seq(tmp_path: Path) -> None:

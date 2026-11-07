@@ -127,6 +127,26 @@ def test_once_per_tier(store) -> None:  # type: ignore[no-untyped-def]
     assert "tier-2" in recorder.sent[-1].body
 
 
+def test_a_warning_is_a_second_notification(store) -> None:  # type: ignore[no-untyped-def]
+    from dataclasses import replace
+
+    from agentinbox.card import build_card
+
+    cfg = make_config()
+    recorder = Recorder()
+    channel = DesktopChannel(config=cfg, notifier=recorder, now=lambda: NOW)
+    ask = make_ask(store, cfg=cfg)
+    card = build_card(ask, now=NOW)
+
+    channel.deliver(ask, card)
+    channel.deliver(ask, replace(card, warning=True))
+    channel.deliver(ask, replace(card, warning=True))
+
+    assert len(recorder.sent) == 2
+    assert recorder.sent[-1].kind == "warn"
+    assert "expires soon" in recorder.sent[-1].body
+
+
 def test_one_digest_per_flood_window(store) -> None:  # type: ignore[no-untyped-def]
     cfg = make_config()
     recorder = Recorder()

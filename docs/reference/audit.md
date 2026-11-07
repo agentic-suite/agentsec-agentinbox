@@ -40,6 +40,14 @@ agentinbox export --ask ask_… --format csv --out /secure/evidence.csv
 The same records flattened into `record_type, ask_id, seq, at, kind, from_status, to_status, principal, channel,
 claim_id, reason, detail, status, prev_hash, entry_hash, payload_digest`.
 
+## Integrity rules
+
+- Every new entry stores the canonical `payload` body; verification re-hashes it and rejects an edited body even
+  when the stored digest was left untouched.
+- Rows migrated from the older schema have no reconstructable body (`payload: null`); they verify by digest and
+  are never used to derive events.
+- A corrupt payload JSON is a fail-closed `StoreError` (verify-log exits `4`), never a skip.
+
 ## Offline verification recipe
 
 ```python
@@ -58,7 +66,9 @@ for entry in [json.loads(line) for line in open("evidence.jsonl")]:
     prev = entry["entry_hash"]
 ```
 
-The export carries everything the recipe needs; no inbox, network, or daemon is involved.
+The export carries everything the recipe needs; no inbox, network, or daemon is involved. The audit rows are the
+**whole chain in seq order**, not just the exported ask's rows — a per-ask slice would break `prev_hash` linkage
+whenever another ask's delivery or flood entry is interleaved.
 
 ## Retention
 

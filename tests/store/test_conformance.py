@@ -39,6 +39,7 @@ def store(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[AskStore]:
         conformance.check_delivery_accounting,
         conformance.check_transition_read,
         conformance.check_claim_revocation,
+        conformance.check_claim_identity_binding,
         conformance.check_escalation_cas,
         conformance.check_flood_accounting,
         conformance.check_audit_covers_entities,

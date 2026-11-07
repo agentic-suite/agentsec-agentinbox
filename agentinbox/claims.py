@@ -45,6 +45,7 @@ def mint_claim(
         secret_hash=hash_secret(raw),
         issued_at=now,
         expires_at=ask.expires_at,
+        action_identity=ask.action_identity,
     )
     store.issue_claim(claim)
     return MintedClaim(claim=claim, secret=raw)

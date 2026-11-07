@@ -10,6 +10,8 @@ from datetime import datetime
 from agentinbox.bus.base import Job, JobKind
 from agentinbox.card import build_card
 from agentinbox.lifecycle import IllegalTransition, UnknownAsk, observe
+from agentinbox.parity import prior_asks
+from agentinbox.redaction import redact_value
 from agentinbox.store import (
     AskRecord,
     AskStatus,
@@ -54,7 +56,10 @@ class DeliveryWiring:
             return
 
         card = build_card(
-            ask, now=self.now(), transitions=self.store.transitions_for(ask.ask_id)
+            ask,
+            now=self.now(),
+            transitions=self.store.transitions_for(ask.ask_id),
+            prior_asks=prior_asks(self.store, ask),
         )
         for channel in self.channels:
             if self._attempt(job, ask, channel, card):
@@ -72,6 +77,7 @@ class DeliveryWiring:
             try:
                 channel.deliver(ask, card)  # type: ignore[attr-defined]
             except Exception as exc:  # every failure is accounted for
+                error = _safe_error(exc)
                 self.store.record_delivery(
                     DeliveryRecord(
                         delivery_id=f"{job.job_id}:{name}:{attempt}",
@@ -81,13 +87,13 @@ class DeliveryWiring:
                         status="failed",
                         at=moment,
                         target=name,
-                        error=str(exc)[:500],
+                        error=error,
                     )
                 )
                 self._observe(
                     job,
                     "delivery-failed",
-                    {"channel": name, "attempt": attempt, "error": str(exc)[:200]},
+                    {"channel": name, "attempt": attempt, "error": error[:200]},
                 )
                 if attempt < self.max_attempts:
                     self.backoff(attempt)
@@ -121,6 +127,13 @@ class DeliveryWiring:
             # The ask resolved (or vanished) while we were delivering: evidence may not
             # rewrite truth, and there is nowhere to record movement for an unknown ask.
             return
+
+
+def _safe_error(exc: Exception) -> str:
+    """A delivery error is evidence, never a place for a URL token or secret."""
+    text = str(exc) or type(exc).__name__
+    redacted, _receipts = redact_value(text, "delivery_error")
+    return str(redacted)[:500]
 
 
 __all__ = ["DEFAULT_MAX_ATTEMPTS", "DeliveryWiring"]

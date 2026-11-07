@@ -49,10 +49,18 @@ Runner = Callable[..., "subprocess.CompletedProcess[str]"]
 
 
 def render_notification(
-    ask: AskRecord, *, now: datetime, tier: str | None = None
+    ask: AskRecord,
+    *,
+    now: datetime,
+    tier: str | None = None,
+    warning: bool = False,
 ) -> Notification:
     """Build the notification from the record — never from the card's payload body."""
+    trust = ask.payload.get("_trust") or {}
+    unverified = set(trust.get("unverified") or [])
     action_class = str(ask.payload.get("class", "unknown"))
+    if "class" in unverified:
+        action_class = f"[unverified] {action_class}"
     remaining = max(0, int((ask.expires_at - now).total_seconds()))
     parts = [
         action_class,
@@ -63,11 +71,15 @@ def render_notification(
         parts.append(f"tier {tier}")
     body = " · ".join(parts) + "\n" + ANSWER_FOOTER.format(ask_id=ask.ask_id)
     return Notification(
-        title=f"Agent ask · {action_class}",
-        body=body,
+        title=(
+            f"Agent ask expiring soon · {action_class}"
+            if warning
+            else f"Agent ask · {action_class}"
+        ),
+        body=("expires soon · " if warning else "") + body,
         thread_id=ask.ask_id,
         ask_id=ask.ask_id,
-        kind="ask",
+        kind="warn" if warning else "ask",
         tier=tier,
     )
 
@@ -236,18 +248,23 @@ class DesktopChannel:
         self.config = config
         self.notifier = default_notifier() if notifier is None else notifier
         self._now = now
-        self._sent: set[tuple[str, str | None]] = set()
+        self._sent: set[tuple[str, str | None, bool]] = set()
         self._digest_windows: set[datetime] = set()
 
     def deliver(self, ask: AskRecord, card: Card | None = None) -> None:
-        """Deliver at most one notification per (ask, tier)."""
-        del card  # the card body is not a notification source (content rule)
+        """Deliver at most one notification per (ask, tier, warning state)."""
+        # The card body is not a notification source (content rule); only its warning flag is.
         if not self._enabled():
             return
-        key = (ask.ask_id, ask.tier)
+        warning = bool(card.warning) if card is not None else False
+        key = (ask.ask_id, ask.tier, warning)
         if key in self._sent:
             return
-        self.notifier.send(render_notification(ask, now=self._now(), tier=ask.tier))
+        self.notifier.send(
+            render_notification(
+                ask, now=self._now(), tier=ask.tier, warning=warning
+            )
+        )
         self._sent.add(key)
 
     def authenticate(self, *, as_name: str | None = None) -> str | None:

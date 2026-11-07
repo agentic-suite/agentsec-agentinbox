@@ -13,6 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
+from agentinbox.bus.base import AskBus, JobKind, new_job
 from agentinbox.escalation import Escalator
 from agentinbox.lifecycle import IllegalTransition, observe
 from agentinbox.store import (
@@ -43,11 +44,13 @@ class Scheduler:
         now: Callable[[], datetime] = utcnow,
         tick_seconds: float = DEFAULT_TICK_SECONDS,
         escalator: Escalator | None = None,
+        bus: AskBus | None = None,
     ) -> None:
         self.store = store
         self._now = now
         self.tick_seconds = tick_seconds
         self.escalator = escalator
+        self.bus = bus
         self._last_seen: datetime | None = None
         #: Proof for tests/reviews: expiry must never produce an allow.
         self.allows_on_expiry = 0
@@ -144,6 +147,17 @@ class Scheduler:
             )
         except IllegalTransition:  # the ask resolved between the read and the write
             return False
+        if self.bus is not None:
+            # A pre-expiry warning is delivered on every active channel, once.
+            self.bus.publish(
+                new_job(
+                    JobKind.RENOTIFY,
+                    ask_id=ask.ask_id,
+                    now=now,
+                    job_id=f"warn:{ask.ask_id}",
+                    payload={"reason": "warning", "remaining_s": remaining},
+                )
+            )
         return True
 
     def _mark_recovered(

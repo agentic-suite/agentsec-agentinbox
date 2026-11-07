@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
-from agentinbox.bus.base import AskBus, JobKind, new_job
+from agentinbox.bus.base import JobKind, JobPublisher, new_job
 from agentinbox.config import ClassConfig, Config
 from agentinbox.contract import AskContract, ContractError, compute_action_identity, parse_ask
 from agentinbox.escalation import initial_escalation
@@ -142,7 +142,7 @@ def ingest(
     config: Config,
     producer: ProducerIdentity,
     now: datetime | None = None,
-    bus: AskBus | None = None,
+    bus: JobPublisher | None = None,
     flood_guard: FloodGuard | None = None,
 ) -> IngestResult:
     moment = now or utcnow()

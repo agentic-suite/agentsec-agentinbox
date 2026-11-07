@@ -57,6 +57,33 @@ def test_deny_with_reason(store) -> None:  # type: ignore[no-untyped-def]
     assert store.transitions_for(ask.ask_id)[-1].reason == "missing rollback plan"
 
 
+def test_a_claim_bound_to_another_identity_is_rejected(store) -> None:  # type: ignore[no-untyped-def]
+    from agentinbox.claims import MintedClaim, hash_secret
+    from agentinbox.store import ClaimRecord
+
+    ask, cfg = make_ask(store)
+    forged = ClaimRecord(
+        claim_id="cl_forged_identity",
+        ask_id=ask.ask_id,
+        channel="terminal",
+        tier=None,
+        secret_hash=hash_secret("forged-secret"),
+        issued_at=NOW,
+        expires_at=ask.expires_at,
+        action_identity="sha256:" + "b" * 64,
+    )
+    store.issue_claim(forged)
+
+    with pytest.raises(AnswerRejected) as caught:
+        AnswerVerifier(store, cfg, now=lambda: NOW).submit(
+            request(ask, MintedClaim(claim=forged, secret="forged-secret")),
+            channel_authenticated=True,
+        )
+
+    assert caught.value.cause == "identity_mismatch"
+    assert store.get(ask.ask_id).status is AskStatus.PENDING  # type: ignore[union-attr]
+
+
 def test_unauthenticated_channel_cannot_answer(store) -> None:  # type: ignore[no-untyped-def]
     ask, cfg = make_ask(store)
     minted = mint(store, ask)

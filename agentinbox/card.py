@@ -56,6 +56,8 @@ class Card:
     redactions: tuple[Redaction, ...]
     flags: tuple[str, ...] = ()
     alternatives: tuple[str, ...] = ()
+    #: True once the ask is inside its pre-expiry warning window.
+    warning: bool = False
 
     def render(self, surface: str = "text", *, color: bool = False) -> str:
         if surface not in SURFACES:
@@ -69,6 +71,7 @@ def build_card(
     now: datetime,
     transitions: Sequence[TransitionRecord] = (),
     status: AskStatus | None = None,
+    prior_asks: Sequence[AskRecord] = (),
 ) -> Card:
     payload: Mapping[str, Any] = ask.payload
     trust = payload.get("_trust") or {}
@@ -90,7 +93,10 @@ def build_card(
             "criticality",
             _text(payload.get("criticality"), trusted="criticality" not in unverified),
         ),
-        Field("requested by", _text(payload.get("requested_by"))),
+        Field(
+            "requested by",
+            _text(payload.get("requested_by"), trusted="requested_by" not in unverified),
+        ),
     )
     policy_fields = (
         Field(
@@ -116,12 +122,14 @@ def build_card(
             "data class",
             _text(payload.get("data_class"), trusted="data_class" not in unverified),
         ),
+        Field("credential class", _text(blast.get("credential_class"))),
     )
     session_fields = (
         Field("session", _text(payload.get("session_id"))),
         Field("agent", _text(payload.get("agent_id"))),
         Field("tier", _text(ask.tier)),
         Field("escalations", _escalation_history(transitions)),
+        Field("prior asks", _prior_asks(prior_asks)),
         Field("session tail", _session_tail(context.get("session_tail")), untrusted=True),
         Field("flags", _text(", ".join(str(flag) for flag in context.get("flags") or []))),
         Field(
@@ -155,6 +163,11 @@ def build_card(
         redactions=redactions,
         flags=tuple(str(flag) for flag in context.get("flags") or []),
         alternatives=tuple(str(item) for item in context.get("alternatives") or []),
+        warning=(
+            effective_status is AskStatus.PENDING
+            and ask.warn_at is not None
+            and ask.warn_at <= now
+        ),
     )
 
 
@@ -234,6 +247,9 @@ def _text(value: Any, *, untrusted: bool = False, trusted: bool = True) -> str:
     if len(text) > FIELD_CAP:
         omitted = len(text) - FIELD_CAP
         text = text[:FIELD_CAP] + f" +{omitted} chars omitted"
+    # Trusted-class fields are only verified when a signed producer adapter supplied them.
+    if not trusted:
+        text = f"[unverified] {text}"
     return text
 
 
@@ -246,11 +262,19 @@ def _arguments(arguments: Any) -> str:
 
 def _escalation_history(transitions: Sequence[TransitionRecord]) -> str:
     rows = [
-        f"{item.detail.get('from_tier', 'unknown')} → {item.detail.get('to_tier', 'unknown')}"
+        f"{item.detail.get('from_tier', 'unknown')} did not answer → "
+        f"{item.detail.get('to_tier', 'unknown')}"
         for item in transitions
         if item.kind == "ask-escalated"
     ]
     return _text(", ".join(rows)) if rows else "none"
+
+
+def _prior_asks(asks: Sequence[AskRecord]) -> str:
+    if not asks:
+        return "none"
+    rows = [f"{item.ask_id} {item.status.value}" for item in asks[-3:]]
+    return _text(", ".join(rows))
 
 
 def _session_tail(tail: Any) -> str:

@@ -30,7 +30,7 @@ Revocation: `store.revoke_claims(ask_id, at=now, tier="tier-1")` → those claim
 | `bad_signature` | channel did not authenticate | 403 |
 | `unknown_claim` / `bad_secret` / `expired_token` / `used` / `revoked` | claim invalid | `bad_claim` (uniform) |
 | `guessing` | attempt ceiling exceeded | `bad_claim` |
-| `identity_mismatch` | claim bound to another ask/channel/tier | `identity_mismatch` |
+| `identity_mismatch` | claim bound to another ask/channel/tier/action identity | `identity_mismatch` |
 | `late` | ask already resolved | `late` (with winner/time) |
 | `off_roster` | principal not authorized | `off_roster` |
 | `self_review` | requester deciding own ask | `self_review` |
@@ -45,6 +45,8 @@ uniform for credential failures so callers cannot probe claim existence.
 - **Both** a valid claim **and** an authenticated principal are required; either alone is refused.
 - First valid answer wins (CAS); later answers are `late-answer` observations — the decision never changes.
 - Claims expire with the ask; a claim cannot outlive its decision window.
+- A claim also records the ask's `action_identity`; a claim presented against a different identity is rejected
+  (`identity_mismatch`) even though the ask id matched.
 - Approve on an `irreversible` class requires typing the action name (`run_command` in the fixtures).
 - Deny on a class with `require_reason_on_deny` requires a non-empty reason.
 - Raw `POST /v1/asks/{id}/answer` always returns 403: answers come from channel adapters (terminal, M7).

@@ -17,7 +17,9 @@ from agentinbox.bus.base import (
     InProcBus,
     Job,
     JobKind,
+    JobPublisher,
     SpoolBus,
+    SpoolPublisher,
     new_job,
     publish_digest,
 )
@@ -33,6 +35,13 @@ def load_bus(config: Config, *, home: Path, now: Callable[[], datetime] = utcnow
     return SpoolBus(home / "spool", now=now)
 
 
+def load_publisher(config: Config, *, home: Path) -> JobPublisher:
+    """A producer-side publisher: lock-free for the spool, in-proc for the default driver."""
+    if config.bus.driver == "in-proc":
+        return InProcBus()
+    return SpoolPublisher(home / "spool")
+
+
 __all__ = [
     "DEFAULT_DONE_KEEP",
     "DEFAULT_MAX_ATTEMPTS",
@@ -46,8 +55,11 @@ __all__ = [
     "InProcBus",
     "Job",
     "JobKind",
+    "JobPublisher",
     "SpoolBus",
+    "SpoolPublisher",
     "load_bus",
+    "load_publisher",
     "new_job",
     "publish_digest",
 ]

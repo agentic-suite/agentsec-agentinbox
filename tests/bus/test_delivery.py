@@ -128,6 +128,27 @@ def test_resolved_ask_is_a_logged_no_op(store) -> None:  # type: ignore[no-untyp
     assert store.get(ask.ask_id).status is AskStatus.APPROVED  # type: ignore[union-attr]
 
 
+def test_delivery_errors_are_redacted(store) -> None:  # type: ignore[no-untyped-def]
+    class LeakyChannel(Channel):
+        def deliver(self, ask: Any, card: Any) -> None:
+            raise OSError("https://user:tok-secret@db.example/x")
+
+    ask = make_ask(store)
+    wiring(store, LeakyChannel("webhook")).handle(
+        new_job(JobKind.DELIVER, ask_id=ask.ask_id, now=NOW)
+    )
+
+    records = store.list_deliveries(ask.ask_id)
+    assert records
+    for record in records:
+        assert "tok-secret" not in (record.error or "")
+        assert "REDACTED" in (record.error or "")
+    failed = [
+        item for item in store.transitions_for(ask.ask_id) if item.kind == "delivery-failed"
+    ]
+    assert all("tok-secret" not in str(item.detail) for item in failed)
+
+
 def test_unknown_ask_is_a_no_op(store) -> None:  # type: ignore[no-untyped-def]
     channel = Channel("terminal")
     wiring(store, channel).handle(new_job(JobKind.DELIVER, ask_id="ask-missing", now=NOW))

@@ -145,6 +145,18 @@ def test_the_cli_runs_the_kit(tmp_path: Path, capsys: pytest.CaptureFixture[str]
     assert "FAIL" not in out
 
 
+def test_the_cli_json_report(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    home = tmp_path / "home"
+    init_home(home, resolve_config_path(home))
+
+    assert main(["--home", str(home), "--json", "conformance"]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report[0]["name"] == "config.class"
+    assert all(item["ok"] for item in report)
+
+
 def test_the_cli_reports_a_broken_config(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

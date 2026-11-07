@@ -44,7 +44,8 @@ Content-Type: application/json
 { "contract": "ask/1.0", ... }
 ```
 
-- The token is the per-process API token (never logged).
+- The token is the daemon's API token: `agentinbox serve` writes it to `<home>/api-token` (mode `0600`) and never
+  prints it. `AGENTINBOX_API_TOKEN` overrides a generated token. The API binds loopback only.
 - Optional adapter signature for trusted fields:
 
 ```http

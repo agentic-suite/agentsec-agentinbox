@@ -127,6 +127,12 @@ class AnswerVerifier:
         if claim.ask_id != ask.ask_id or claim.channel != request.channel:
             self._reject(ask, request, now, "identity_mismatch", "claim is bound elsewhere")
             raise AnswerRejected("identity_mismatch", "claim is bound to another ask/channel")
+        if (
+            claim.action_identity is not None
+            and claim.action_identity != ask.action_identity
+        ):
+            self._reject(ask, request, now, "identity_mismatch", "claim identity is stale")
+            raise AnswerRejected("identity_mismatch", "claim is bound to another action")
         if claim.tier is not None and ask.tier is not None and claim.tier != ask.tier:
             self._reject(ask, request, now, "identity_mismatch", "claim tier is stale")
             raise AnswerRejected("identity_mismatch", "claim tier is stale")

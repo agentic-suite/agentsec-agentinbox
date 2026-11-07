@@ -7,6 +7,7 @@ milestones can grow the set without renumbering. Any ``fail`` makes the whole co
 
 from __future__ import annotations
 
+import json
 import os
 import sqlite3
 import stat
@@ -153,10 +154,18 @@ def _chain(database: Path) -> Check:
         return Check("chain", OK, "no store yet")
     try:
         with sqlite3.connect(f"file:{database}?mode=ro", uri=True) as connection:
-            rows = connection.execute(
-                "SELECT seq, prev_hash, entry_hash, kind, ref_id, at, payload_digest"
-                " FROM audit ORDER BY seq ASC"
-            ).fetchall()
+            try:
+                rows = connection.execute(
+                    "SELECT seq, prev_hash, entry_hash, kind, ref_id, at,"
+                    " payload_digest, payload FROM audit ORDER BY seq ASC"
+                ).fetchall()
+            except sqlite3.OperationalError as exc:
+                if "no such column: payload" not in str(exc).lower():
+                    raise
+                rows = connection.execute(
+                    "SELECT seq, prev_hash, entry_hash, kind, ref_id, at,"
+                    " payload_digest, NULL AS payload FROM audit ORDER BY seq ASC"
+                ).fetchall()
     except sqlite3.OperationalError as exc:
         if "no such table: audit" in str(exc).lower():
             return Check("chain", OK, "audit table not present yet (migrates on open)")
@@ -164,18 +173,29 @@ def _chain(database: Path) -> Check:
     except sqlite3.Error as exc:
         return Check("chain", FAIL, f"{database}: cannot read the audit chain ({exc})")
 
-    entries = [
-        AuditEntry(
-            seq=int(row[0]),
-            prev_hash=str(row[1]),
-            entry_hash=str(row[2]),
-            kind=str(row[3]),
-            ref_id=str(row[4]),
-            at=_parse_moment(str(row[5])),
-            payload_digest=str(row[6]),
+    entries: list[AuditEntry] = []
+    for row in rows:
+        raw = row[7]
+        payload: dict[str, object] | None = None
+        if raw is not None:
+            try:
+                payload = json.loads(raw)
+            except (TypeError, ValueError):
+                return Check(
+                    "chain", FAIL, f"{database}: audit seq {row[0]} payload is corrupt"
+                )
+        entries.append(
+            AuditEntry(
+                seq=int(row[0]),
+                prev_hash=str(row[1]),
+                entry_hash=str(row[2]),
+                kind=str(row[3]),
+                ref_id=str(row[4]),
+                at=_parse_moment(str(row[5])),
+                payload_digest=str(row[6]),
+                payload=payload,
+            )
         )
-        for row in rows
-    ]
     try:
         verify_audit_chain(entries)
     except ChainHashMismatch as exc:

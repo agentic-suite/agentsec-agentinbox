@@ -175,6 +175,34 @@ def test_ask_file_returns_the_resolve_outcome(
     assert '"reason_code": "allow_ask_approved"' in capsys.readouterr().out
 
 
+def test_ask_publishes_while_a_daemon_owns_the_spool(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from agentinbox.bus import SpoolBus
+
+    monkeypatch.setattr("agentinbox.cli.getpass.getuser", lambda: "requester")
+    home = make_home(tmp_path)
+    marker = tmp_path / "published"
+    daemon_bus = SpoolBus(home / "spool")
+    try:
+        thread, result = run_in_thread(
+            ["--home", str(home), "ask", "--exec", f"touch {marker}"]
+        )
+        ask = wait_for_pending(home, thread=thread, result=result)
+
+        jobs = []
+        assert daemon_bus.consume(jobs.append) == 1
+        assert jobs[0].ask_id == ask.ask_id
+
+        answer(home, ask, decision="approve")
+        thread.join(timeout=10)
+    finally:
+        daemon_bus.close()
+
+    assert result["code"] == 0
+    assert marker.exists()
+
+
 def test_ask_requires_exactly_one_source(tmp_path: Path) -> None:
     home = make_home(tmp_path)
     assert main(["--home", str(home), "ask"]) == 1

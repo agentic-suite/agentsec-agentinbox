@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Final, Protocol
 
 #: Version of the conformance suite a driver must declare to be admitted.
-CONFORMANCE_VERSION: Final = "6"
+CONFORMANCE_VERSION: Final = "7"
 
 
 class StoreError(Exception):
@@ -123,6 +123,8 @@ class ClaimRecord:
     expires_at: datetime
     consumed_at: datetime | None = None
     revoked_at: datetime | None = None
+    #: The action identity the claim is bound to (PRD 18 binding step).
+    action_identity: str | None = None
 
     def state(self, at: datetime) -> str:
         """Derived claim state: used > revoked > expired > issued."""
@@ -165,7 +167,12 @@ class FloodRecord:
 
 @dataclass(frozen=True, slots=True)
 class AuditEntry:
-    """The hash-chained evidence row. ``payload`` is the canonical evidence body."""
+    """The hash-chained evidence row.
+
+    ``payload`` is the canonical evidence body when this build wrote it (``None`` for rows
+    migrated from schema v3, whose body cannot be reconstructed). Verification re-hashes a
+    present body, so editing it is detected even if the stored digest is left untouched.
+    """
 
     seq: int
     prev_hash: str
@@ -174,7 +181,7 @@ class AuditEntry:
     ref_id: str
     at: datetime
     payload_digest: str
-    payload: Mapping[str, Any] = field(default_factory=dict)
+    payload: Mapping[str, Any] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -348,6 +355,10 @@ def verify_audit_chain(entries: Sequence[AuditEntry]) -> None:
             )
         if entry.prev_hash != previous:
             raise ChainHashMismatch(f"audit seq {entry.seq}: prev_hash does not link")
+        if entry.payload is not None and payload_digest(entry.payload) != entry.payload_digest:
+            raise ChainHashMismatch(
+                f"audit seq {entry.seq}: payload_digest does not match the body"
+            )
         recomputed = chain_hash(
             prev_hash=entry.prev_hash,
             seq=entry.seq,

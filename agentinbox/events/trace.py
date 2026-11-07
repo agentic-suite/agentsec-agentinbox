@@ -56,6 +56,8 @@ _SKIP_TRANSITIONS = frozenset({"ask-delivered", "delivery-failed", "ask-flood"})
 
 
 def event_from_entry(store: AskStore, entry: AuditEntry) -> dict[str, Any] | None:
+    if entry.payload is None:  # legacy v3 row; the body cannot be reconstructed
+        return None
     if entry.kind == "transition":
         kind = str(entry.payload.get("kind", ""))
         if kind in _SKIP_TRANSITIONS:
@@ -119,7 +121,8 @@ def event_from_entry(store: AskStore, entry: AuditEntry) -> dict[str, Any] | Non
 def _transition_payload(
     event_type: str, entry: AuditEntry, ask: AskRecord
 ) -> dict[str, Any]:
-    detail = entry.payload.get("detail") or {}
+    payload = entry.payload or {}
+    detail = payload.get("detail") or {}
     if event_type == "ask-raised":
         return {
             "class": str(ask.payload.get("class", "unknown")),
@@ -138,16 +141,16 @@ def _transition_payload(
     if event_type == "ask-answered":
         return {
             "outcome": detail.get("decision"),
-            "principal": entry.payload.get("principal"),
-            "channel": entry.payload.get("channel"),
-            "reason": entry.payload.get("reason"),
+            "principal": payload.get("principal"),
+            "channel": payload.get("channel"),
+            "reason": payload.get("reason"),
         }
     if event_type == "ask-expired":
         return {
             "ttl_s": int((ask.expires_at - ask.created_at).total_seconds())
         }
     if event_type == "ask-cancelled":
-        return {"by": entry.payload.get("principal") or "producer"}
+        return {"by": payload.get("principal") or "producer"}
     cause = str(detail.get("cause", "late"))
     return {
         "cause": ANSWER_CAUSE_MAP.get(cause, "binding_mismatch"),

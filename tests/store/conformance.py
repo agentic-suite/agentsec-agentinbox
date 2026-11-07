@@ -257,6 +257,26 @@ def check_transition_read(store) -> None:  # type: ignore[no-untyped-def]
     assert [item.seq for item in transitions] == [1, 2]
 
 
+def check_claim_identity_binding(store) -> None:  # type: ignore[no-untyped-def]
+    ask = sample_ask()
+    store.create_or_get_by_identity(ask)
+    claim = ClaimRecord(
+        claim_id="claim_identity",
+        ask_id=ask.ask_id,
+        channel="terminal",
+        tier=None,
+        secret_hash="h" * 64,
+        issued_at=T0,
+        expires_at=T0 + timedelta(minutes=5),
+        action_identity=ask.action_identity,
+    )
+    store.issue_claim(claim)
+
+    stored = store.get_claim("claim_identity")
+    assert stored is not None
+    assert stored.action_identity == ask.action_identity
+
+
 def check_claim_revocation(store) -> None:  # type: ignore[no-untyped-def]
     ask = sample_ask()
     store.create_or_get_by_identity(ask)

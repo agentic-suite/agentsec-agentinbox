@@ -67,3 +67,10 @@ The retry window is `flood_window_seconds`; the denied ask's `flood-denied` tran
 
 Buckets are in-process (a restart resets the counters); the flood records and events are durable. Thresholds are
 static config in v0.1.0 — adaptive/behavioral tuning is the forward slate.
+
+**Burst vs pack:** a new key starts with `per_agent_burst` tokens, so the first `burst` asks are allowed and the
+rest of a pack are denied. With the defaults (burst 20, 200 asks in 30 s) the pack yields **180 denies plus the
+20-ask burst capacity**, one event, and one digest. This is deliberate: the same mechanism must keep a legitimate
+20-action migration answerable (SC-14). A literal "200 asks → 200 denies" would deny the legitimate burst too;
+the SC-13 verdict is therefore "N denies, one event, one digest, and no more than the burst capacity reaches the
+approver".

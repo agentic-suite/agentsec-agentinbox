@@ -144,7 +144,30 @@ def test_serve_loop_stops_on_a_keyboard_interrupt(
             return None
 
     monkeypatch.setattr("agentinbox.cli.load_bus", lambda *a, **k: FakeBus())
-    assert main(["--home", str(home), "serve"]) == 0
+    assert main(["--home", str(home), "serve", "--no-api"]) == 0
+
+
+def test_serve_starts_the_api_and_writes_a_private_token(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home = make_home(tmp_path)
+
+    class FakeBus:
+        def run(self, handler, stop) -> None:  # type: ignore[no-untyped-def]
+            raise KeyboardInterrupt
+
+        def consume(self, handler) -> int:  # type: ignore[no-untyped-def]
+            return 0
+
+        def close(self) -> None:
+            return None
+
+    monkeypatch.setattr("agentinbox.cli.load_bus", lambda *a, **k: FakeBus())
+    assert main(["--home", str(home), "serve", "--api-port", "0"]) == 0
+
+    token_path = home / "api-token"
+    assert len(token_path.read_text(encoding="utf-8").strip()) == 64
+    assert token_path.stat().st_mode & 0o777 == 0o600
 
 
 def test_serve_once_writes_the_agentwatch_events(tmp_path: Path) -> None:
@@ -176,6 +199,35 @@ def test_serve_once_writes_the_agentwatch_events(tmp_path: Path) -> None:
     assert events[0]["event_type"] == "ask-raised"
     assert events[0]["emitter"] == "agentinbox"
     assert events[0]["session_id"]
+
+
+def test_serve_fails_closed_when_the_api_port_is_taken(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import socket
+
+    home = make_home(tmp_path)
+    occupied = socket.socket()
+    occupied.bind(("127.0.0.1", 0))
+    occupied.listen(1)
+    port = occupied.getsockname()[1]
+
+    class FakeBus:
+        def run(self, handler, stop) -> None:  # type: ignore[no-untyped-def]
+            raise KeyboardInterrupt
+
+        def consume(self, handler) -> int:  # type: ignore[no-untyped-def]
+            return 0
+
+        def close(self) -> None:
+            return None
+
+    monkeypatch.setattr("agentinbox.cli.load_bus", lambda *a, **k: FakeBus())
+    try:
+        assert main(["--home", str(home), "serve", "--api-port", str(port)]) == 4
+    finally:
+        occupied.close()
+    assert "API bind failed" in capsys.readouterr().err
 
 
 def test_serve_fails_closed_without_a_config(

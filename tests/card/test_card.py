@@ -56,6 +56,60 @@ def test_surfaces_share_the_same_core_blocks() -> None:
     assert len(set(cores.values())) == 1
 
 
+def test_unverified_trusted_fields_are_labelled() -> None:
+    # The default producer is unauthenticated, so class/criticality are unverified.
+    rendered = build_card(make_ask(), now=NOW).render("text")
+
+    assert "[unverified] irreversible" in rendered
+    assert "[unverified] critical" in rendered
+
+
+def test_authenticated_trusted_fields_are_not_labelled(store) -> None:  # type: ignore[no-untyped-def]
+    ask = ingest(
+        payload(),
+        store=store,
+        config=config(),
+        producer=ProducerIdentity(adapter="agentpolicy", authenticated=True),
+        now=NOW,
+    ).ask
+
+    rendered = build_card(ask, now=NOW).render("text")
+
+    assert "[unverified] irreversible" not in rendered
+    assert "class: irreversible" in rendered
+
+
+def test_prior_asks_and_credential_class_render(store) -> None:  # type: ignore[no-untyped-def]
+    first = make_ask(store)
+    second = ingest(
+        payload(
+            arguments={"command": "echo second"},
+            context={
+                "blast_radius": {
+                    "resource": "db:prod/customers",
+                    "credential_class": "prod-deploy",
+                }
+            },
+        ),
+        store=store,
+        config=config(),
+        producer=ProducerIdentity.unauthenticated(),
+        now=NOW,
+    ).ask
+
+    rendered = build_card(second, now=NOW, prior_asks=[first, second]).render("text")
+
+    assert first.ask_id in rendered
+    assert "credential class: prod-deploy" in rendered
+
+
+def test_absent_prior_asks_and_escalations_render_none() -> None:
+    rendered = build_card(make_ask(), now=NOW).render("text")
+
+    assert "prior asks: none" in rendered
+    assert "escalations: none" in rendered
+
+
 def test_missing_fields_are_explicit_unknown_never_blank() -> None:
     degraded = AskRecord(
         ask_id="ask_" + "d" * 16,

@@ -44,7 +44,7 @@ from agentinbox.store.base import (
     verify_audit_chain,
 )
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 #: from_version -> statements that take the store to ``from_version + 1``.
 MIGRATIONS: dict[int, tuple[str, ...]] = {
@@ -141,7 +141,8 @@ MIGRATIONS: dict[int, tuple[str, ...]] = {
         "ALTER TABLE asks ADD COLUMN escalate_at TEXT",
         "ALTER TABLE asks ADD COLUMN tier TEXT",
     ),
-    3: ("ALTER TABLE audit ADD COLUMN payload TEXT NOT NULL DEFAULT '{}'",),
+    3: ("ALTER TABLE audit ADD COLUMN payload TEXT",),
+    4: ("ALTER TABLE claims ADD COLUMN action_identity TEXT",),
 }
 
 
@@ -332,8 +333,8 @@ class SqliteStore:
             try:
                 self._conn.execute(
                     "INSERT INTO claims (claim_id, ask_id, channel, tier, secret_hash,"
-                    " issued_at, expires_at, consumed_at, revoked_at)"
-                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    " issued_at, expires_at, consumed_at, revoked_at, action_identity)"
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
                         claim.claim_id,
                         claim.ask_id,
@@ -344,6 +345,7 @@ class SqliteStore:
                         to_iso(claim.expires_at),
                         None if claim.consumed_at is None else to_iso(claim.consumed_at),
                         None if claim.revoked_at is None else to_iso(claim.revoked_at),
+                        claim.action_identity,
                     ),
                 )
             except sqlite3.IntegrityError as exc:
@@ -607,19 +609,37 @@ class SqliteStore:
     def audit_entries(self) -> list[AuditEntry]:
         with self._lock:
             rows = self._conn.execute("SELECT * FROM audit ORDER BY seq ASC").fetchall()
-        return [
-            AuditEntry(
-                seq=row["seq"],
-                prev_hash=row["prev_hash"],
-                entry_hash=row["entry_hash"],
-                kind=row["kind"],
-                ref_id=row["ref_id"],
-                at=parse_iso(row["at"]),
-                payload_digest=row["payload_digest"],
-                payload=json.loads(row["payload"]),
+        entries: list[AuditEntry] = []
+        for row in rows:
+            raw = row["payload"]
+            payload: Mapping[str, Any] | None
+            if raw is None:
+                payload = None
+            else:
+                try:
+                    decoded = json.loads(raw)
+                except (TypeError, ValueError) as exc:
+                    raise StoreError(
+                        f"audit seq {row['seq']}: payload is corrupt ({exc})"
+                    ) from exc
+                if not isinstance(decoded, dict):
+                    raise StoreError(
+                        f"audit seq {row['seq']}: payload is not an object"
+                    )
+                payload = decoded
+            entries.append(
+                AuditEntry(
+                    seq=row["seq"],
+                    prev_hash=row["prev_hash"],
+                    entry_hash=row["entry_hash"],
+                    kind=row["kind"],
+                    ref_id=row["ref_id"],
+                    at=parse_iso(row["at"]),
+                    payload_digest=row["payload_digest"],
+                    payload=payload,
+                )
             )
-            for row in rows
-        ]
+        return entries
 
     def verify_chain(self) -> None:
         verify_audit_chain(self.audit_entries())
@@ -803,6 +823,7 @@ def _row_to_claim(row: sqlite3.Row) -> ClaimRecord:
         expires_at=parse_iso(row["expires_at"]),
         consumed_at=None if row["consumed_at"] is None else parse_iso(row["consumed_at"]),
         revoked_at=None if row["revoked_at"] is None else parse_iso(row["revoked_at"]),
+        action_identity=row["action_identity"],
     )
 
 

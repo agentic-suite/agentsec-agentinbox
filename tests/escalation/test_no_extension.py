@@ -77,5 +77,5 @@ def test_last_tier_renders_the_remaining_time(store) -> None:  # type: ignore[no
     card = build_card(stored, now=clock(), transitions=store.transitions_for(ask.ask_id))  # type: ignore[arg-type]
     rendered = card.render("terminal")
 
-    assert "tier-1 → on-call" in rendered
+    assert "tier-1 did not answer → on-call" in rendered
     assert card.ttl_seconds == 3300
