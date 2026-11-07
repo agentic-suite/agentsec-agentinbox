@@ -352,7 +352,7 @@ every M26–M31 milestone carries its own gate. The 32.7 regression baseline bec
   burn-down including spent grants; doctor lists active grants. Five repeated denies surface as a tuning
   insight only. Next: **M31** (`31.D0` insights design).
 
-- **2026-11-07 — M31 Policy learning & governance insights closed.** Issues #365–#378. Commit `TBD`.
+- **2026-11-07 — M31 Policy learning & governance insights closed.** Issues #365–#378. Commit `2dedc7d`.
   **Gate:** 924 tests pass · coverage **95.11%** · `ruff` clean · `mypy --strict` clean.
   Redacted, aggregated insights cover repetitive approvals (grant/rule/self-cert proposal), deny clusters,
   class × tier × hour hotspots, evidence gaps, and divergence-driven hardening. Calibration is aggregate
