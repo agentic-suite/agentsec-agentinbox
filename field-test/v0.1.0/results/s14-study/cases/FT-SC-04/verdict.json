@@ -1,0 +1,16 @@
+{
+  "id": "FT-SC-04",
+  "status": "blocked",
+  "class": "P/F|B",
+  "blocked": true,
+  "grounded": true,
+  "assertions_total": 2,
+  "assertions_grounded": 1,
+  "llm_captured": false,
+  "llm_required": false,
+  "limitation": "the 15-second study needs >=10 non-author participants; none are provisioned on this Docker SUT",
+  "release_gate_item": "PRD 21 Method B / M32 32.5 (#384)",
+  "run_id": "s14-study",
+  "assertions": [{"name":"blocked","ok":true,"blocked":true,"reason":"the 15-second study needs >=10 non-author participants; none are provisioned on this Docker SUT","release_gate_item":"PRD 21 Method B / M32 32.5 (#384)"},{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}
+]
+}

@@ -1,0 +1,107 @@
+{
+  "cases": [
+    {
+      "assertions": [
+        {
+          "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/flood/test_buckets.py tests/flood/test_deny_digest.py",
+          "grounded": true,
+          "name": "FT-SC-13 assertions",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 2,
+      "assertions_total": 2,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-13",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s3-flood",
+      "status": "pass"
+    },
+    {
+      "assertions": [
+        {
+          "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/flood/test_headroom.py",
+          "grounded": true,
+          "name": "FT-SC-14 assertions",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 2,
+      "assertions_total": 2,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-14",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s3-flood",
+      "status": "pass"
+    },
+    {
+      "assertions": [
+        {
+          "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/flood/test_buckets.py tests/flood/test_headroom.py tests/flood/test_deny_digest.py",
+          "grounded": true,
+          "name": "FT-SC-PAIR flood suites",
+          "ok": true
+        },
+        {
+          "cmd": "/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/python -",
+          "grounded": true,
+          "name": "flood-pair-together",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 3,
+      "assertions_total": 3,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-PAIR",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s3-flood",
+      "status": "pass"
+    }
+  ],
+  "env": {
+    "arch": "arm64",
+    "commit": "e54972b",
+    "compose": "5.6.1",
+    "docker": "Docker version 29.5.2, build 79eb04c7d8",
+    "os": "Darwin",
+    "python": "Python-3.12.14",
+    "run_id": "s3-flood",
+    "version": "v0.1.0"
+  },
+  "generated_at": "2026-11-07T19:08:40.039945+00:00",
+  "green": true,
+  "run_id": "s3-flood",
+  "totals": {
+    "blocked": 0,
+    "fail": 0,
+    "over_claimed": 0,
+    "pass": 3
+  }
+}

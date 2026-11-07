@@ -1,0 +1,2 @@
+{"name":"FT-SC-26 assertions","ok":false,"grounded":true,"cmd":"ft_sut python /ft/scripts/run_pytest.py tests/ops/test_offline.py"}
+{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}

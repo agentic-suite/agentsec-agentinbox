@@ -1,0 +1,2 @@
+/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/scripts/fieldtest/t1_answerer.sh: line 31: mapfile: command not found
+/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/scripts/fieldtest/t1_codex.sh: line 46: 36486 Terminated: 15          "$FT_PY" "$REPO_ROOT/scripts/fieldtest/t1_proxy.py" "$UPSTREAM" "$LLM_DIR" > "$PROXY_LOG" 2>&1

@@ -1,0 +1,14 @@
+{
+  "id": "FT-SC-PAIR",
+  "status": "pass",
+  "class": "P/F",
+  "blocked": false,
+  "grounded": true,
+  "assertions_total": 3,
+  "assertions_grounded": 3,
+  "llm_captured": false,
+  "llm_required": false,
+  "run_id": "s3-flood",
+  "assertions": [{"name":"FT-SC-PAIR flood suites","ok":true,"grounded":true,"cmd":"ft_sut python /ft/scripts/run_pytest.py tests/flood/test_buckets.py tests/flood/test_headroom.py tests/flood/test_deny_digest.py"},{"name":"flood-pair-together","ok":true,"grounded":true,"cmd":"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/python -"},{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}
+]
+}

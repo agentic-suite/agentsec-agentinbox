@@ -1,0 +1,2 @@
+{"name":"blocked","ok":true,"blocked":true,"reason":"the 15-second study needs >=10 non-author participants; none are provisioned on this Docker SUT","release_gate_item":"PRD 21 Method B / M32 32.5 (#384)"}
+{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}

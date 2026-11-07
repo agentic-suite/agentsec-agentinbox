@@ -6,14 +6,14 @@
 
 # agentinbox v0.1.0 — Field Test Report
 
-> **Status: ⏸ PAUSED AFTER BATCH 1 — 9/9 RUN CASES GREEN (2026-11-07).** This is a **hand-maintained**
+> **Status: ⛔ STOPPED AFTER BATCH 16 — T1 SCRIPT ERROR + LEAK GATE (2026-11-07).** This is a **hand-maintained**
 > journal, updated as the M32 sweep runs — not a generated scoreboard. Verdicts are entered **by hand, from
 > committed result files under `field-test/v0.1.0/results/`**. Batch 1 first failed on a **field-step
 > script defect** (duplicate `[classes.irreversible]` TOML), which was fixed and the case re-run green.
-> Per instruction the sweep then paused; no further batches were run.
-> **Current:** **9 ✅ PASS · 0 ❌ FAIL · 0 ⛔ BLOCKED · 46 ▫ not run** — batch 0 (5 core cases) + batch 1
-> (FT-SC-10, 10-LIVE after fix, 17, 19). Deep validation: 9 grounded PASS, 0 over-claimed, leak clean.
-> The field box + ≥10 study participants remain **not provisioned** (recorded, not hidden).
+> Remaining suites are running in ≤5-case batches with deep validation after each.
+> **Current:** **43 ✅ PASS · 8 ❌ FAIL · 2 ⛔ BLOCKED · 2 ▫ not run** — batches 0–16 run; deep validation
+> 43 grounded PASS, 0 over-claimed; the Codex plugin-clone leak was caught and removed; final scan clean.
+> The study cohort and the two remaining live cases are the only unverdicted work (recorded, not hidden).
 > **Structure:** follows the `agentpolicy` v0.1.0 `FIELD_TEST_REPORT.md` format (a journal, not a
 > scoreboard), pointed at [FIELD_TEST_PLAN.md](FIELD_TEST_PLAN.md) §6 (the 55-case matrix), §8 (CUJ map),
 > §9.1 (the pre-registered study bars), §10 (run order), §11 (release gates).
@@ -24,7 +24,7 @@
 
 ## BLUF + Release Gate Verdict
 
-> **⏸ PAUSED — 9/55 verdicted (9 ✅ PASS · 0 ❌ FAIL · 0 ⛔ BLOCKED · 46 ▫ not run).** Batch 0
+> **⛔ STOPPED — 53/55 verdicted (43 ✅ PASS · 8 ❌ FAIL · 2 ⛔ BLOCKED · 2 ▫ not run).** Batch 0
 > (5 core cases) and batch 1 (`FT-SC-10`, `FT-SC-10-LIVE`, `FT-SC-17`, `FT-SC-19`) are recorded and
 > deep-validated (9 grounded PASS, 0 over-claimed, leak-clean). The live case's harness defect was fixed and
 > re-run green; the sweep then paused per instruction. **No release (`v0.1.0` tag) may be cut from this
@@ -34,11 +34,11 @@
 
 | | Count |
 |---|---|
-| ✅ PASS (raw verdict) | 9 |
-| — of which evidenced (asserted from committed result files, not exit-0) | 9 |
-| ❌ FAIL | 0 |
-| ⛔ BLOCKED (P/F\|B, environment cannot provide — named + evidenced) | 0 |
-| ▫ not run | **46** (rows awaiting a batch) |
+| ✅ PASS (raw verdict) | 43 |
+| — of which evidenced (asserted from committed result files, not exit-0) | 43 |
+| ❌ FAIL | 8 |
+| ⛔ BLOCKED (P/F\|B, environment cannot provide — named + evidenced) | 2 |
+| ▫ not run | **2** (FT-SC-16-LIVE, FT-SC-24-LIVE) |
 | Removed from scope (not claimed as supported) | 0 |
 
 ### Release gate verdict (M33 gate items; filled only as real runs land)
@@ -47,10 +47,10 @@
 |---|---|---|---|
 | 1 | Core SC-01–SC-26 re-run green on the expanded build (vs `ab94330` + PRD 17) | ▫ partial (8/26) | 8 ✅ core cases; the live extra case (FT-SC-10-LIVE) also ✅ after its step fix |
 | 2 | Expansion SC-68–SC-90 verdicted with evidence | ▫ pending | plan §6 S9–S14 · #380–#383 |
-| 3 | Attack packs green (SC-22/23/24) — **release-gating** | ▫ pending | any red = **M33 blocked** |
+| 3 | Attack packs green (SC-22/23/24) — **release-gating** | ❌ RED | SC-22/23 ✅; SC-24 ❌ on pytest unraisable warnings → **M33 blocked** |
 | 4 | The 15-second study bars met (pre-registered, plan §9.1) | ▫ pending | met **or the miss published** with the M33 decision |
 | 5 | Injection arm: 0 approvals from poisoned cards | ▫ pending | study + SC-23 |
-| 6 | Harness recipes live (Claude Code + Codex CLI) with journal entries | ▫ pending | `BLOCKED` yields **no matrix label**, never a softened one |
+| 6 | Harness recipes live (Claude Code + Codex CLI) with journal entries | ❌ FAIL | both T1 cases failed (answerer `mapfile` script error); LLM pairs captured 11/11 |
 | 7 | Evidence clean: 0 scanner findings over store, captures, exports, packets | ▫ pending | SC-21 + the per-case leak gate |
 | 8 | Report honest: verdicts from result files, red register populated, hand-maintained | ▫ pending | this document |
 
@@ -74,9 +74,9 @@ regression note) before the group closes. One run per case; a re-run is a **seco
 ### Group 4 — Outcome closure & proof (SC-79–SC-82) — ▫ not run (#382)
 ### Group 5 — Grants & compression (SC-83–SC-86) — ▫ not run (#383)
 ### Group 6 — Insights & governance (SC-87–SC-90) — ▫ not run (#383)
-### Group 7 — Attack packs re-confirmed on the final build (SC-22/23/24) — ▫ not run (#401 acceptance)
-### Group 8 — The 46-card study cohort — ▫ not run (#384)
-### Group 9 — Harness recipes live (Claude Code, then Codex CLI) — ▫ not run (#402/#104)
+### Group 7 — Attack packs re-confirmed on the final build (SC-22/23/24) — ❌ partial (SC-24 red)
+### Group 8 — The 46-card study cohort — ⛔ blocked (#384)
+### Group 9 — Harness recipes live (Claude Code, then Codex CLI) — ❌ failed (answerer script error)
 
 ### Sweep execution log (batches of ≤5, deep validation after each)
 
@@ -84,6 +84,21 @@ regression note) before the group closes. One run per case; a re-run is a **seco
 |---|---|---|---|---|---|
 | 0 (pre-sweep) | s0-core | FT-SC-01, 02, 05, 06, 09 | committed, 5 cases / 1 boot | 5 grounded PASS, leak clean | ✅ 5 pass |
 | 1 | s0-core | FT-SC-10, 10-LIVE, 17, 19 | 4 cases / 1 clean boot; live case re-run after step fix | 9 verdicts total: 9 grounded PASS, 0 over-claimed, leak clean | ✅ 4 pass (live after fix) |
+| 2 | s1-cross-channel | FT-SC-07, 08, 18 | 3 cases / 1 clean boot | 12 verdicts: 12 grounded PASS, 0 over-claimed, leak clean | ✅ 3 pass |
+| 3 | s2-escalation | FT-SC-11, 12 | 2 cases / 1 clean boot | 14 verdicts: 14 grounded PASS, 0 over-claimed, leak clean | ✅ 2 pass |
+| 4 | s3-flood | FT-SC-13, 14, PAIR | 3 cases / 1 clean boot | 17 verdicts: 17 grounded PASS, 0 over-claimed, leak clean | ✅ 3 pass (pair enforced) |
+| 5 | s4-ci | FT-SC-15, 16 | 2 cases / 1 clean boot | 19 verdicts: 17 grounded PASS, 0 over-claimed, leak clean | ❌ 2 fail (pytest unraisable ResourceWarning, not product assertions) |
+| 6 | s5-evidence | FT-SC-20, 21 | 2 cases / 1 clean boot | 21 verdicts: 17 grounded PASS, 0 over-claimed, leak clean | ❌ 2 fail (same pytest unraisable ResourceWarning) |
+| 7 | s6-attacks | FT-SC-22, 23, 24 | 3 cases / 1 clean boot | 24 verdicts: 19 grounded PASS, 0 over-claimed, leak clean | ✅ 2 pass (release-gating) · ❌ 1 fail (unraisable warning) |
+| 8 | s7-governance | FT-SC-25, 26 | 2 cases / 1 clean boot | 26 verdicts: 20 grounded PASS, 0 over-claimed, leak clean | ✅ 1 pass · ❌ 1 fail (unraisable warning) |
+| 9 | s8-readiness | FT-SC-68, 69, 70 | 3 cases / 1 clean boot | 29 verdicts: 23 grounded PASS, 0 over-claimed, leak clean | ✅ 3 pass |
+| 10 | s9-constrained | FT-SC-71, 72, 73, 74 | 4 cases / 1 clean boot | 33 verdicts: 27 grounded PASS, 0 over-claimed, leak clean | ✅ 4 pass |
+| 11 | s10-operations | FT-SC-75, 76, 77, 78 | 4 cases / 1 clean boot | 37 verdicts: 31 grounded PASS, 0 over-claimed, leak clean | ✅ 4 pass |
+| 12 | s11-outcomes | FT-SC-79, 80, 81, 82 | 4 cases / 1 clean boot | 41 verdicts: 35 grounded PASS, 0 over-claimed, leak clean | ✅ 4 pass |
+| 13 | s12-grants | FT-SC-83, 84, 85, 86 | 4 cases / 1 clean boot | 45 verdicts: 39 grounded PASS, 0 over-claimed, leak clean | ✅ 4 pass |
+| 14 | s13-insights | FT-SC-87, 88, 89, 90 | 4 cases / 1 clean boot | 49 verdicts: 43 grounded PASS, 0 over-claimed, leak clean | ✅ 4 pass |
+| 15 | s14-study | FT-SC-03, 04 | 2 cases, no human cohort | 51 verdicts: 43 grounded PASS, 0 over-claimed, leak clean | ⛔ 2 blocked (participants absent) |
+| 16 | s15-harness | FT-T1-CLAUDE, FT-T1-CODEX | 2 live cases; OMLX reachable | 53 verdicts: 43 grounded PASS, 0 over-claimed; **leak gate found a token in Codex plugin tmp** | ❌ 2 fail (answerer `mapfile`; Codex allow/audit; leaked plugin artifact removed) |
 
 ---
 
@@ -144,8 +159,7 @@ protocol: plan [§4.1](FIELD_TEST_PLAN.md).
 *(fills as groups close — state per group: which cases ran, on what build, with which drivers (plan §3), and
 what the assertions were grounded in: store diffs, resolve JSON, audit chain, scanner runs — never "exit 0")*
 
-- **Run (honest): 9/55 verdicted** — ✅ 9 (5 batch-0 core + SC-10/17/19 + FT-SC-10-LIVE after fix),
-  ❌ 0, ⛔ 0 blocked, ▫ 46 not run. The sweep paused after the live re-run went green.
+- **Run (honest): 53/55 verdicted** — ✅ 43, ❌ 8 (six pytest-unraisable cases + two Tier-1), ⛔ 2 blocked (study), ▫ 2 not run (the two remaining live cases). The sweep stopped on a Tier-1 answerer script error and a leak-gate hit; the leaked plugin artifact was removed and the results rescanned clean.
   The deterministic L0 suites were green at authoring (924 tests, 95.11%, `ruff` + `mypy --strict` clean at
   `2dedc7d`); the field verdicts above are the first real runs.
 - **Blocked (declared up front): the Tier-1 harness recipes and the study cohort** await the field box /
@@ -166,64 +180,64 @@ re-derived from the committed result files. **Class:** **P/F** = hard gate · **
 |---|---|---|---|---|
 | FT-SC-01 | core-lifecycle | P/F | ✅ PASS | first ask, terminal, zero config — grounded in Docker |
 | FT-SC-02 | core-lifecycle | P/F | ✅ PASS | malformed rejected loudly, nothing partial persists — grounded in Docker |
-| FT-SC-03 | study | P/F\|B | ▫ not run | the 15-second spine — bars in plan §9.1 |
-| FT-SC-04 | study/quality | P/F\|B | ▫ not run | degraded cards → explicit `unknown` + deny |
+| FT-SC-03 | study | P/F\|B | ⛔ BLOCKED | ≥10 non-author participants not provisioned; no study result claimed |
+| FT-SC-04 | study/quality | P/F\|B | ⛔ BLOCKED | same study cohort missing; no degraded-card result claimed |
 | FT-SC-05 | core-lifecycle | P/F | ✅ PASS | rescope hint → new identity, no state reuse — grounded in Docker |
 | FT-SC-06 | core-lifecycle | P/F | ✅ PASS | duplicate ingest coalesces — grounded in Docker |
-| FT-SC-07 | cross-channel | P/F | ▫ not run | second-surface approve + terminal parity |
-| FT-SC-08 | cross-channel | P/F | ▫ not run | race: one decision, second rejected `late` |
+| FT-SC-07 | cross-channel | P/F | ✅ PASS | second-surface approve + terminal parity — grounded in Docker |
+| FT-SC-08 | cross-channel | P/F | ✅ PASS | race: one decision, second rejected `late` — grounded in Docker |
 | FT-SC-09 | core-lifecycle | P/F | ✅ PASS | timeout = deny + warning, jitter ≤1 s — grounded in Docker |
 | FT-SC-10 | core-lifecycle | P/F | ✅ PASS | expiry survives crash + clock step-back — grounded in Docker |
 | FT-SC-10-LIVE | live | P/F | ✅ PASS | real kill -9 + restart; expired exactly once; resolve deny/`human_gate_timeout` — after fixing the step |
-| FT-SC-11 | escalation | P/F | ▫ not run | 3 a.m. drill, tier claims revoked |
-| FT-SC-12 | escalation | P/F | ▫ not run | ladder exhaustion denies, TTL never extended |
-| FT-SC-13 | flood | P/F | ▫ not run | attack pack: burst allowed / overflow denied (counts recorded) |
-| FT-SC-14 | flood | P/F | ▫ not run | legitimate burst — **passes together with SC-13** |
-| FT-SC-PAIR | flood | P/F | ▫ not run | paired verdict: SC-13 and SC-14 both pass |
-| FT-SC-15 | ci | P/F | ▫ not run | pipeline halts on `gate`, resumes on answer |
-| FT-SC-16 | ci | P/F | ▫ not run | deterministic exit matrix, idempotent retry |
+| FT-SC-11 | escalation | P/F | ✅ PASS | 3 a.m. drill, tier claims revoked — grounded in Docker |
+| FT-SC-12 | escalation | P/F | ✅ PASS | ladder exhaustion denies, TTL never extended — grounded in Docker |
+| FT-SC-13 | flood | P/F | ✅ PASS | attack pack: burst allowed / overflow denied (counts recorded) — grounded in Docker |
+| FT-SC-14 | flood | P/F | ✅ PASS | legitimate burst — **passes together with SC-13** — grounded in Docker |
+| FT-SC-PAIR | flood | P/F | ✅ PASS | paired verdict: SC-13 and SC-14 both pass — grounded in Docker |
+| FT-SC-15 | ci | P/F | ❌ FAIL | pytest 9.2.0/Py3.13 turns an unclosed-SQLite ResourceWarning into `PytestUnraisableExceptionWarning` (6 passed / 2 failed); product assertions passed |
+| FT-SC-16 | ci | P/F | ❌ FAIL | same pytest unraisable-warning failure (11 passed / 2 failed) in the CLI gate tests |
 | FT-SC-16-LIVE | live | P/F | ▫ not run | real gate exit matrix 0/2/3/5 |
 | FT-SC-17 | governance | P/F | ✅ PASS | self-review denied (+ allowed/audited variant) — grounded in Docker |
-| FT-SC-18 | cross-channel | P/F | ▫ not run | channel failover, no duplicate notify |
+| FT-SC-18 | cross-channel | P/F | ✅ PASS | channel failover, no duplicate notify — grounded in Docker |
 | FT-SC-19 | cross-channel | P/F | ✅ PASS | late answer = visible no-op — grounded in Docker |
-| FT-SC-20 | evidence | P/F | ▫ not run | reconstruction + chain, tamper names `seq` |
-| FT-SC-21 | evidence | P/F | ▫ not run | 0 scanner findings, receipts complete |
-| FT-SC-22 | attacks | P/F | ▫ not run | **release-gating** — 10 spoof/replay/forge attacks |
-| FT-SC-23 | attacks | P/F | ▫ not run | **release-gating** — 10 poisoned cards, 0 approvals |
-| FT-SC-24 | faults | P/F | ▫ not run | **release-gating** — fail-closed matrix, 0 silent allows |
+| FT-SC-20 | evidence | P/F | ❌ FAIL | pytest 9.2.0/Py3.13 unraisable ResourceWarning (4 failed / 21 passed); product assertions passed |
+| FT-SC-21 | evidence | P/F | ❌ FAIL | same unraisable ResourceWarning (1 failed / 11 passed); scanner assertions passed |
+| FT-SC-22 | attacks | P/F | ✅ PASS | **release-gating** — spoof/replay/forge suite passed, grounded in Docker |
+| FT-SC-23 | attacks | P/F | ✅ PASS | **release-gating** — injection suite passed, 0 approvals |
+| FT-SC-24 | faults | P/F | ❌ FAIL | same pytest unraisable ResourceWarning; product assertions passed (release still blocked) |
 | FT-SC-24-LIVE | live | P/F | ▫ not run | corrupt + locked store each fail closed (4) |
-| FT-SC-25 | adapters | P/F | ▫ not run | LangGraph round-trip + crash-resume, one execution |
-| FT-SC-26 | offline | P/F | ▫ not run | offline day, doctor green, no outbound attempts |
-| FT-SC-68 | readiness | P/F | ▫ not run | pre-write bounce, nothing stored, repair contract |
-| FT-SC-69 | readiness | P/F | ▫ not run | contradiction visible / reject-on-ingest |
-| FT-SC-70 | readiness | P/F | ▫ not run | same weak ask, different class bands |
-| FT-SC-71 | constrained | P/F | ▫ not run | one-click constrained allow + constraint set |
-| FT-SC-72 | constrained | P/F | ▫ not run | repair packet round trip, no human re-teach |
-| FT-SC-73 | constrained | P/F | ▫ not run | edit re-fingerprints, enforcer runs edited form |
-| FT-SC-74 | constrained | P/F | ▫ not run | unbindable = advice only, cannot be picked |
-| FT-SC-75 | operations | P/F | ▫ not run | 20-ask bundle: one screen, 20 answers, no approve-all |
-| FT-SC-76 | operations | P/F | ▫ not run | shift handoff preserves TTL + notes |
-| FT-SC-77 | operations | P/F | ▫ not run | incident mode, denies still deny |
-| FT-SC-78 | operations | P/F | ▫ not run | narrative reproduces a 3 a.m. denial |
-| FT-SC-79 | outcomes | P/F | ▫ not run | executed closure + offline-verifiable packet |
-| FT-SC-80 | outcomes | P/F | ▫ not run | exceeded manifest loud, never absorbed |
-| FT-SC-81 | outcomes | P/F | ▫ not run | rollback leaves the decision untouched |
-| FT-SC-82 | outcomes | P/F | ▫ not run | packet-only reviewer reconstructs end-to-end |
-| FT-SC-83 | grants | P/F | ▫ not run | 12-ask compressed view, 12 answers, export complete |
-| FT-SC-84 | grants | P/F | ▫ not run | window expires mid-burst → per-ask, 0 silent allows |
+| FT-SC-25 | adapters | P/F | ✅ PASS | LangGraph round-trip + crash-resume, one execution — grounded in Docker |
+| FT-SC-26 | offline | P/F | ❌ FAIL | pytest unraisable ResourceWarning; product assertions passed |
+| FT-SC-68 | readiness | P/F | ✅ PASS | pre-write bounce, nothing stored, repair contract — grounded in Docker |
+| FT-SC-69 | readiness | P/F | ✅ PASS | contradiction visible / reject-on-ingest — grounded in Docker |
+| FT-SC-70 | readiness | P/F | ✅ PASS | same weak ask, different class bands — grounded in Docker |
+| FT-SC-71 | constrained | P/F | ✅ PASS | one-click constrained allow + constraint set — grounded in Docker |
+| FT-SC-72 | constrained | P/F | ✅ PASS | repair packet round trip, no human re-teach — grounded in Docker |
+| FT-SC-73 | constrained | P/F | ✅ PASS | edit re-fingerprints, enforcer runs edited form — grounded in Docker |
+| FT-SC-74 | constrained | P/F | ✅ PASS | unbindable = advice only, cannot be picked — grounded in Docker |
+| FT-SC-75 | operations | P/F | ✅ PASS | 20-ask bundle: one screen, 20 answers, no approve-all — grounded in Docker |
+| FT-SC-76 | operations | P/F | ✅ PASS | shift handoff preserves TTL + notes — grounded in Docker |
+| FT-SC-77 | operations | P/F | ✅ PASS | incident mode, denies still deny — grounded in Docker |
+| FT-SC-78 | operations | P/F | ✅ PASS | narrative reproduces a 3 a.m. denial — grounded in Docker |
+| FT-SC-79 | outcomes | P/F | ✅ PASS | executed closure + offline-verifiable packet — grounded in Docker |
+| FT-SC-80 | outcomes | P/F | ✅ PASS | exceeded manifest loud, never absorbed — grounded in Docker |
+| FT-SC-81 | outcomes | P/F | ✅ PASS | rollback leaves the decision untouched — grounded in Docker |
+| FT-SC-82 | outcomes | P/F | ✅ PASS | packet-only reviewer reconstructs end-to-end — grounded in Docker |
+| FT-SC-83 | grants | P/F | ✅ PASS | 12-ask compressed view, 12 answers, export complete — grounded in Docker |
+| FT-SC-84 | grants | P/F | ✅ PASS | window expires mid-burst → per-ask, 0 silent allows — grounded in Docker |
 | FT-SC-85 | grants | P/F | ▫ not run | owner revocation is immediate + loud |
-| FT-SC-86 | grants | P/F | ▫ not run | repeated denials → insight, no auto-hardening |
-| FT-SC-87 | insights | P/F | ▫ not run | 20 approvals → one redacted insight |
-| FT-SC-88 | insights | P/F | ▫ not run | noisy policy → named tuning diff (PR to apply) |
-| FT-SC-89 | insights | P/F | ▫ not run | calibration aggregate; per-principal gated + logged |
-| FT-SC-90 | insights | P/F | ▫ not run | divergence → proposal only, nothing applies itself |
+| FT-SC-86 | grants | P/F | ✅ PASS | repeated denials → insight, no auto-hardening — grounded in Docker |
+| FT-SC-87 | insights | P/F | ✅ PASS | 20 approvals → one redacted insight — grounded in Docker |
+| FT-SC-88 | insights | P/F | ✅ PASS | noisy policy → named tuning diff (PR to apply) — grounded in Docker |
+| FT-SC-89 | insights | P/F | ✅ PASS | calibration aggregate; per-principal gated + logged — grounded in Docker |
+| FT-SC-90 | insights | P/F | ✅ PASS | divergence → proposal only, nothing applies itself — grounded in Docker |
 
 **Harness cases (P/F|B — plan §S14):**
 
 | Case | Suite | Class | Status | Notes |
 |---|---|---|---|---|
-| FT-T1-CLAUDE | harness | P/F|B | ▫ not run | Claude Code `PreToolUse` live — journal: version, transcript, gate outcome |
-| FT-T1-CODEX | harness | P/F|B | ▫ not run | Codex CLI wrapper live — deny + expiry behavior recorded |
+| FT-T1-CLAUDE | harness | P/F\|B | ❌ FAIL | triple + 6/6 LLM pairs pass; audit empty — answerer script used `mapfile`, unavailable on this macOS bash |
+| FT-T1-CODEX | harness | P/F\|B | ❌ FAIL | 5/5 LLM pairs, deny held; allow not executed + audit empty (same `mapfile`); plugin-clone bearer token leaked into results and was removed |
 
 ---
 
@@ -239,6 +253,19 @@ spot-checked. A suite is complete only when every case in it has a verdict.)*
 *(one entry per FAIL or regression, entered when found: symptom → root cause → fix commit → regression
 test that now guards it. No entry may be closed without all four. At authoring: none — nothing has run.)*
 
+- **Six cases — ❌ pytest/toolchain, not product assertions.** `FT-SC-15, 16, 20, 21, 24, 26` fail under
+  pytest 9.2.0 on Python 3.13 because unclosed-SQLite `ResourceWarning`s are promoted to
+  `PytestUnraisableExceptionWarning`; the product assertions inside those selections passed (e.g. 6/2,
+  11/2, 21/4, 11/1). Fix: none (do-not-fix rule); this is a harness/toolchain gate, not a policy defect.
+- **FT-T1-CLAUDE / FT-T1-CODEX — ❌ Tier-1 answerer script error.** The three-call/allow-deny behaviour and
+  LLM capture worked (Claude 6/6 pairs, Codex 5/5; secret-free), but `t1_answerer.sh` calls `mapfile`, which
+  macOS's bash 3.2 does not provide, so the answerer died and `export --session` produced an empty audit;
+  Codex's allow command also did not execute (the sandbox/runner path, not agentinbox). Fix: none applied
+  (stop rule); both cases remain ❌ and feed **no** matrix label to M33.
+- **Leak-gate hit — Codex plugin clone.** `ft_capture` copied Codex's `.tmp/plugins` into the case artifacts;
+  `scan_results.py` found a bearer token there. The unsafe `.tmp` directory was removed from the results
+  (evidence, not test code) and the final scan is clean; no secret was committed. The harness still needs a
+  sanitisation/capture-exclusion fix before a rerun can publish the Codex evidence.
 - **FT-SC-10-LIVE — ✅ after two harness-step fixes (never a product failure).** Symptom 1: the live
   daemon never started; the step appended a second `[classes.irreversible]` table to the `init` scaffold
   (`Cannot declare ('classes','irreversible') twice`), invalidating the TOML. Fix 1: the step now writes a
@@ -255,6 +282,9 @@ test that now guards it. No entry may be closed without all four. At authoring: 
 | # | Case | Defect | Cause | Fix | Regression | Owner | Status |
 |---|---|---|---|---|---|---|---|
 | 1 | FT-SC-10-LIVE | live daemon did not start; then resolve assertion looked in the wrong artifact | duplicate `[classes.irreversible]` TOML table; `human_gate_timeout` lives on `resolve()`, not the audit row | step writes a dedicated config; assertion calls `resolve()` | live step re-run ✅ PASS | field-test harness | ✅ resolved |
+| 2 | FT-SC-15, 16, 20, 21, 24, 26 | pytest reports failures though product assertions passed | pytest 9.2.0 / Python 3.13 promotes unclosed-SQLite `ResourceWarning` to `PytestUnraisableExceptionWarning` | none (do-not-fix rule) | none | field-test toolchain | ⛔ open |
+| 3 | FT-T1-CLAUDE, FT-T1-CODEX | answerer dies, audit empty; Codex allow not executed | `mapfile` unavailable in macOS bash 3.2 | none (stop rule) | none | field-test harness | ⛔ open |
+| 4 | FT-T1-CODEX | bearer token in results | `ft_capture` copied Codex `.tmp/plugins` | unsafe artifact removed; capture exclusion still needed | final leak scan clean | field-test harness | ⚠️ mitigated, fix needed |
 
 ---
 
@@ -283,17 +313,29 @@ harness — not the product — broke. Numbered, dated, never summarized away.)*
 5. **The live case now proves the recovery path for real.** `kill -9` mid-TTL → restart after expiry →
    exactly one `expired` transition, and `resolve()` returns `deny / human_gate_timeout`. This is stronger
    evidence than the in-process `FT-SC-10` suite alone.
+6. **One toolchain theme explains six ❌.** `FT-SC-15/16/20/21/24/26` fail on pytest 9.2.0 + Python 3.13's
+   unraisable `ResourceWarning` handling, not on their product assertions. The field verdict is still ❌
+   (the harness must be reproducible), but the defect is in the runner's warning policy, not the inbox.
+   This is the dominant failure theme of the sweep.
+7. **Tier-1 got further than expected, then died on a shell portability bug.** OMLX answered, the hooks
+   gated real calls, and LLM capture was complete (Claude 6/6, Codex 5/5, secret-free). The answerer then
+   failed because `mapfile` is bash 4+, while macOS ships bash 3.2 — an empty audit and a failed Codex allow.
+   Lesson: the harness must be bash-3.2-safe or run its answerer under a modern shell.
+8. **The leak gate did its job on live evidence.** Codex's plugin clone carried a bearer token into the
+   captured tree; the scanner caught it before commit, the unsafe `.tmp` tree was removed, and the rescan
+   is clean. Lesson: live harness capture must exclude vendor/tool caches, not just sanitize output text.
 
 ---
 
 ## Coverage, Gaps, and Declared Limitations
 
-Status vocabulary: **not run | ✅ PASS | ❌ FAIL | ⛔ BLOCKED** — this run so far: **9 ✅ PASS · 0 ❌ FAIL ·
-0 ⛔ BLOCKED · 46 ▫ not run** (paused after batch 1; live case re-run green).
+Status vocabulary: **not run | ✅ PASS | ❌ FAIL | ⛔ BLOCKED** — this run so far: **43 ✅ PASS · 8 ❌ FAIL ·
+2 ⛔ BLOCKED · 2 ▫ not run** (stopped after batch 16: T1 script error + leak gate).
 
-- **Coverage so far:** 9/55 cases verdicted — nine grounded PASS (eight suite-backed core cases plus the
-  live kill/restart case). Deep validation: 9 verdicts, 9 grounded PASS, 0 over-claimed, leak scan clean.
-  The remaining 46 are stated as `not run`, never omitted.
+- **Coverage so far:** 53/55 cases verdicted — 43 ✅ PASS, 8 ❌ FAIL, 2 ⛔ BLOCKED, 2 ▫ not run.
+  Deep validation: 53 verdicts, 43 grounded PASS, 0 over-claimed; two leak-gate hits (T1 Codex plugin
+  clone) were removed and the final scan is clean. The study bars are unproven (blocked); the two
+  remaining live cases were not started after the stop rule.
 - **Declared & Blocked register (fills as runs land):** every `BLOCKED` case names (1) what is missing,
   (2) the evidence of the blocked attempt, (3) the downstream gate consequence (M33 label withheld).
   **At authoring:** the Tier-1 harness recipes + the study cohort await the field box + participants.
@@ -313,10 +355,10 @@ Status vocabulary: **not run | ✅ PASS | ❌ FAIL | ⛔ BLOCKED** — this run 
 | Study: degraded | 100% deny-or-insufficient | ▫ pending | degraded-arm decisions |
 | Study: poisoned | **0** approvals from injection | ▫ pending | poisoned-arm decisions |
 | Study: expansion cards | ≥9/12 correct per participant median ≥ 9/12 | ▫ pending | expansion-arm decisions |
-| Attack packs | 0 crafted allows (SC-22/23/24) | ▫ pending | pack result files |
-| Evidence hygiene | 0 scanner findings over any result | ▫ pending | per-case leak gate |
-| Harness journal | both recipes: version + transcript + outcome | ▫ pending | `field-test/v0.1.0/journal/` |
-| LLM capture (Tier-1) | every real call logged: balanced, 2xx, secret-free | ▫ pending | `artifacts/llm/` + deep-validation gate |
+| Attack packs | 0 crafted allows (SC-22/23/24) | ❌ red | SC-22/23 ✅; SC-24 ❌ on pytest unraisable warnings → M33 blocked |
+| Evidence hygiene | 0 scanner findings over any result | ⚠️ caught + cleaned | Codex plugin bearer token caught by leak gate; unsafe tree removed; final scan clean |
+| Harness journal | both recipes: version + transcript + outcome | ❌ fail | both T1 cases failed; no matrix label |
+| LLM capture (Tier-1) | every real call logged: balanced, 2xx, secret-free | ✅ 11/11 pairs | Claude 6/6, Codex 5/5; cases still ❌ on the answerer/allow/audit |
 
 ---
 

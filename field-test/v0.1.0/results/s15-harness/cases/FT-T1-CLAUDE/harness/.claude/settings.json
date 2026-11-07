@@ -1,0 +1,7 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {"matcher": "Bash", "hooks": [{"type": "command", "command": "/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s15-harness/cases/FT-T1-CLAUDE/harness/hook.sh"}]}
+    ]
+  }
+}

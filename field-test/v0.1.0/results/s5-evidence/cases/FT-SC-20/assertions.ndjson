@@ -1,0 +1,2 @@
+{"name":"FT-SC-20 assertions","ok":false,"grounded":true,"cmd":"ft_sut python /ft/scripts/run_pytest.py tests/audit/test_chain.py tests/audit/test_export.py tests/cli/test_audit_cli.py"}
+{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}

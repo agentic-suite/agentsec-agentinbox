@@ -1,0 +1,14 @@
+{
+  "id": "FT-T1-CLAUDE",
+  "status": "fail",
+  "class": "P/F|B",
+  "blocked": false,
+  "grounded": true,
+  "assertions_total": 6,
+  "assertions_grounded": 6,
+  "llm_captured": true,
+  "llm_required": false,
+  "run_id": "s15-harness",
+  "assertions": [{"name":"t1-claude-triple","ok":true,"grounded":true,"cmd":"bash /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/scripts/fieldtest/t1_claude.sh /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s15-harness/cases/FT-T1-CLAUDE"},{"name":"t1-claude-allow-executed","ok":true,"grounded":true,"cmd":"bash -c test -s \"$FT_CASE_DIR/artifacts/claude-call1.txt\" && echo EXECUTED"},{"name":"t1-claude-deny-held","ok":true,"grounded":true,"cmd":"bash -c test ! -e \"$FT_CASE_DIR/harness/work/ft-t1-side-effect.txt\" && echo BLOCKED"},{"name":"t1-claude-captured","ok":true,"grounded":true,"cmd":"llm capture: 6 request(s) + 6 response(s), secret-free"},{"name":"t1-claude-audit","ok":false,"grounded":true,"cmd":"bash -c test -s \"$FT_CASE_DIR/artifacts/audit.jsonl\" && echo AUDIT-OK"},{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}
+]
+}

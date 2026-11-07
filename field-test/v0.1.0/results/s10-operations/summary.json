@@ -1,0 +1,127 @@
+{
+  "cases": [
+    {
+      "assertions": [
+        {
+          "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/bundles/test_operations.py",
+          "grounded": true,
+          "name": "FT-SC-75 assertions",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 2,
+      "assertions_total": 2,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-75",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s10-operations",
+      "status": "pass"
+    },
+    {
+      "assertions": [
+        {
+          "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/bundles/test_operations.py",
+          "grounded": true,
+          "name": "FT-SC-76 assertions",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 2,
+      "assertions_total": 2,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-76",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s10-operations",
+      "status": "pass"
+    },
+    {
+      "assertions": [
+        {
+          "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/bundles/test_operations.py",
+          "grounded": true,
+          "name": "FT-SC-77 assertions",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 2,
+      "assertions_total": 2,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-77",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s10-operations",
+      "status": "pass"
+    },
+    {
+      "assertions": [
+        {
+          "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/bundles/test_operations.py",
+          "grounded": true,
+          "name": "FT-SC-78 assertions",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 2,
+      "assertions_total": 2,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-78",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s10-operations",
+      "status": "pass"
+    }
+  ],
+  "env": {
+    "arch": "arm64",
+    "commit": "e54972b",
+    "compose": "5.6.1",
+    "docker": "Docker version 29.5.2, build 79eb04c7d8",
+    "os": "Darwin",
+    "python": "Python-3.12.14",
+    "run_id": "s10-operations",
+    "version": "v0.1.0"
+  },
+  "generated_at": "2026-11-07T19:11:12.176330+00:00",
+  "green": true,
+  "run_id": "s10-operations",
+  "totals": {
+    "blocked": 0,
+    "fail": 0,
+    "over_claimed": 0,
+    "pass": 4
+  }
+}

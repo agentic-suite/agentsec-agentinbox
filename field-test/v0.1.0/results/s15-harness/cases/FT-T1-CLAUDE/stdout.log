@@ -1,0 +1,6 @@
+triple call 1/3: staging read (approve -> executes)
+triple call 2/3: production write (deny -> blocked, no side effect)
+triple call 3/3: destructive production op (deny -> structured rejection)
+HARNESS_OK audit=0 llm=6
+EXECUTED
+BLOCKED

@@ -1,0 +1,14 @@
+{
+  "id": "FT-SC-16",
+  "status": "fail",
+  "class": "P/F",
+  "blocked": false,
+  "grounded": true,
+  "assertions_total": 2,
+  "assertions_grounded": 2,
+  "llm_captured": false,
+  "llm_required": false,
+  "run_id": "s4-ci",
+  "assertions": [{"name":"FT-SC-16 assertions","ok":false,"grounded":true,"cmd":"ft_sut python /ft/scripts/run_pytest.py tests/contract/test_exit_codes.py tests/cli/test_gate_cli.py"},{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}
+]
+}
