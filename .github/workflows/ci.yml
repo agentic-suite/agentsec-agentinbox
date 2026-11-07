@@ -65,6 +65,13 @@ jobs:
         run: python -m agentinbox.packs
       - name: Evidence scanner self-test (seeded leak must fail)
         run: python -m agentinbox.scanner --self-test
+      - name: Claims lint (PRD 20 §G vocabulary)
+        run: python -m agentinbox.claimslint
+      - name: Release evidence scan (zero secrets)
+        run: |
+          python -m agentinbox.scanner --path docs/release/v0.1.0
+          python -m agentinbox.scanner --path docs/field-test/v0.1.0
+          python -m agentinbox.scanner --path field-test/v0.1.0/results
       - name: Invariants, timing, hardening, posture
         run: python -m pytest tests/security -q
       - name: Own posture (no-ML manifest + security.txt)

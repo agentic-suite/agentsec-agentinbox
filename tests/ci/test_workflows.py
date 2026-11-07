@@ -68,3 +68,9 @@ def test_ci_runs_the_release_blocking_security_gates(ci: str) -> None:
     assert "python -m agentinbox.scanner --self-test" in ci
     assert "python -m pytest tests/security" in ci
     assert "python -m agentinbox.posture manifest" in ci
+
+
+def test_ci_runs_claims_lint_and_release_evidence_scan(ci: str) -> None:
+    assert "python -m agentinbox.claimslint" in ci
+    assert "python -m agentinbox.scanner --path docs/release/v0.1.0" in ci
+    assert "python -m agentinbox.scanner --path field-test/v0.1.0/results" in ci

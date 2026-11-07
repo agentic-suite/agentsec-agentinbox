@@ -363,3 +363,7 @@ __all__ = [
     "run_packs",
     "spoof_replay_forge",
 ]
+
+
+if __name__ == "__main__":  # pragma: no cover - process entry point
+    raise SystemExit(main())

@@ -18,6 +18,7 @@ from agentinbox.scanner import (
 from agentinbox.scanner import (
     scan_archive,
     scan_artifacts,
+    scan_path,
     scan_store,
     scan_text,
     self_test,
@@ -194,3 +195,21 @@ def test_scanner_cli_requires_a_target_and_tolerates_absent_inputs(
     bad.write_bytes(b"not a tar")
     assert scanner_main(["--archive", str(bad)]) == 0
     assert scan_archive(bad).artifacts == 0
+
+
+def test_scan_path_scans_release_evidence_text_and_fails_on_a_leak(
+    tmp_path: Path, capsys
+) -> None:  # type: ignore[no-untyped-def]
+    clean = tmp_path / "clean"
+    clean.mkdir()
+    (clean / "notes.md").write_text("the approval was denied for alice", encoding="utf-8")
+    report = scan_path(clean)
+    assert report.ok
+    assert report.artifacts == 1
+
+    leak = tmp_path / "leak"
+    leak.mkdir()
+    (leak / "transcript.txt").write_text(f"token {SECRET}", encoding="utf-8")
+    assert not scan_path(leak).ok
+    assert scanner_main(["--path", str(leak)]) == 1
+    assert "SECRET" in capsys.readouterr().err

@@ -180,6 +180,50 @@ def store_artifacts_from_db(database: Path) -> list[tuple[str, str]]:
     return artifacts
 
 
+_SKIP_PATH_SUFFIXES = frozenset(
+    {
+        ".bmp",
+        ".db",
+        ".gif",
+        ".gz",
+        ".ico",
+        ".jpeg",
+        ".jpg",
+        ".pdf",
+        ".png",
+        ".tar",
+        ".tgz",
+        ".webp",
+        ".whl",
+        ".zip",
+    }
+)
+
+
+def _evidence_files(path: Path) -> Iterable[Path]:
+    if path.is_file():
+        yield path
+    elif path.is_dir():
+        for candidate in sorted(path.rglob("*")):
+            if candidate.is_file() and candidate.suffix.lower() not in _SKIP_PATH_SUFFIXES:
+                yield candidate
+
+
+def scan_path(path: Path) -> ScanReport:
+    """Scan a release/evidence file or directory tree (read-only, no extraction)."""
+    findings: list[Finding] = []
+    artifacts = 0
+    for candidate in _evidence_files(path):
+        try:
+            body = candidate.read_bytes()
+        except OSError:
+            continue
+        report = scan_bytes(body, artifact=f"path:{candidate}")
+        artifacts += 1
+        findings.extend(report.findings)
+    return ScanReport(artifacts=artifacts, findings=tuple(findings))
+
+
 def scan_archive(archive: Path) -> ScanReport:
     findings: list[Finding] = []
     artifacts = 0
@@ -242,6 +286,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--archive", action="append", default=[], metavar="PATH", help="scan a backup archive"
     )
     parser.add_argument(
+        "--path",
+        action="append",
+        default=[],
+        metavar="PATH",
+        help="scan a file or directory tree of release evidence",
+    )
+    parser.add_argument(
         "--self-test",
         action="store_true",
         help="prove clean artifacts pass and the seeded corpus is detected",
@@ -258,9 +309,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             print("scanner self-test FAILED", file=sys.stderr)
         return 0 if ok else 1
 
-    if not args.home and not args.archive:
+    if not args.home and not args.archive and not args.path:
         parser.print_usage(sys.stderr)
-        print("scanner: error: pass --home, --archive, or --self-test", file=sys.stderr)
+        print(
+            "scanner: error: pass --home, --archive, --path, or --self-test",
+            file=sys.stderr,
+        )
         return 1
 
     artifacts: list[tuple[str, str | bytes]] = []
@@ -270,13 +324,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     report = scan_artifacts(artifacts)
     findings = list(report.findings)
-    archive_count = 0
-    for path in args.archive:
-        archive_report = scan_archive(Path(path))
-        archive_count += archive_report.artifacts
+    extra_count = 0
+    for archive in args.archive:
+        archive_report = scan_archive(Path(archive))
+        extra_count += archive_report.artifacts
         findings.extend(archive_report.findings)
+    for evidence_path in args.path:
+        path_report = scan_path(Path(evidence_path))
+        extra_count += path_report.artifacts
+        findings.extend(path_report.findings)
     final = ScanReport(
-        artifacts=report.artifacts + archive_count, findings=tuple(findings)
+        artifacts=report.artifacts + extra_count, findings=tuple(findings)
     )
     print(
         f"scanned {final.artifacts} artifacts: {len(final.findings)} finding(s)"
@@ -294,9 +352,14 @@ __all__ = [
     "scan_archive",
     "scan_artifacts",
     "scan_bytes",
+    "scan_path",
     "scan_store",
     "scan_text",
     "self_test",
     "store_artifacts",
     "store_artifacts_from_db",
 ]
+
+
+if __name__ == "__main__":  # pragma: no cover - process entry point
+    raise SystemExit(main())
