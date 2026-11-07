@@ -468,30 +468,33 @@ def _gate(args: argparse.Namespace) -> int:
         )
     except Exception as exc:  # any failure is fail-closed exit 4
         print(f"{PROG}: gate unavailable: {exc}", file=sys.stderr)
+        _close_store(store)
         return int(ExitCode.UNAVAILABLE)
     finally:
         for previous_signum, handler in previous:
             with contextlib.suppress(ValueError, OSError, TypeError):
                 signal.signal(previous_signum, handler)
 
-    ask = store.get(args.ask)
-    if ask is not None:
-        card = build_card(
-            ask,
-            now=utcnow(),
-            transitions=store.transitions_for(ask.ask_id),
-            prior_asks=prior_asks(store, ask),
-            similar_cases=similar_cases(store, ask),
-            prior_objections=prior_objections(store, ask),
-            handoff=handoff_for(store.transitions_for(ask.ask_id)),
-            grant=grant_for_card(store, ask),
-        )
-        sys.stdout.write(card.render("ci"))
-    if result.code is ExitCode.UNAVAILABLE:
-        print(f"{PROG}: gate unavailable: {result.reason}", file=sys.stderr)
-    print(f"{PROG}: ask {args.ask}: {result.status} ({result.reason})")
-    _close_store(store)
-    return int(result.code)
+    try:
+        ask = store.get(args.ask)
+        if ask is not None:
+            card = build_card(
+                ask,
+                now=utcnow(),
+                transitions=store.transitions_for(ask.ask_id),
+                prior_asks=prior_asks(store, ask),
+                similar_cases=similar_cases(store, ask),
+                prior_objections=prior_objections(store, ask),
+                handoff=handoff_for(store.transitions_for(ask.ask_id)),
+                grant=grant_for_card(store, ask),
+            )
+            sys.stdout.write(card.render("ci"))
+        if result.code is ExitCode.UNAVAILABLE:
+            print(f"{PROG}: gate unavailable: {result.reason}", file=sys.stderr)
+        print(f"{PROG}: ask {args.ask}: {result.status} ({result.reason})")
+        return int(result.code)
+    finally:
+        _close_store(store)
 
 
 def _serve(args: argparse.Namespace) -> int:

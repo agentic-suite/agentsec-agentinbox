@@ -284,3 +284,11 @@ regression test):
 | 2026-11-07 | M31 | 31.6 | Divergence auto-hardening the class | High | Proposed diff only; a test asserts decisions are unchanged |
 | 2026-11-07 | M31 | 31.7 | Action without an accountable reviewer/origin | High | `insight-action` records insight id, kind, reviewer, and origin; applying is a reviewed PR |
 | 2026-11-07 | M31 | 31.8 | Stale insights lingering | Medium | Expiry is last-seen + `stale_after_seconds`; contract test |
+
+## M32 field-test close-out review (2026-11-07)
+
+| Date | M | Item | Finding | Severity | Resolution |
+|---|---|---|---|---|---|
+| 2026-11-07 | M32 | 32.CR | A permission-locked store silently self-healed: `SqliteStore.__init__` re-chmod'ed an existing db to 0600 before connecting, so a deliberate lockout exited 0 (FT-SC-24-LIVE, Defect #5) | High | chmod only on create; an existing db is tightened only when readable-but-permissive; an owner-unreadable db raises `StoreError` and the CLI exits 4. Locked-store regression test added |
+| 2026-11-07 | M32 | 32.CR | CLI `gate` returned from its fail-closed exception path without closing the store, leaving the sqlite connection to GC (promoted to an unraisable warning by pytest 9) | Medium | `_gate` now closes on the exception path and in a `finally` around card/render output; direct test asserts close on a forced gate failure |
+| 2026-11-07 | M32 | 32.T/32.C/32.L | Milestone gate run: ruff clean, mypy --strict clean, **931 passed**, coverage **95.08%** (required 95%) | — | Gate green; the four container-only `ResourceWarning` reds are recorded as KNOWN test-setup/env in the field-test report, not product failures |

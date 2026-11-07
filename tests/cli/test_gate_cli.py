@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import agentinbox.cli as cli
 from agentinbox.cli import main
 from agentinbox.config import init_home, load_config, resolve_config_path
 from agentinbox.ingest import ingest
@@ -123,6 +124,28 @@ def test_lapsed_budget_returns_three(
 def test_missing_ask_flag_is_a_usage_error(tmp_path: Path) -> None:
     home = make_home(tmp_path)
     assert main(["--home", str(home), "gate"]) == 1
+
+
+def test_gate_exception_closes_store(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home = make_home(tmp_path)
+    ask_id = seed(home)
+    closed: list[object] = []
+    real_close = cli._close_store
+
+    def record(store: object) -> None:
+        closed.append(store)
+        real_close(store)  # type: ignore[arg-type]
+
+    def boom(*_args: object, **_kwargs: object) -> None:
+        raise RuntimeError("gate blew up")
+
+    monkeypatch.setattr(cli, "_close_store", record)
+    monkeypatch.setattr(cli, "gate", boom)
+
+    assert main(["--home", str(home), "gate", "--ask", ask_id]) == 4
+    assert closed
 
 
 def test_bad_config_fails_closed(
