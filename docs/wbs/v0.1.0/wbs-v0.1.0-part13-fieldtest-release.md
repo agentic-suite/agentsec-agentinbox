@@ -14,9 +14,23 @@ the `v0.1.0` tag + PyPI publish.
 > (M26–M31), the **final two milestones are M32 (field tests, SC-01–SC-90) and M33 (release readiness)**;
 > M33 tags `v0.1.0`. Nothing follows M33.
 
+> **AMENDED 2026-11-07 — M24 and M25 are ABSORBED into M32 and M33.**
+> The two-pass design is replaced by **one field-test pass (M32) and one release pass (M33)**. M24 was a
+> strict subset of M32's SC-01–SC-26 re-run; M25 was a rehearsal of the same release M33 performs. Every
+> M24/M25 work item maps to an M32/M33 item (see the
+> [absorption map](wbs-v0.1.0-index.md#m24m25-absorption-into-m32m33-amended-2026-11-07)); two items with
+> no counterpart became new work items: **32.8 harness recipe runs (#402)** and
+> **33.5 Wave-0 demo wiring (#403)**. Issues #98–#123 are closed as *absorbed* (each names its target).
+> **Consequence:** the core is not hardware-tested before M26–M31; the M32 regression baseline is the M23
+> core commit `ab94330` + PRD 17 expected behavior, not a measured M24 verdict set.
+
 ---
 
-## Milestone M24 — Core field tests (SC-01–SC-26 + the 15-second study)
+## Milestone M24 — Core field tests (SC-01–SC-26 + the 15-second study) — **ABSORBED into M32**
+
+> **Status: absorbed (2026-11-07).** Execute these items inside **M32** (32.D0/32.5/32.6/32.7); do not
+> run a separate pass. Issue targets: #98→32.D0, #99–#102/#106→32.7/32.T, #103→32.5, #104→32.8, #105→32.6,
+> #107–#110→32.C/L/CR/D.
 
 **Goal:** execute [PRD 17](../../prd/17-scenarios.md)'s v0.1.0 catalog on real hardware with real harnesses:
 lifecycle (SC-01–06), expiry (09–10), cross-channel truth (07/18/19), escalation (11/12), flood (13/14), CI
@@ -55,7 +69,11 @@ and Codex CLI. The report is the evidence register's EV-2..EV-14 made real.
 
 ---
 
-## Milestone M25 — Release readiness (tags `v0.1.0`)
+## Milestone M25 — Release readiness (tags `v0.1.0`) — **ABSORBED into M33**
+
+> **Status: absorbed (2026-11-07).** Execute these items inside **M33**; there is one release pass.
+> Issue targets: #111→33.D0, #112→33.2, #113→33.1, #114→33.3, #115→33.4, #116→33.5, #117→33.D,
+> #118→33.4, #119–#123→33.T/C/L/CR/D.
 
 **Goal:** ship honestly: the **claims lint** enforces the [PRD 20 §G](../../prd/20-standards-and-claims.md)
 vocabulary against every public doc (no over-claim ships), release notes carry the measured benches + the
