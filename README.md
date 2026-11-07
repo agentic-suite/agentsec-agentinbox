@@ -92,7 +92,7 @@ agentinbox doctor          # exit 0 on a healthy install, 4 (fail-closed) otherw
 ```
 
 `AGENTINBOX_HOME` (or `--home`) relocates the home directory. A PyPI release
-(`pip install agentsec-agentinbox`) lands with the v0.1.0 release (M25).
+(`pip install agentsec-agentinbox`) lands with the v0.1.0 release (M33).
 
 ## Quickstart (first approval in under 5 minutes)
 
@@ -119,6 +119,9 @@ agentinbox verify-log           # hash chain
   [security](./docs/reference/security.md) · [operations](./docs/reference/ops.md).
 - **Runbooks:** [docs/runbooks/](./docs/runbooks/) — channel outage, secret rotation, corruption,
   live flood, config drift, clock incident, escalation misfire, upgrade day.
+- **v0.1.0 release packet:** [docs/release/v0.1.0/README.md](./docs/release/v0.1.0/README.md) —
+  release plan, generated compatibility matrix, expansion runbooks, field evidence, and the
+  pending security audit / notes / SBOM artifacts.
 - **Guides:** [approver guide](./docs/guides/approver-guide.md) ·
   [honest enterprise page](./docs/guides/enterprise-honesty.md) ·
   [producer guide](./docs/adapters/producer-guide.md) ·
@@ -129,9 +132,9 @@ agentinbox verify-log           # hash chain
   [scenario catalog](./docs/prd/17-scenarios.md), and
   [traceability](./docs/prd/12-traceability.md) define what "done" means.
 - **The v0.1.0 WBS is written:** [docs/wbs/v0.1.0/](./docs/wbs/v0.1.0/wbs-v0.1.0-index.md) —
-  **26 milestones (M0–M25)** across **13 detail files** (2 milestones per file): the core
-  engine (M0–M9), reach (M10–M14), evidence + producers (M15–M19), hardening +
-  ops + docs (M20–M23), field tests + release (M24–M25, which tags `v0.1.0`).
+  **34 milestones (M0–M33)** across **17 detail files**: the core engine (M0–M9),
+  reach (M10–M14), evidence + producers (M15–M19), hardening + ops + docs
+  (M20–M23), expansion (M26–M31), field tests + release (M32–M33, which tags `v0.1.0`).
 - **Design docs are authored before code**, milestone by milestone — start with
   [the foundation design](./docs/design/v0.1.0/foundation.md) (CLI surface,
   exit-code contract, config model, store layout).
