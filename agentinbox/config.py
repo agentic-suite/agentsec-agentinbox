@@ -53,7 +53,7 @@ _THROTTLE_KEYS = frozenset({"per_agent_burst", "per_agent_rate_per_min", "flood_
 _LIMITS_KEYS = frozenset({"max_hold_rounds", "max_evidence_revisions", "max_thread_entries"})
 _WEBUI_KEYS = frozenset({"enabled", "bind"})
 _CHANNEL_KEYS = {
-    "terminal": frozenset({"enabled"}),
+    "terminal": frozenset({"enabled", "allow_as"}),
     "desktop": frozenset({"enabled"}),
     "webhook": frozenset({"enabled", "url_ref", "hmac_key_ref"}),
 }
@@ -79,6 +79,7 @@ class ClassConfig:
 @dataclass(frozen=True, slots=True)
 class ChannelConfig:
     enabled: bool = False
+    allow_as: bool = False
     url_ref: str | None = None
     hmac_key_ref: str | None = None
 
@@ -356,6 +357,10 @@ def _parse_channels(value: dict[str, Any]) -> dict[str, ChannelConfig]:
         if not isinstance(enabled, bool):
             raise ConfigError(f"[channels.{name}].enabled: must be a boolean")
 
+        allow_as = table.get("allow_as", False)
+        if not isinstance(allow_as, bool):
+            raise ConfigError(f"[channels.{name}].allow_as: must be a boolean")
+
         url_ref = table.get("url_ref")
         if url_ref is not None:
             _validate_ref(url_ref, f"[channels.{name}].url_ref")
@@ -364,7 +369,10 @@ def _parse_channels(value: dict[str, Any]) -> dict[str, ChannelConfig]:
             _validate_ref(hmac_key_ref, f"[channels.{name}].hmac_key_ref")
 
         channels[name] = ChannelConfig(
-            enabled=enabled, url_ref=url_ref, hmac_key_ref=hmac_key_ref
+            enabled=enabled,
+            allow_as=allow_as,
+            url_ref=url_ref,
+            hmac_key_ref=hmac_key_ref,
         )
     return channels
 

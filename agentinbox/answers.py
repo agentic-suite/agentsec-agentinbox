@@ -64,6 +64,7 @@ class AnswerRequest:
     decision: str  # "approve" | "deny"
     reason: str | None = None
     typed_confirmation: str | None = None
+    assumed: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,7 +172,10 @@ class AnswerVerifier:
                 channel=request.channel,
                 claim_id=request.claim_id,
                 reason=request.reason,
-                detail={"decision": request.decision},
+                detail={
+                    "decision": request.decision,
+                    "assumed_principal": request.assumed,
+                },
             ),
         )
         if not won:

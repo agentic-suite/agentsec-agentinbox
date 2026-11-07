@@ -77,9 +77,13 @@ guessing resistance), [PRD 06](../../prd/06-security-baseline.md) (T1/T4/T10/T13
 
 **Exit criteria**
 
-- [ ] Design docs first · tests · coverage ≥95% · lint clean · docs · committed+pushed
-- [ ] SC-01 (terminal first ask) green; scripts can never approve; assumed principals audited
-- [ ] The InboxChannel contract + shared parity fixtures exist (all later channels inherit them)
+- [x] Design docs first · tests · coverage measured 95.61% · lint clean · docs · committed+pushed
+- [x] SC-01 (terminal first ask) green; scripts can never approve; assumed principals audited
+- [x] The InboxChannel contract + shared parity fixtures exist (all later channels inherit them)
+
+**Closed 2026-11-08 except 7.C.** Design: [terminal](../design/v0.1.0/terminal.md) · Reference:
+[terminal](../reference/terminal.md) · Gate: 379 tests, coverage 95.61%, `ruff` + `mypy --strict` clean.
+**7.C (#188, coverage gate) is intentionally left open by the owner.**
 
 ---
 

@@ -17,14 +17,21 @@ from collections.abc import Callable, Sequence
 from typing import NoReturn
 
 from agentinbox import __version__
+from agentinbox.answers import AnswerVerifier
+from agentinbox.channels.base import ChannelError
+from agentinbox.channels.terminal import TerminalChannel
 from agentinbox.config import (
+    Config,
     ConfigError,
     init_home,
+    load_config,
     resolve_config_path,
     resolve_home,
 )
 from agentinbox.doctor import render_explain, render_human, run_checks
 from agentinbox.exit_codes import ExitCode
+from agentinbox.store import AskStore, StoreError, utcnow
+from agentinbox.store.loader import load_store
 
 PROG = "agentinbox"
 
@@ -122,6 +129,79 @@ def _doctor(args: argparse.Namespace) -> int:
     return int(ExitCode.APPROVED if report.ok else ExitCode.UNAVAILABLE)
 
 
+def _runtime(args: argparse.Namespace) -> tuple[Config, AskStore]:
+    home = resolve_home(args.home)
+    config_path = resolve_config_path(home, args.config)
+    config = load_config(config_path)
+    store = load_store(config.store.driver, home=home)
+    return config, store
+
+
+def _answer(args: argparse.Namespace) -> int:
+    try:
+        config, store = _runtime(args)
+    except (ConfigError, StoreError) as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    ask = store.get(args.ask_id)
+    if ask is None:
+        print(f"{PROG}: unknown ask: {args.ask_id}", file=sys.stderr)
+        return int(ExitCode.DENIED)
+
+    decision = "approve" if args.approve else "deny" if args.deny else None
+    channel = TerminalChannel(
+        config=config,
+        output=sys.stdout,
+        input_fn=input,
+        interactive=sys.stdin.isatty(),
+    )
+    try:
+        return channel.answer(
+            store,
+            AnswerVerifier(store, config),
+            ask,
+            decision=decision,
+            reason=args.reason,
+            as_name=args.as_name,
+        )
+    except ChannelError as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+
+def _inbox(args: argparse.Namespace) -> int:
+    try:
+        _config, store = _runtime(args)
+    except (ConfigError, StoreError) as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    pending = store.list_pending(now=utcnow(), limit=200)
+    if args.json:
+        print(
+            json.dumps(
+                [
+                    {
+                        "ask_id": ask.ask_id,
+                        "class": ask.payload.get("class", "unknown"),
+                        "expires_at": ask.expires_at.isoformat(),
+                        "action": ask.payload.get("action", "unknown"),
+                    }
+                    for ask in pending
+                ],
+                sort_keys=True,
+            )
+        )
+    else:
+        if not pending:
+            print("no pending asks")
+        for ask in pending:
+            print(f"{ask.ask_id}  {ask.payload.get('class', 'unknown')}  "
+                  f"{ask.payload.get('action', 'unknown')}  expires {ask.expires_at.isoformat()}")
+    return int(ExitCode.APPROVED if not pending else ExitCode.PENDING)
+
+
 def _version(args: argparse.Namespace) -> int:
     if getattr(args, "json", False):
         print(
@@ -171,6 +251,10 @@ def build_parser() -> argparse.ArgumentParser:
             handler = _init
         elif command == "doctor":
             handler = _doctor
+        elif command == "answer":
+            handler = _answer
+        elif command == "inbox":
+            handler = _inbox
         else:
             handler = _stub(command)
         sub.set_defaults(handler=handler)
@@ -182,6 +266,13 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument(
                 "--explain", action="store_true", help="print the effective configuration"
             )
+        if command == "answer":
+            sub.add_argument("ask_id")
+            choice = sub.add_mutually_exclusive_group()
+            choice.add_argument("--approve", action="store_true")
+            choice.add_argument("--deny", action="store_true")
+            sub.add_argument("--reason")
+            sub.add_argument("--as", dest="as_name", metavar="NAME")
 
     return parser
 
@@ -204,7 +295,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # A stub accepts the flags of the command it will become (and refuses); a real command
     # rejects anything it does not define.
-    if extra and args.command in {"version", "init", "doctor"}:
+    if extra and args.command in {"version", "init", "doctor", "answer", "inbox"}:
         parser.print_usage(sys.stderr)
         print(f"{PROG}: error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)
         return int(ExitCode.USAGE)
