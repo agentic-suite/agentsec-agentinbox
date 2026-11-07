@@ -7,8 +7,10 @@ delivery/flood transitions that mirror their records).
 
 from __future__ import annotations
 
+import os
 from collections.abc import Callable
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from agentinbox.events.base import (
@@ -164,7 +166,12 @@ def _traceparent(ask: AskRecord) -> str | None:
 
 
 class EventTracer:
-    """Drain new audit entries to a buffered sink; the decision path never waits on it."""
+    """Drain new audit entries to a buffered sink; the decision path never waits on it.
+
+    ``state_path`` persists the last **delivered** sequence, so a restart does not replay the
+    whole chain into the sink. If the sink is down the cursor stays behind its in-memory mark:
+    the buffered events may be replayed (at-least-once, stable ``event_id``) rather than lost.
+    """
 
     def __init__(
         self,
@@ -172,6 +179,7 @@ class EventTracer:
         *,
         sink: EventSink | None = None,
         now: Callable[[], datetime] = utcnow,
+        state_path: Path | None = None,
     ) -> None:
         self.store = store
         self.sink = (
@@ -179,20 +187,40 @@ class EventTracer:
             if isinstance(sink, BufferedEventSink)
             else BufferedEventSink(sink or ListSink(), now=now)
         )
-        self._last_seq = 0
+        self._state_path = state_path
+        self._last_seq = _read_cursor(state_path)
 
     def drain(self) -> list[dict[str, Any]]:
         emitted: list[dict[str, Any]] = []
         for entry in self.store.audit_entries():
             if entry.seq <= self._last_seq:
                 continue
-            self._last_seq = entry.seq
             event = event_from_entry(self.store, entry)
+            self._last_seq = entry.seq
             if event is None:
                 continue
             self.sink.write(event)
             emitted.append(event)
+        if self._state_path is not None and self.sink.pending == 0:
+            self._write_cursor()
         return emitted
+
+    def _write_cursor(self) -> None:
+        assert self._state_path is not None
+        self._state_path.parent.mkdir(parents=True, exist_ok=True)
+        staging = self._state_path.with_name(self._state_path.name + ".tmp")
+        staging.write_text(f"{self._last_seq}\n", encoding="utf-8")
+        os.chmod(staging, 0o600)
+        os.replace(staging, self._state_path)
+
+
+def _read_cursor(path: Path | None) -> int:
+    if path is None:
+        return 0
+    try:
+        return max(0, int(path.read_text(encoding="utf-8").strip()))
+    except (OSError, ValueError):
+        return 0
 
 
 __all__ = ["ANSWER_CAUSE_MAP", "EventTracer", "event_from_entry"]

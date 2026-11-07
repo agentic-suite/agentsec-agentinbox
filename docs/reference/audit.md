@@ -13,6 +13,10 @@ agentinbox verify-log
 # agentinbox: chain verification failed: audit seq 7: entry_hash does not verify  (exit 4)
 ```
 
+`verify-log` reads the store **read-only** (no driver open, no migration, no write) and recomputes each
+payload digest from the stored body as well as the seq/link hashes. A tampered body is detected by its exact
+seq; an old store without an audit table verifies as zero entries and is left untouched.
+
 ## `export`
 
 ```sh

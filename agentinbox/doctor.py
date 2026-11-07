@@ -7,7 +7,6 @@ milestones can grow the set without renumbering. Any ``fail`` makes the whole co
 
 from __future__ import annotations
 
-import json
 import os
 import sqlite3
 import stat
@@ -17,10 +16,11 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+from agentinbox.audit import read_audit_entries
 from agentinbox.channels.desktop import desktop_availability
 from agentinbox.config import Config, ConfigError, effective_ladder_delays, load_config
 from agentinbox.secrets import SecretError, resolve_ref
-from agentinbox.store import AuditEntry, ChainHashMismatch, verify_audit_chain
+from agentinbox.store import ChainHashMismatch, StoreError, verify_audit_chain
 from agentinbox.store.sqlite import SCHEMA_VERSION
 
 OK = "ok"
@@ -153,61 +153,13 @@ def _chain(database: Path) -> Check:
     if not database.exists():
         return Check("chain", OK, "no store yet")
     try:
-        with sqlite3.connect(f"file:{database}?mode=ro", uri=True) as connection:
-            try:
-                rows = connection.execute(
-                    "SELECT seq, prev_hash, entry_hash, kind, ref_id, at,"
-                    " payload_digest, payload FROM audit ORDER BY seq ASC"
-                ).fetchall()
-            except sqlite3.OperationalError as exc:
-                if "no such column: payload" not in str(exc).lower():
-                    raise
-                rows = connection.execute(
-                    "SELECT seq, prev_hash, entry_hash, kind, ref_id, at,"
-                    " payload_digest, NULL AS payload FROM audit ORDER BY seq ASC"
-                ).fetchall()
-    except sqlite3.OperationalError as exc:
-        if "no such table: audit" in str(exc).lower():
-            return Check("chain", OK, "audit table not present yet (migrates on open)")
-        return Check("chain", FAIL, f"{database}: cannot read the audit chain ({exc})")
-    except sqlite3.Error as exc:
-        return Check("chain", FAIL, f"{database}: cannot read the audit chain ({exc})")
-
-    entries: list[AuditEntry] = []
-    for row in rows:
-        raw = row[7]
-        payload: dict[str, object] | None = None
-        if raw is not None:
-            try:
-                payload = json.loads(raw)
-            except (TypeError, ValueError):
-                return Check(
-                    "chain", FAIL, f"{database}: audit seq {row[0]} payload is corrupt"
-                )
-        entries.append(
-            AuditEntry(
-                seq=int(row[0]),
-                prev_hash=str(row[1]),
-                entry_hash=str(row[2]),
-                kind=str(row[3]),
-                ref_id=str(row[4]),
-                at=_parse_moment(str(row[5])),
-                payload_digest=str(row[6]),
-                payload=payload,
-            )
-        )
-    try:
+        entries = read_audit_entries(database)
         verify_audit_chain(entries)
+    except StoreError as exc:
+        return Check("chain", FAIL, f"{database}: {exc}")
     except ChainHashMismatch as exc:
         return Check("chain", FAIL, f"{database}: {exc}")
     return Check("chain", OK, f"{len(entries)} entries verify")
-
-
-def _parse_moment(text: str) -> datetime:
-    try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00"))
-    except ValueError:
-        return datetime.now(UTC)
 
 
 def _spool(home: Path) -> Check:

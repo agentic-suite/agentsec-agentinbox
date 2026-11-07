@@ -78,9 +78,12 @@ the offending field.
 
 | Fields | Source | If producer is **not** authenticated |
 |---|---|---|
-| `reason_code`, `policy_ref`, `criticality`, `class`, `environment`, `data_class` | trusted-class | rendered/flagged **unverified** |
+| `reason_code`, `policy_ref`, `criticality`, `class`, `environment`, `data_class`, `requested_by` | trusted-class | rendered/flagged **unverified** |
 | `arguments`, `context.*`, `traceparent`, any extra string | agent-supplied | always **untrusted** |
-| `tool`, `action`, `agent_id`, `session_id`, `requested_by`, `expires_at`, `action_identity` | protocol facts | not "trusted policy", but not agent-influenceable |
+| `tool`, `action`, `agent_id`, `session_id`, `expires_at`, `action_identity` | protocol facts | not "trusted policy", but not agent-influenceable |
+
+`requested_by` is the self-review anchor: an authenticated adapter's value is trusted, an unsigned producer's
+value is unverified (so `self_review=deny` is best-effort for unsigned producers).
 
 The stored payload carries:
 

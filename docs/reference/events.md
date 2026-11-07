@@ -10,7 +10,9 @@ are facts with shared join keys; a downed sink buffers and marks gaps.
 
 `agentinbox serve` drains new audit entries every second (and after `--once`) to
 `<home>/logs/events.jsonl` (mode `0600`). The tracer is a projection of the audit chain; the chain remains
-authoritative.
+authoritative. Its delivered cursor lives in `<home>/logs/events.seq`, so a normal restart does not replay the
+whole chain. If the sink is down the cursor stays behind and buffered facts are replayed (at-least-once, stable
+`event_id = agentinbox:<audit seq>`) rather than lost.
 
 ## Envelope
 

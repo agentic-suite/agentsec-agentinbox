@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from agentinbox.config import ClassConfig, Config
-from agentinbox.events import BufferedEventSink, EventTracer
+from agentinbox.events import BufferedEventSink, EventTracer, ListSink
 from agentinbox.ingest import ingest
 from agentinbox.trust import ProducerIdentity
 from tests.ask.conftest import NOW, payload
@@ -94,6 +94,37 @@ def test_overflow_is_marked_not_silent(store) -> None:  # type: ignore[no-untype
     assert len(inner.records) == 3
     assert sink.gaps == 1
     assert sink.dropped == 0
+
+
+def test_the_tracer_resumes_from_its_cursor(store, tmp_path) -> None:  # type: ignore[no-untyped-def]
+    state = tmp_path / "events.seq"
+    first = EventTracer(store, sink=ListSink(), state_path=state)
+    make(store)
+    assert len(first.drain()) == 1
+
+    resumed = EventTracer(store, sink=ListSink(), state_path=state)
+    assert resumed.drain() == []
+
+    make(store, 1)
+    assert len(resumed.drain()) == 1
+
+
+def test_a_down_sink_does_not_advance_the_cursor(store, tmp_path) -> None:  # type: ignore[no-untyped-def]
+    state = tmp_path / "events.seq"
+    inner = FlakySink()
+    inner.down = True
+    tracer = EventTracer(
+        store, sink=BufferedEventSink(inner, now=lambda: NOW), state_path=state
+    )
+    make(store)
+    tracer.drain()
+
+    assert tracer.sink.pending == 1
+    assert not state.exists() or state.read_text().strip() == "0"
+
+    # A restart replays the buffered fact rather than losing it.
+    resumed = EventTracer(store, sink=ListSink(), state_path=state)
+    assert len(resumed.drain()) == 1
 
 
 def test_the_decision_path_never_touches_the_sink(store) -> None:  # type: ignore[no-untyped-def]

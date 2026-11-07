@@ -137,6 +137,9 @@ regression test):
 | R2 / E12 | CLI `ask` ingested without publishing a delivery job, so no channel was notified; and a producer could not publish while the daemon owned the spool lock | Added a lock-free `SpoolPublisher`; `ask` publishes through it (the daemon keeps the consumer lock) |
 | PRD 18 binding | Claims were bound to ask/channel/tier but not to `action_identity` | `ClaimRecord.action_identity` is persisted (schema v5) and checked in the verifier; a forged identity is `identity_mismatch` |
 | PRD 02 delivery modes | `serve` never started the loopback ingest API, so remote producers could not POST | `serve` starts the API on 127.0.0.1 (default 8377), writes a `0600` token to `<home>/api-token`, fails closed on a port conflict; `--no-api` opts out |
+| R5 / read-only posture | `verify-log` opened the store through the migrating loader, writing an old DB it was only supposed to inspect | `verify-log` uses `read_audit_entries` (read-only sqlite, no migration); a v1 store stays v1 and gains no audit table |
+| R5 / event log | The JSONL event sink replayed the whole chain after a restart (duplicate lines) | `EventTracer` persists the last **delivered** sequence in `<home>/logs/events.seq`; a down sink keeps the cursor behind and replays (at-least-once) instead of losing events |
+| R1 / T10 | `requested_by` was never a trusted-class field, so a signed adapter's self-review anchor was still unverified | Added to the trusted profile; a signed adapter's value is verified, an unsigned producer's is labelled unverified |
 
 **Noted, deliberately unchanged or deferred:**
 
@@ -146,10 +149,10 @@ regression test):
   migration burst remains fully answerable". With burst 20 the pack yields 180 denies + 20 burst-capacity asks,
   one event, one digest. Documented in the flood reference; SC-13 should be written as "N denies + one
   event/digest, no more than the burst capacity reaches the approver".
-- **`requested_by` trust:** it is producer-supplied (not a signed trusted field), so `self_review=deny` is
-  best-effort against an agent owner who lies; the card labels it unverified.
-- **Event sink restart:** the JSONL sink is at-least-once across a restart (stable `event_id = agentinbox:<seq>`);
-  a cursor file is a small follow-up if exact-once local logs are wanted.
+- **`requested_by` trust:** the value is now trusted for a signed adapter and unverified for an unsigned producer;
+  `self_review=deny` remains best-effort against an unsigned agent owner who lies (the card labels it).
+- **Event sink restart:** a persisted delivered-cursor now prevents a clean-restart replay; a crash while the
+  sink is down replays the buffered facts (at-least-once, stable `event_id`) rather than losing them.
 - **Reload scope:** a valid SIGHUP reload swaps the escalation policy and records the change; channels/API pick up
   other policy on restart. Documented in the fail-closed reference.
 - **M21+:** service units, backup/restore, `report`, offline day, benches, and the final field tests (M32/M33)

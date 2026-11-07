@@ -221,9 +221,10 @@ A milestone is **closed** only when all of these hold:
   02/05/06/11/13/15/16/18/19/20/22. Fixed and regression-tested: audit payload re-hashing + corrupt-payload
   fail-closed; complete-chain export; `[unverified]` trust labels; prior-asks/credential-class card fields;
   warning delivery; escalation wording; delivery-error redaction; lock-free producer publishing; claim
-  `action_identity` binding (schema v5); `serve` starting the loopback API with a `0600` token. Noted and
-  documented: PRD-05 vs PRD-18 claim-entropy wording, the 200/30 s flood-pack arithmetic, `requested_by`
-  trust limits, event-sink at-least-once on restart, reload scope. Details in the
+  `action_identity` binding (schema v5); `serve` starting the loopback API with a `0600` token; read-only
+  `verify-log` (no migration); a persisted event-sink delivery cursor; `requested_by` in the signed trusted
+  profile. Noted and documented: PRD-05 vs PRD-18 claim-entropy wording, the 200/30 s flood-pack arithmetic,
+  unsigned `requested_by` trust limits, reload scope. Details in the
   [review log](codereview-log.md#prd-conformance-review-m0m20-2026-11-08).
 
 ## PRD coverage matrix (every doc 00–30)

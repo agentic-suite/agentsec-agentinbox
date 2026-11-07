@@ -29,7 +29,13 @@ from typing import Any, NoReturn
 from agentinbox import __version__
 from agentinbox.answers import AnswerVerifier
 from agentinbox.api import start_api
-from agentinbox.audit import apply_retention, export_csv, export_jsonl, export_records
+from agentinbox.audit import (
+    apply_retention,
+    export_csv,
+    export_jsonl,
+    export_records,
+    read_audit_entries,
+)
 from agentinbox.bus import (
     BusError,
     DeliveryWiring,
@@ -72,6 +78,7 @@ from agentinbox.store import (
     parse_iso,
     to_iso,
     utcnow,
+    verify_audit_chain,
 )
 from agentinbox.store.loader import load_store
 from agentinbox.trust import ProducerIdentity
@@ -489,6 +496,7 @@ def _serve(args: argparse.Namespace) -> int:
         sink=BufferedEventSink(
             JsonlEventSink(home / "logs" / "events.jsonl")
         ),
+        state_path=home / "logs" / "events.seq",
     )
     try:
         if args.once:
@@ -553,14 +561,15 @@ def _serve(args: argparse.Namespace) -> int:
 
 def _verify_log(args: argparse.Namespace) -> int:
     try:
-        _config, store = _runtime(args)
-    except (ConfigError, StoreError) as exc:
+        home = resolve_home(args.home)
+    except ConfigError as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)
         return int(ExitCode.UNAVAILABLE)
 
     try:
-        entries = store.audit_entries()
-        store.verify_chain()
+        # Read-only: verify-log must not migrate or write the store it inspects.
+        entries = read_audit_entries(home / "inbox.db")
+        verify_audit_chain(entries)
     except ChainHashMismatch as exc:
         print(f"{PROG}: chain verification failed: {exc}", file=sys.stderr)
         return int(ExitCode.UNAVAILABLE)

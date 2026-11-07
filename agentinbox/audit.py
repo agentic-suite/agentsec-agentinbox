@@ -9,12 +9,23 @@ from __future__ import annotations
 
 import csv
 import io
+import json
+import sqlite3
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 from agentinbox.config import Config
-from agentinbox.store import AskStore, canonical_json, to_iso, utcnow
+from agentinbox.store import (
+    AskStore,
+    AuditEntry,
+    StoreError,
+    canonical_json,
+    parse_iso,
+    to_iso,
+    utcnow,
+)
 
 EXPORT_CONTRACT = "export/1.0"
 RETENTION_MARKER = "retention-pruned"
@@ -37,6 +48,59 @@ CSV_COLUMNS = (
     "entry_hash",
     "payload_digest",
 )
+
+
+def read_audit_entries(database: Path) -> list[AuditEntry]:
+    """Read the chain read-only — no driver open, no migration, no write."""
+    if not database.exists():
+        return []
+    try:
+        with sqlite3.connect(f"file:{database}?mode=ro", uri=True) as connection:
+            try:
+                rows = connection.execute(
+                    "SELECT seq, prev_hash, entry_hash, kind, ref_id, at,"
+                    " payload_digest, payload FROM audit ORDER BY seq ASC"
+                ).fetchall()
+            except sqlite3.OperationalError as exc:
+                message = str(exc).lower()
+                if "no such table: audit" in message:
+                    return []
+                if "no such column: payload" not in message:
+                    raise
+                rows = connection.execute(
+                    "SELECT seq, prev_hash, entry_hash, kind, ref_id, at,"
+                    " payload_digest, NULL AS payload FROM audit ORDER BY seq ASC"
+                ).fetchall()
+    except sqlite3.Error as exc:
+        raise StoreError(f"audit is unreadable: {exc}") from exc
+
+    entries: list[AuditEntry] = []
+    for row in rows:
+        raw = row[7]
+        payload: dict[str, Any] | None = None
+        if raw is not None:
+            try:
+                decoded = json.loads(raw)
+            except (TypeError, ValueError) as exc:
+                raise StoreError(
+                    f"audit seq {row[0]} payload is corrupt ({exc})"
+                ) from exc
+            if not isinstance(decoded, dict):
+                raise StoreError(f"audit seq {row[0]} payload is not an object")
+            payload = decoded
+        entries.append(
+            AuditEntry(
+                seq=int(row[0]),
+                prev_hash=str(row[1]),
+                entry_hash=str(row[2]),
+                kind=str(row[3]),
+                ref_id=str(row[4]),
+                at=parse_iso(str(row[5])),
+                payload_digest=str(row[6]),
+                payload=payload,
+            )
+        )
+    return entries
 
 
 def export_records(
@@ -213,5 +277,6 @@ __all__ = [
     "export_csv",
     "export_jsonl",
     "export_records",
+    "read_audit_entries",
     "retention_cutoff",
 ]

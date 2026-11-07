@@ -17,6 +17,8 @@ TRUSTED_FIELDS = (
     "environment",
     "policy_ref",
     "reason_code",
+    # ``requested_by`` is the self-review anchor; an authenticated adapter's value is trusted.
+    "requested_by",
 )
 UNTRUSTED_FIELDS = ("arguments", "context")
 AGENTPOLICY_ADAPTER = "agentpolicy"
