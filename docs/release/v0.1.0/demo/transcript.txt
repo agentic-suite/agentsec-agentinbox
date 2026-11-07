@@ -1,0 +1,102 @@
+Wave-0 demo — agentpolicy -> agentinbox -> human deny
+agentinbox 0.1.0.dev0; agentpolicy 0.1.0
+1) Replit destructive rule: drop_database -> deny (deny_critical_op)
+   drop_database (delete) in production on restricted data is blocked: destructive operation on sensitive data with irreversible side effects. Use a read-only alternative or move to a lower-risk environment. Policy rule: Deletes in production are blocked.
+2) Production-write human gate: deploy_service -> escalate (escalate_prod_write)
+   Write action (deploy) in production on restricted data requires approval. Route to the on-call approver. Policy rule: Write actions in production require approval.
+3) ask-raised: ask_ef87eb1d5c4b896a (session sess_wave0_demo)
+ASKS: ask_ef87eb1d5c4b896a   status=pending   ttl=4m59s
+fingerprint: sha256:b4c68e7261ce…
+
+CHOICES
+  suggestion: run against staging first (suggestion)
+  suggestion: cap the blast radius with an explicit limit (suggestion)
+
+ACTION
+  tool: [untrusted: tool output] shell
+  action: [untrusted: tool output] run_command
+  arguments: [untrusted: tool output] command=deploy_service checkout-api; timeout_s=30
+  fingerprint: sha256:b4c68e7261ce…
+  class: irreversible
+  criticality: high
+  requested by: release-bot
+
+POLICY
+  reason code: human_gate_required
+  rule: rule[2]
+  policy version: 1.0.0
+  clause: [untrusted: tool output] rule[2]
+
+BLAST RADIUS
+  resource: service:checkout-api
+  reversibility: irreversible
+  affected estimate: unknown
+  environment: production
+  data class: restricted
+  credential class: unknown
+
+SESSION SO FAR
+  session: sess_wave0_demo
+  agent: agent://release-bot
+  tier: unknown
+  escalations: none
+  prior asks: none
+  similar cases: none (precedent only)
+  prior objection: none
+  session tail: unknown
+  flags: code_freeze_window
+  alternatives: staging deploy, read-only status check
+  transitions: 1
+
+Answer with: agentinbox answer <id> --approve|--deny  (q leaves it pending)
+4) delivered: terminal card + desktop notification
+ASKS: ask_ef87eb1d5c4b896a   status=pending   ttl=4m59s
+fingerprint: sha256:b4c68e7261ce…
+
+CHOICES
+  suggestion: run against staging first (suggestion)
+  suggestion: cap the blast radius with an explicit limit (suggestion)
+
+ACTION
+  tool: [untrusted: tool output] shell
+  action: [untrusted: tool output] run_command
+  arguments: [untrusted: tool output] command=deploy_service checkout-api; timeout_s=30
+  fingerprint: sha256:b4c68e7261ce…
+  class: irreversible
+  criticality: high
+  requested by: release-bot
+
+POLICY
+  reason code: human_gate_required
+  rule: rule[2]
+  policy version: 1.0.0
+  clause: [untrusted: tool output] rule[2]
+
+BLAST RADIUS
+  resource: service:checkout-api
+  reversibility: irreversible
+  affected estimate: unknown
+  environment: production
+  data class: restricted
+  credential class: unknown
+
+SESSION SO FAR
+  session: sess_wave0_demo
+  agent: agent://release-bot
+  tier: unknown
+  escalations: none
+  prior asks: none
+  similar cases: none (precedent only)
+  prior objection: none
+  session tail: unknown
+  flags: code_freeze_window
+  alternatives: staging deploy, read-only status check
+  transitions: 1
+
+Answer with: agentinbox answer <id> --approve|--deny  (q leaves it pending)
+ask ask_ef87eb1d5c4b896a: denied
+5) terminal decision: deny (exit 2)
+6) resolve: resolve/1.0 deny (deny_ask_denied)
+7) agentwatch events: ['ask-raised', 'ask-delivered', 'ask-delivered', 'ask-answered']
+8) export: 10 records
+9) verify-log: ok: 5 audit entries verify (exit 0)

@@ -49,6 +49,13 @@ Part of the [agentic-suite](https://github.com/agentic-suite).
 | 28 | [Review loops & operational orchestration](28-review-loops-and-orchestration.md) | **The middle path**: `needs_changes` + clarification cycles, timeboxed session grants, future-effective approval windows, incident-scoped suppression, class-shaped routing, parallel notify, per-agent trust profiles, environment overlays, change calendars — R48–R58, E15 |
 | 29 | [Trust maturity, writeback & human performance](29-trust-maturity-writeback-performance.md) | **Evidence you can defend**: rollback-required approvals, confidence-labeled blast radius, structured deny taxonomy, signed rationale, externally-verifiable attestations, outbound writeback (GitHub checks/PRs/tickets), cross-ask correlation, training mode, built-in chaos drills — R59–R67, E16 |
 | 30 | [Correctness, conflict & abuse hardening](30-correctness-conflict-abuse-hardening.md) | **The final layer that makes 24–29 safe**: the precedence lattice, the formal state machine, idempotent never-authoritative side effects, frozen schema-evolution, computed-not-asserted trust, review-loop limits, monotonic-narrowing edits, shared-machine provenance, sleep/wake semantics, derivative redaction, no-advisory-allows, revocation, corpus governance, web-UI security, dead-man detection — R68–R77, E17–E21 |
+| 31 | [CUJ & feature gaps (0.1.0 expansion)](31-cuj-and-feature-gaps-next-slate.md) | CUJ-15..48 + F31–F45 umbrella → PRDs 32–37 |
+| 32 | [Decision quality & ask readiness](32-decision-quality-and-ask-readiness.md) | Readiness scoring, non-decisionable rejection, contradictions, evidence sufficiency, quality banner — R78–R86 |
+| 33 | [Constrained allows & denial repair](33-constrained-allows-and-denial-repair.md) | Alternatives, constrained allow, repair packets, human edits — R87–R93 |
+| 34 | [Operation bundles, handoff & incident review](34-operation-bundles-handoff-and-incident-review.md) | Bundles, claim/assign/handoff, incident mode, narrative, timeline — R94–R100 |
+| 35 | [Outcome closure & execution proof](35-outcome-closure-and-execution-proof.md) | Closure states, receipts, approved-vs-executed, packets — R101–R107 |
+| 36 | [Repetitive approvals, grants & compression](36-repetitive-approvals-grants-and-compression.md) | Compression, windows, session grants, burn-down, governance — R108–R114 |
+| 37 | [Policy learning & governance insights](37-policy-learning-and-governance-insights.md) | Repetition/deny/hotspot insights, calibration, insight-to-action — R115–R122 |
 | A | [Appendix A — consolidated PRD](appendix-a-consolidated-prd.md) | The source PRD (PRD 11 from the research vault), verbatim, fully traced into the set |
 
 ## Reading order

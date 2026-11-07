@@ -1,0 +1,2 @@
+{"name":"FT-SC-69 assertions","ok":true,"grounded":true,"cmd":"ft_sut python /ft/scripts/run_pytest.py tests/readiness/test_contradictions.py"}
+{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}

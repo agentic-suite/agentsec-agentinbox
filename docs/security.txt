@@ -1,0 +1,6 @@
+# RFC 9116 security.txt — committed source; publish at /.well-known/security.txt at M25.
+Contact: mailto:security@agentic-suite.dev
+Expires: 2027-11-01T00:00:00.000Z
+Policy: https://github.com/agentic-suite/.github/blob/main/SECURITY.md
+Preferred-Languages: en
+Canonical: https://agentic-suite.dev/.well-known/security.txt

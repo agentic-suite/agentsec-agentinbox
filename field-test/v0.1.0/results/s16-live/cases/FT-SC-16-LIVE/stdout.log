@@ -1,0 +1,92 @@
+ASKS: ask_109b42a13278989c   status=pending   ttl=0m59s
+fingerprint: sha256:824319222009…
+READINESS: yellow · missing completeness, target_specificity, reversibility_clarity, trust_provenance · contradictions: none · evidence: strong
+
+CHOICES
+  suggestion: run against staging first (suggestion)
+  suggestion: cap the blast radius with an explicit limit (suggestion)
+
+ACTION
+  tool: [untrusted: tool output] shell
+  action: [untrusted: tool output] run_command
+  arguments: [untrusted: tool output] command=echo matrix
+  fingerprint: sha256:824319222009…
+  class: [unverified] irreversible
+  criticality: [unverified] normal
+  requested by: [unverified] agent://t1-live
+
+POLICY
+  reason code: [unverified] human_gate_required
+  rule: [unverified] cli-exec
+  policy version: [unverified] v0.1.0
+  clause: [untrusted: tool output] live
+
+BLAST RADIUS
+  resource: unknown
+  reversibility: unknown (irreversible class)
+  affected estimate: unknown
+  environment: [unverified] production
+  data class: [unverified] internal
+  credential class: unknown
+
+SESSION SO FAR
+  session: ft-sc16-approved
+  agent: agent://t1-live
+  tier: unknown
+  escalations: none
+  prior asks: none
+  similar cases: none (precedent only)
+  prior objection: none
+  session tail: unknown
+  flags: unknown
+  alternatives: unknown
+  transitions: 1
+
+Answer with: agentinbox answer <id> --approve|--deny  (q leaves it pending)
+type the action name to confirm (run_command): ask ask_109b42a13278989c: approved (assumed principal)
+ASKS: ask_0d2f998020bbcf3b   status=pending   ttl=0m59s
+fingerprint: sha256:824319222009…
+READINESS: yellow · missing completeness, target_specificity, reversibility_clarity, trust_provenance · contradictions: none · evidence: strong
+
+CHOICES
+  suggestion: run against staging first (suggestion)
+  suggestion: cap the blast radius with an explicit limit (suggestion)
+
+ACTION
+  tool: [untrusted: tool output] shell
+  action: [untrusted: tool output] run_command
+  arguments: [untrusted: tool output] command=echo matrix
+  fingerprint: sha256:824319222009…
+  class: [unverified] irreversible
+  criticality: [unverified] normal
+  requested by: [unverified] agent://t1-live
+
+POLICY
+  reason code: [unverified] human_gate_required
+  rule: [unverified] cli-exec
+  policy version: [unverified] v0.1.0
+  clause: [untrusted: tool output] live
+
+BLAST RADIUS
+  resource: unknown
+  reversibility: unknown (irreversible class)
+  affected estimate: unknown
+  environment: [unverified] production
+  data class: [unverified] internal
+  credential class: unknown
+
+SESSION SO FAR
+  session: ft-sc16-denied
+  agent: agent://t1-live
+  tier: unknown
+  escalations: none
+  prior asks: none
+  similar cases: precedent only: ask_109b42a13278989c approved (env=production, criticality=normal)
+  prior objection: none
+  session tail: unknown
+  flags: unknown
+  alternatives: unknown
+  transitions: 1
+
+Answer with: agentinbox answer <id> --approve|--deny  (q leaves it pending)
+ask ask_0d2f998020bbcf3b: denied (assumed principal)

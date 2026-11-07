@@ -1,0 +1,2 @@
+{"name":"FT-SC-24 assertions","ok":false,"grounded":true,"cmd":"ft_sut python /ft/scripts/run_pytest.py tests/faults/test_matrix.py"}
+{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}

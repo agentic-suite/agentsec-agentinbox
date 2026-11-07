@@ -1,0 +1,1 @@
++ compose exec agentinbox python /ft/scripts/run_pytest.py tests/constraints/test_repair.py tests/constraints/test_recall.py

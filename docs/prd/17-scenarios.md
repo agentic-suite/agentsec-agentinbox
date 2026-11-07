@@ -89,9 +89,11 @@ Dana denies. *Expect:* claims from tier-1 revoked (a late tier-1 tap → `answer
 
 ## Group 4 — Flood & abuse (R7)
 
-**SC-13 · Flood pack (the attack).** Bot emits 200 asks / 30 s (agentdrill pack). *Expect:* bucket trips at
-threshold; post-threshold asks → `flood_denied` + `ask_flood_throttled`; exactly **1** `ask-flood` event;
-**1** digest notification; pre-flood pendings remain answerable and un-spammed.
+**SC-13 · Flood pack (the attack).** Bot emits 200 asks / 30 s (agentdrill pack). *Expect:* the key starts with
+its configured burst capacity, which is allowed; post-threshold asks → `flood_denied` + `ask_flood_throttled`;
+exactly **1** `ask-flood` event; **1** digest notification; pre-flood pendings remain answerable and un-spammed.
+The verdict records the allowed burst count and the denied remainder (with the defaults: 20 allowed, 180 denied);
+a literal "200/200 denied" would also deny SC-14's legitimate burst and is not the contract.
 
 **SC-14 · Legitimate burst is not an attack.** Migration touches 20 tables (20 asks, distinct identities,
 < 2 s apart). *Expect:* all delivered, all answerable, no throttle trip (dedupe + burst headroom). **P** iff

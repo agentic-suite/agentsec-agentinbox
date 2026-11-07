@@ -6,13 +6,17 @@ and idempotent ingest, the durable store + crash-safe scheduler (**timeout = den
 desktop-notification + CI-checkpoint + signed-webhook channels (**no chat platform required**), the
 filesystem-spool bus (movement ≠ truth), escalation ladders, flood protection, the hash-chained audit log +
 agentwatch event set, the agentpolicy resolve bridge, and the producer adapters (agentpolicy reference,
-generic CLI/HTTP, LangGraph `interrupt()`, `--exec`). **Twenty-six milestones (M0–M25)** across **thirteen
-detail files**; **field tests (M24) and release readiness (M25) are last.**
+generic CLI/HTTP, LangGraph `interrupt()`, `--exec`). **Thirty-four milestones (M0–M33)** across **seventeen
+detail files**; **the final two milestones are field tests (M32) and release readiness (M33)**. **M24/M25
+are absorbed into M32/M33 (amended 2026-11-07, see the [absorption map](#m24m25-absorption-into-m32m33-amended-2026-11-07)):
+there is ONE field-test pass (M32, SC-01–SC-90 + one study) and ONE release pass (M33, tags `v0.1.0`).**
 
 > **Milestone ranges by intent:** **M0–M9** = the core engine (store → contract → lifecycle → scheduler →
 > card → claims → terminal → desktop → bus) · **M10–M14** = reach (CI, escalation, flood, webhook, multi-channel
 > truth) · **M15–M19** = evidence + producers (audit chain, agentwatch, resolve bridge, adapters,
-> conformance) · **M20–M23** = hardening + ops + docs · **M24–M25** = field tests + release. The WBS builds the
+> conformance) · **M20–M23** = hardening + ops + docs · **M24–M25** = absorbed into M32/M33 (see the
+> absorption map below) · **M26–M31** = 0.1.0 expansion features (PRDs 31–37) · **M32–M33** = **the**
+> field tests + release. The WBS builds the
 > whole set to one release; nothing in the forward slate (PRDs 24–30) is in scope — v0.1.0 is the
 > [PRD 05](../../prd/05-features.md) §A/§B P0 set only (R1–R7 + E1–E12).
 
@@ -48,7 +52,9 @@ A milestone is **closed** only when all of these hold:
 4. **Tracking issue closed** — or explicitly commented with status.
 5. **Docs updated** — the milestone's design/reference docs updated and linked from this WBS.
 6. **Checkpoint recorded** — a dated line appended to the Progress section (commit refs + gate result).
-7. **Field tests (M24) and release readiness (M25) are the final milestones** — **M25 tags `v0.1.0`**.
+7. **The final two milestones are field tests (M32) and release readiness (M33)** — **M33 tags `v0.1.0`**.
+   M24 (core field tests) and M25 (release rehearsal) are **absorbed into M32/M33** (amended 2026-11-07);
+   nothing follows M33.
 
 > **One ticket at a time:** per work item, write the test first (RED) → implement (GREEN) → next. Do **not** run
 > the full suite between tickets; run it at milestone end only.
@@ -81,8 +87,52 @@ A milestone is **closed** only when all of these hold:
 | M21 | Ops: service units, backup/restore, migrations, `report` (E10, PRD 22/13) | [Part 11](wbs-v0.1.0-part11-failclosed-ops.md) |
 | M22 | Security hardening sweep + evidence scanner (PRD 06/18) | [Part 12](wbs-v0.1.0-part12-security-docs.md) |
 | M23 | Docs completion: reference, quickstart, runbooks, recipes | [Part 12](wbs-v0.1.0-part12-security-docs.md) |
-| **M24** | **Field tests** (SC-01–SC-26 + the 15-second study) | [Part 13](wbs-v0.1.0-part13-fieldtest-release.md) |
-| **M25** | **Release readiness** (last; tags `v0.1.0`) | [Part 13](wbs-v0.1.0-part13-fieldtest-release.md) |
+| **M24** | **Core field tests — ABSORBED into M32** (SC-01–SC-26 + the study) | [Part 13](wbs-v0.1.0-part13-fieldtest-release.md) |
+| **M25** | **Core release rehearsal — ABSORBED into M33** | [Part 13](wbs-v0.1.0-part13-fieldtest-release.md) |
+| **M26–M31** | **0.1.0 expansion features** (PRDs 31–37) | [Parts 14–16](wbs-v0.1.0-part14-quality-constraints.md) |
+| **M32** | **Field tests — FINAL** (SC-01–SC-90; 15-second study) | [Part 17](wbs-v0.1.0-part17-expansion-fieldtest-release.md) |
+| **M33** | **Release readiness — FINAL** (tags `v0.1.0`) | [Part 17](wbs-v0.1.0-part17-expansion-fieldtest-release.md) |
+
+## M24/M25 absorption into M32/M33 (amended 2026-11-07)
+
+**Decision:** the two-pass design is replaced by **one field-test pass and one release pass**. M24/M25
+were never a separate release: they were the core-only rehearsal of the same catalog M32/M33 already
+re-run. Absorbing them removes a second human study cohort, a second report, and a duplicate release
+rehearsal. Nothing in M24/M25 loses a home — every work item maps below, and the two items with no
+counterpart became new M32/M33 work items.
+
+| Absorbed item | Lands in | Notes |
+|---|---|---|
+| 24.D0 plan | **32.D0** (extended) | one plan covering SC-01–SC-90 + one study protocol |
+| 24.1 lifecycle/expiry SC-01–06/09/10 | **32.7** | regression baseline = the M23 core commit, not a measured M24 pass |
+| 24.2 cross-channel/escalation SC-07/08/11/12/18/19 | **32.7** | — |
+| 24.3 flood/CI/evidence/attacks SC-13–24 | **32.7** | attack packs stay release-gating |
+| 24.4 plugin/offline SC-25/26 | **32.7** | — |
+| 24.5 zero-context study | **32.5** | **one cohort**, extended corpus across all CUJs |
+| 24.6 harness recipe runs | **32.8** | no M32 counterpart existed; the M24 issue **#104** was re-pointed as this item |
+| 24.7 hand-maintained report | **32.6** | same no-automation guard |
+| 24.T runner | **32.T** | runner built with 32.D0 |
+| 24.C/L/CR/D | 32.C/L/CR/D | — |
+| 25.1 claims lint | **33.2** | — |
+| 25.2 compatibility matrix | **33.1** | field-tested rows cite the 32.8 journal |
+| 25.3 release notes + gaps | **33.3/33.D** | — |
+| 25.4 SBOM/Sigstore/SLSA/Scorecard | **33.4** | — |
+| 25.5 Wave-0 demo wiring | **33.5** | no M33 counterpart existed; the M25 issue **#116** was re-pointed as this item |
+| 25.6 security audit + risk re-grade | **33.6** | no M33 counterpart existed; the M25 issue **#117** was re-pointed as this item |
+| 25.7 tag + PyPI | **33.4** | `v0.1.0` tag only after M32 green |
+| 25.T/C/L/CR/D | 33.T/C/L/CR/D | — |
+
+**Issues:** #98–#110 are **re-milestoned open** under M32 and #111–#123 under M33 — titles re-pointed
+to their new item numbers, none closed, none duplicated; the original bodies still govern. The
+M24/M25 GitHub milestones are now empty and kept for history. Detailed execution guidance for the
+three re-pointed items (32.8 harness runs, 33.5 Wave-0 demo, 33.6 security audit) is persisted as
+comments on **#104, #116, and #117**.
+
+**Consequence, stated honestly:** the core (M0–M23) is not run on real hardware before the expansion is
+stacked on it; a core-level hardware defect would surface at M32 with M26–M31 on top. Mitigations kept:
+the ~800-test fixture suite pins behavior, the M21/M22 ops+packs tooling runs locally at any time, and
+every M26–M31 milestone carries its own gate. The 32.7 regression baseline becomes the M23 commit
+(`ab94330`) + PRD 17 expected behavior instead of a measured M24 verdict set.
 
 ## Issues & milestones (GitHub)
 
@@ -103,41 +153,242 @@ A milestone is **closed** only when all of these hold:
 | M8 | Desktop notification channel (R2) | #192–#202 (11) | M21 | Ops: service units, backup/restore, migrations, `report` (E10, PRD 22) | #62–#73 (12) |
 | M9 | AskBus: contract + in-proc + filesystem spool (E12) | #203–#214 (12) | M22 | Security hardening sweep + evidence scanner (PRD 06/18) | #74–#85 (12) |
 | M10 | CI checkpoint (R6) | #215–#226 (12) | M23 | Docs completion (reference, quickstart, runbooks, recipes) | #86–#97 (12) |
-| M11 | Escalation ladder (R4) | #227–#237 (11) | M24 | Field tests (SC-01–SC-26 + the 15-second study) | #98–#110 (13) |
-| M12 | Flood guard (R7) | #238–#248 (11) | M25 | Release readiness (tags `v0.1.0`) | #111–#123 (13) |
+| M11 | Escalation ladder (R4) | #227–#237 (11) | M24 | Core field tests (absorbed into M32; issues moved there) | #98–#110 (13) |
+| M12 | Flood guard (R7) | #238–#248 (11) | M25 | Core release rehearsal (absorbed into M33; issues moved there) | #111–#123 (13) |
 
 ## Progress
 
-*(empty — dated checkpoints with commit refs + gate results are appended here as milestones close)*
+- **2026-11-06 — M0 Foundation & identity closed.** Issues #4–#16. Commits on `feat-0.1.0`:
+  `3f5626a` design · `f1d425f` packaging · `0275552` CLI surface · `7acfc44` exit codes ·
+  `6df485f` config/`init` · `5707635` CI · `0f30b01` doctor · `d7e423e` identity docs ·
+  `199fe66` reference docs + review log.
+  **Gate (run once at milestone end):** 129 tests pass · coverage **100%** (≥95 required) ·
+  `ruff` clean · `mypy --strict` clean · DCO signed. Workflow YAML validated; 8 review findings
+  resolved ([log](codereview-log.md)). Next: **M1** (`1.D0` store design).
+- **2026-11-06 — M1 AskStore contract + drivers (E11) closed.** Issues #17–#28. Commits on `feat-0.1.0`:
+  `07fd35a` design+interface · `539d6da` SQLite · `2634b4a` memory · `bb1ce53` conformance · `87e0742`
+  migrations · `727af69` loader. **Gate:** 203 tests pass · coverage **97.71%** · `ruff` clean ·
+  `mypy --strict` clean · DCO signed. Both drivers pass the same suite; a broken driver fails it; a store
+  newer than the build refuses loudly. Next: **M2** (`2.D0` ask contract).
+- **2026-11-06 — M2 Ask contract + ingest + redaction (E1, E6) closed.** Issues #124–#135. Commits on
+  `feat-0.1.0`: `d4fad27` schema+model · `5604e42` validation/identity/redaction/trust · `38acdda` API.
+  **Gate:** 268 tests pass · coverage **96.45%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  SC-02/SC-06 proven at the unit level; secrets never reach the store; trust cannot be self-asserted.
+  Next: **M3** (`3.D0` lifecycle).
+- **2026-11-06 — M3 Ask record + lifecycle closed.** Issues #136–#146. **Gate:** 300 tests pass · coverage
+  **96.65%** · `ruff` clean · `mypy --strict` clean · DCO signed. One edge table enforces every legal
+  transition; illegal attempts are evidence; terminal is terminal; expiry is derived on read, never written
+  by a reader. Store schema v3 adds `warn_at`/`escalate_at`/`tier`; conformance version 2 adds
+  transitions/delivery reads. Next: **M4** (`4.D0` scheduler).
+- **2026-11-06 — M4 Scheduler / timeout=deny closed.** Issues #147–#157. **Gate:** 317 tests pass · coverage
+  **95.94%** · `ruff` clean · `mypy --strict` clean · DCO signed. Warn at `T-60`, expiry at `T`, recovery fires
+  once with a marker, concurrent schedulers cannot double-expire, backwards jumps cannot postpone, and the
+  zero-allow-on-expiry counter stays 0. `doctor` warns when persisted evidence is ahead of the clock.
+  Next: **M5** (`5.D0` decision card).
+- **2026-11-08 — M8 Desktop notification channel closed.** Issues #192–#202. **Gate:** 397 tests pass ·
+  coverage **95.69%** · `ruff` clean · `mypy --strict` clean · DCO signed. Notifications carry class +
+  fingerprint + TTL + tier only; `authenticate()` never returns a principal (no answer path); once-per-tier
+  and single-digest fixtures green; `doctor` reports `desktop` and fails closed when enabled-but-headless.
+  Next: **M9** (`9.D0` bus design).
+- **2026-11-08 — M9 AskBus contract + drivers closed.** Issues #203–#214. **Gate:** 434 tests pass ·
+  coverage **95.82%** · `ruff` clean · `mypy --strict` clean · DCO signed. In-proc default; filesystem spool
+  with rename-CAS publish, fsync,
+  `flock` single-owner refusal, crash resume, bounded poll, and aggressive `done/` pruning. A 200-ask flood
+  publishes one rolling digest job; delivery wiring records every attempt (`ask-delivered`/`delivery-failed`),
+  retries with bounded backoff, and fails over. `serve --once` drains the spool. Next: **M10** (`10.D0` gate design).
+- **2026-11-08 — M10 CI checkpoint (`gate`) closed.** Issues #215–#226. **Gate:** 453 tests pass ·
+  coverage **95.62%** · `ruff` clean · `mypy --strict` clean · DCO signed. `gate --ask --wait --timeout`
+  maps approved→0, denied/cancelled→2, expired/budget→3, unavailable→4, pending→5; a lapsed budget never
+  mutates the ask; SIGTERM/SIGINT records a `cancelled` transition; retries are read-only idempotent.
+  Four CI recipes documented. Next: **M11** (`11.D0` escalation design).
+- **2026-11-08 — M11 Escalation ladder closed.** Issues #227–#237. **Gate:** 488 tests pass ·
+  coverage **95.51%** · `ruff` clean · `mypy --strict` clean · DCO signed. Config-driven tiers with
+  validated delays (no implicit zero delay,
+  every tier has a roster), `escalate_at` fired by the M4 scheduler, atomic tier change + prior-tier claim
+  revocation, tier-aware authorization, one `renotify` job/notification per tier, `expires_at` immutable
+  through exhaustion (SC-12), and digested `inbox-config-changed` evidence. Next: **M12** (`12.D0` flood design).
+- **2026-11-08 — M12 Flood guard closed.** Issues #238–#248. **Gate:** 509 tests pass · coverage
+  **95.79%** · `ruff` clean · `mypy --strict` clean · DCO signed. Coalescing first (retries never consume tokens), then per-key token buckets
+  (`agent|session|environment|producer-uid`) with per-class overrides; over-threshold asks auto-deny with
+  `ask_flood_throttled` + `retry_after_s`; one `ask-flood` event and one rolling digest per window; the
+  200-ask pack yields 180 denies, 1 event, 1 digest; a 20-action migration survives; flood denials can never
+  be resurrected. Next: **M13** (`13.D0` webhook design).
+- **2026-11-08 — M13 Webhook channel + delivery accounting closed.** Issues #249–#259. **Gate:** 524 tests
+  pass · coverage **95.47%** · `ruff` clean · `mypy --strict` clean · DCO signed. HMAC-signed `webhook/1.0` POST with an allow-listed
+  display-only payload, refs-only secrets, http(s)-only URLs, `deliver()`-only adapter (no answer path),
+  bounded retries + per-attempt Delivery records/events + failover, unroutable classes refused at load,
+  `channels` health command, and five receiver recipes. Next: **M14** (`14.D0` parity design).
+- **2026-11-08 — M14 Multi-channel single truth closed.** Issues #260–#270. **Gate:** 532 tests pass ·
+  coverage **95.30%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  One `parity.decision_record`/`comparable_decision` source; surface
+  rendering for text/terminal/desktop/ci; an 8-thread race yields one `answer` and seven `late` no-ops;
+  late answers name the winner/time and record evidence; failover shows the outcome without re-asking; the
+  conformance suite runs all four surfaces and rejects a deciding channel. Next: **M15** (`15.D0` audit design).
+- **2026-11-08 — M15 Audit chain, verify-log + export closed.** Issues #271–#281. **Gate:** 561 tests pass
+  · coverage **95.55%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  Transitions, deliveries, floods, exports, and retention
+  markers append chained entries; `verify-log` names the first bad seq; `export --session/--ask --format
+  jsonl|csv [--out]` emits ordered asks/transitions/deliveries/chain (0600, audited); retention prunes
+  detail with a chain marker; no import authority exists (negative test). Next: **M8–M15 complete**.
+- **2026-11-08 — M16 agentwatch event set + sink closed.** Issues #282–#292. **Gate:** 572 tests pass ·
+  coverage **95.39%** · `ruff` clean · `mypy --strict` clean · DCO signed. Ten event types projected from the audit chain (audit schema v4
+  carries the payload), schema fixtures with payload allow-lists, join keys + producer `traceparent`,
+  frozen rejection-cause map, buffered sink with flush + `event-gap` markers, and a no-untrusted-text
+  fixture. Next: **M17** (`17.D0` resolve bridge).
+- **2026-11-08 — M17 agentpolicy resolve bridge closed.** Issues #293–#303. **Gate:** 587 tests pass ·
+  coverage **95.48%** · `ruff` clean · `mypy --strict` clean · DCO signed. Frozen reason-code registry; every state maps to its exact code;
+  `resolve/1.0` carries `retryable`/`retry_after`/`rescope_hint`/`answered_by`/`action_identity`; class
+  hints + deny-reason echo (capped, labelled, not policy); identity mismatch denied; the API long-poll
+  returns resolve and handles unknown/mismatch; re-reads are idempotent. Next: **M18** (`18.D0` adapters).
+- **2026-11-08 — M18 Producer adapters (agentpolicy + CLI/HTTP) closed.** Issues #29–#39. **Gate:** 608
+  tests pass · coverage **95.30%** · `ruff` clean · `mypy --strict` clean · DCO signed. Signed agentpolicy
+  adapter (trusted fields, `401` on bad
+  signature) with a create→answer→allow round-trip; `ask --file`/`--exec` (executes only on allow); API
+  token/adapter/uid/caps/flood hardening; concurrent store open/migration race fixed; CUJ-1 measured;
+  producer guide. Next: **M19** (`19.D0` LangGraph + conformance kit).
+- **2026-11-08 — M19 LangGraph reference adapter + conformance kit closed.** Issues #40–#50. **Gate:** 625
+  tests pass · coverage **95.09%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  Framework-neutral interrupt/resume gate; durable
+  resume-by-id; `ExecutionJournal` makes tool execution at-most-once across crashes; the `conformance` kit
+  (9 checks against a fresh store) gates channels/producers/contract/redaction/idempotency/exit codes/events;
+  broken store fails red; example graph, adapter template, Claude Code/Codex recipes. Next: **M20**.
+- **2026-11-08 — M20 Fail-closed fault matrix + doctor hardening closed.** Issues #51–#61. **Gate:** 641
+  tests pass · coverage **95.10%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  `FAILURE_MATRIX` covers eight faults (store locked/corrupt,
+  schema, sink, channel 500, scheduler kill, invalid reload, clock skew); store open errors now fail closed
+  (`StoreError` → `503`/exit 4); doctor adds `chain`, `spool`, `keys`, downgrade refusal and stays <2 s;
+  `ConfigHolder` keeps the last-good config and records `inbox-config-changed(failed)`; zero-allow counter
+  stays 0. Next: **M21**. 
+
+- **2026-11-08 — PRD conformance review (M0–M20).** Audited the built milestones against PRDs
+  02/05/06/11/13/15/16/18/19/20/22. Fixed and regression-tested: audit payload re-hashing + corrupt-payload
+  fail-closed; complete-chain export; `[unverified]` trust labels; prior-asks/credential-class card fields;
+  warning delivery; escalation wording; delivery-error redaction; lock-free producer publishing; claim
+  `action_identity` binding (schema v5); `serve` starting the loopback API with a `0600` token; read-only
+  `verify-log` (no migration); a persisted event-sink delivery cursor; `requested_by` in the signed trusted
+  profile. Reconciled the PRD wording: claim entropy is 128-bit in PRD 05 and PRD 18; the 200/30 s flood verdict
+  records the burst capacity + denied remainder (PRD 05 R7, PRD 17 SC-13, WBS 12.3). Added
+  `require_signed_producer` (self-review enforceable), an in-place SIGHUP reload (channels/retention/API), and
+  the not-verified claims table. Details in the
+  [review log](codereview-log.md#prd-conformance-review-m0m20-2026-11-08).
+
+- **2026-11-07 — M21 Ops: service units, backup/restore, migrations, `report` closed.** Issues #62–#73.
+  Commit `3ac7cf5`. **Gate:** 750 tests pass · coverage **95.27%** · `ruff` clean · `mypy --strict` clean ·
+  DCO signed. `serve --install` writes user-scoped launchd/systemd units (no root); SIGTERM stops accepting,
+  flushes events, closes cleanly, and a dead `serve.lock` makes `gate` exit 4. `doctor --backup` uses the
+  SQLite online-backup path (WAL-safe) and carries key **references** only; `doctor --restore` allow-lists
+  extraction, verifies the chain, and expires overdue pending asks once (never resurrects a decision).
+  `compat` freezes the contract/exit/event surface with the additive-only matrix; every released schema
+  migrates forward and downgrade refuses loudly. `report --json` is read-only and local-only (p50/p99,
+  expiries, escalations, floods, rejected causes, deny rate by class). Doctor adds `offline`; the SC-26
+  offline day runs with non-loopback sockets blocked. Benches record N-1..N-7. Next: **M22** (`22.D0` security sweep).
+
+- **2026-11-07 — M22 Security hardening sweep + evidence scanner closed.** Issues #74–#85. Commit
+  `88bf037`. **Gate:** 793 tests pass · coverage **95.19%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  The evidence scanner shares the redaction pattern set and scans store dumps (read-only), rendered
+  terminal/desktop/CI/webhook payloads, audit exports, and backup archives; a seeded leak fails and CI runs
+  the self-test. Spoof/replay/forge, injection, and flood packs are release-blocking (`python -m
+  agentinbox.packs`), and a broken gate fixture turns the spoof pack red. Invariants I-1..I-5 each have a
+  negative fixture; credential failures collapse to the public cause `bad_claim`; claim/token/HMAC compares
+  are constant-time; logs strip control/ANSI; creation paths force 0700/0600 under `umask 000`; there is no
+  `--yes`. Own-posture checks prove zero runtime dependencies/no ML, emit a CycloneDX SBOM dry run, and
+  validate the committed `security.txt` (SLA in `SECURITY.md`). Next: **M23** (`23.D0` docs plan).
+
+- **2026-11-07 — M23 Docs completion closed.** Issues #86–#97. Commit `df42a7b`. **Gate:** 799 tests pass ·
+  coverage **95.19%** · `ruff` clean · `mypy --strict` clean · DCO signed. The quickstart is step-tested
+  through a pty (first approval recorded in ~1.5 s, hard limit 300 s); a doc-coverage test walks the CLI
+  parser and config dataclasses so no flag/key can ship undocumented; eight runbooks (RB-1..RB-8) carry
+  symptoms → steps → verify; MCP and Temporal recipes join the harness/CI recipes; the approver guide and
+  the honest enterprise page state the v0.1.0 gaps before features; terminal captures are text from the
+  real renderer; README install/usage/quickstart are live (PyPI/tag wait for M33). **M24/M25 absorbed into M32/M33.** Next: **M26** (`26.D0` readiness design).
+
+- **2026-11-07 — M26 Ask readiness & decision quality closed.** Issues #306–#317. Commit `c4a3b5f`.
+  **Gate:** 836 tests pass · coverage **95.09%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  Six deterministic dimensions (completeness, target specificity, reversibility, evidence, trust,
+  contradictions) score every ask; the score is derived and stored, never producer-asserted. A class can
+  reject below threshold before any write with a structured `ask_not_decisionable` repair contract (API +
+  CLI); otherwise the ask ships with a quality banner above the blocks, per-class evidence labels naming
+  the gap, explicit freshness (`stale`/`unknown freshness`/`mixed`), and up to three prior same-class/tool
+  asks as `precedent only`. `doctor --explain` prints the effective readiness settings. Next: **M27**
+  (`27.D0` constrained-allow design).
+
+- **2026-11-07 — M27 Constrained allows & denial repair closed.** Issues #318–#328. Commit `fd6ca4c`.
+  **Gate:** 862 tests pass · coverage **95.03%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  Producer alternatives are selectable only with a declared enforcer binding and a matching canonical
+  fingerprint; otherwise advice-only. Choosing one yields `decision=allow_with_constraints`; class
+  `edit_schema` allows re-canonicalized, re-fingerprinted edits with original/edited identities recorded.
+  Denials carry a repair packet (invariant, missing evidence, suggested scope, safe alternative,
+  retry worthiness, tier) on the resolve and in evidence; resubmissions show prior objections. `status`
+  stays allow/deny for old clients; `decision`/`constraints`/`edits`/`repair` are additive. Next: **M28**
+  (`28.D0` bundles/handoff design).
+
+- **2026-11-07 — M28 Operation bundles, handoff & incident review closed.** Issues #329–#340. Commit `5536c98`.
+  **Gate:** 881 tests pass · coverage **95.13%** · `ruff` clean · `mypy --strict` clean.
+  Bundles are derived-on-read by declared `operation_id` (or labelled session+window), with counts,
+  environments, phases, and the earliest-expiry critical path; no bundle-level decision exists.
+  Claim/assign are routing-only observations. Handoff notes carry remaining TTL, prior context, open
+  questions, evidence, and both principals, rendered before the card. `[incident]` is a bounded,
+  config-declared overlay audited as chained `incident-on/off`; denials never flip and TTLs never
+  extend. Narratives reconstruct the decision from stored transitions; timelines export with the
+  bundle (`bundle/1.0`). Next: **M29** (`29.D0` outcome-closure design).
+
+- **2026-11-07 — M29 Outcome closure & execution proof closed.** Issues #341–#352. Commit `ab2498a`.
+  **Gate:** 897 tests pass · coverage **95.06%** · `ruff` clean · `mypy --strict` clean.
+  Approved asks close via post-terminal `outcome` observations (`executed/failed/cancelled/rolled_back/
+  superseded`); status and decision never change and silence stays `unknown`. Receipts are whitelisted,
+  capped, and credential-scanned. Approved-vs-executed comparison is derived (`match/partial/exceeded/
+  divergent/unknown`) and names exceeding resources; divergence writes a chained `outcome-divergence`
+  and requires explicit acknowledgement. `decision-packet/1.0` exports ask, decision, narrative, outcome,
+  timeline, trace, and the audit chain with offline verification (`export --ask --packet`). Trace joins
+  ask→policy→decision→execution→divergence; per-class closure SLA surfaces `outcome-pending-past-sla`
+  in doctor without auto-closing. Next: **M30** (`30.D0` grants/compression design).
+
+- **2026-11-07 — M30 Repetitive approvals, grants & compression closed.** Issues #353–#364. Commit `21198dd`.
+  **Gate:** 915 tests pass · coverage **95.11%** · `ruff` clean · `mypy --strict` clean.
+  Repeated materially-identical asks render as one compressed view with every row and no group decision;
+  exports and the chain are unchanged. Class/session windows are owner+reason audited with `max_uses`
+  and `max_per_minute`; a live window auto-allows with `authorization.source=window-grant`, and expiry,
+  revocation, session end, or a spent ceiling immediately reverts to per-ask approval. The card shows
+  burn-down including spent grants; doctor lists active grants. Five repeated denies surface as a tuning
+  insight only. Next: **M31** (`31.D0` insights design).
+
+- **2026-11-07 — M31 Policy learning & governance insights closed.** Issues #365–#378. Commit `2dedc7d`.
+  **Gate:** 924 tests pass · coverage **95.11%** · `ruff` clean · `mypy --strict` clean.
+  Redacted, aggregated insights cover repetitive approvals (grant/rule/self-cert proposal), deny clusters,
+  class × tier × hour hotspots, evidence gaps, and divergence-driven hardening. Calibration is aggregate
+  by default; per-principal rows require `[insights].governance_principals` and write a chained access
+  event. Insights export as `insights/1.0`, pass the evidence scanner, expire after `stale_after_seconds`,
+  and actions record reviewer + origin for a git-reviewed PR — nothing auto-applies. **M26–M31 feature
+  milestones are complete**; next is M32 field tests (blocked on the field box/humans), then M33 release.
 
 ## PRD coverage matrix (every doc 00–30)
 
 | PRD | Topic | Milestone(s) |
 |---|---|---|
-| **PRD 00** | Press release / FAQ | narrative; validated at M25 |
+| **PRD 00** | Press release / FAQ | narrative; validated at M33 |
 | **PRD 01** | Why | context (all milestones) |
 | **PRD 02** | Architecture (components, trust boundaries, failure semantics) | M0–M20 |
 | **PRD 03** | Landscape (control patterns ported) | M7–M15 (the pattern sources) |
-| **PRD 04** | Users, stories & CUJs (CUJ-1..14) | M2–M25 |
+| **PRD 04** | Users, stories & CUJs (CUJ-1..14) | M2–M33 |
 | **PRD 05** | Features R1–R7 + E1–E12 (v0.1.0 P0) | M0–M22 |
 | **PRD 06** | Security baseline (invariants, threats) | M6, M20, M22 |
-| **PRD 07** | Success metrics | M21 (`report`), M24 (study), M25 |
-| **PRD 08** | Risks | cross-cutting; reviewed at M24 |
-| **PRD 09** | Roadmap | M25 (release notes scope) |
-| **PRD 10** | Feature parity | M18–M19 (producer parity), M25 |
+| **PRD 07** | Success metrics | M21 (`report`), M32 (study), M33 |
+| **PRD 08** | Risks | cross-cutting; reviewed at M32 |
+| **PRD 09** | Roadmap | M33 (release notes scope) |
+| **PRD 10** | Feature parity | M18–M19 (producer parity), M33 |
 | **PRD 11** | Decisions D-1..D-27 | cross-cutting (honored every milestone) |
 | **PRD 12** | Traceability (maintained) | every milestone |
 | **PRD 13** | NFRs (performance, portability, offline) | M1, M4, M21 |
 | **PRD 14** | Non-goals (scope guard — **the forward slate is out of scope**) | every milestone |
 | **PRD 15** | Data model + lifecycle + contracts | M2–M4, M16–M17 |
 | **PRD 16** | Channel/bus/store/producer adapters | M7–M13, M18–M19 |
-| **PRD 17** | Scenario catalog SC-01–SC-26 (v0.1.0 gates) | fixtures M1–M22; executed M24 |
+| **PRD 17** | Scenario catalog SC-01–SC-26 (v0.1.0 gates) | fixtures M1–M22; executed M32 |
 | **PRD 18** | Approval integrity (pipeline, claims, assurance) | M6, M22 |
-| **PRD 19** | Harness compatibility (honest labels) | M18–M19, M25 |
-| **PRD 20** | Standards, events & claims (§B event set) | M16, M22 (claims lint), M25 |
-| **PRD 21** | Evidence register & method | M22 (scanner), M24 (study), M25 |
+| **PRD 19** | Harness compatibility (honest labels) | M18–M19, M32 (runs), M33 (matrix) |
+| **PRD 20** | Standards, events & claims (§B event set) | M16, M22 (scanner), M33 (claims lint) |
+| **PRD 21** | Evidence register & method | M22 (scanner), M32 (study), M33 |
 | **PRD 22** | Operations & governance | M21 |
-| **PRD 23** | Enterprise adoption (honest gaps) | M25 (claims, no over-claim) |
+| **PRD 23** | Enterprise adoption (honest gaps) | M33 (claims, no over-claim) |
 | **PRD 24** | Constrained approvals, effects & ask semantics | deferred — v0.1.0 out of scope ([PRD 14](../prd/14-non-goals.md)); forward-slate WBS written at v0.1.x |
 | **PRD 25** | Evidence, previews & decision quality | deferred — v0.1.0 out of scope ([PRD 14](../prd/14-non-goals.md)); forward-slate WBS written at v0.1.x |
 | **PRD 26** | Approver experience, teams & operations | deferred — v0.1.0 out of scope ([PRD 14](../prd/14-non-goals.md)); forward-slate WBS written at v0.1.x |
@@ -145,6 +396,13 @@ A milestone is **closed** only when all of these hold:
 | **PRD 28** | Review loops & operational orchestration | deferred — v0.1.0 out of scope ([PRD 14](../prd/14-non-goals.md)); forward-slate WBS written at v0.1.x |
 | **PRD 29** | Trust maturity, writeback & human performance | deferred — v0.1.0 out of scope ([PRD 14](../prd/14-non-goals.md)); forward-slate WBS written at v0.1.x |
 | **PRD 30** | Correctness, conflict & abuse hardening | deferred — v0.1.0 out of scope ([PRD 14](../prd/14-non-goals.md)); forward-slate WBS written at v0.1.x |
+| **PRD 31** | CUJ & feature gaps (0.1.0 expansion) | M49 |
+| **PRD 32** | decision quality & ask readiness | M50 |
+| **PRD 33** | constrained allows & denial repair | M51 |
+| **PRD 34** | operation bundles, handoff & incident review | M52 |
+| **PRD 35** | outcome closure & execution proof | M53 |
+| **PRD 36** | repetitive approvals, grants & compression | M54 |
+| **PRD 37** | policy learning & governance insights | M55 |
 
 ## Requirements → milestone (v0.1.0: R1–R7, E1–E12)
 
@@ -180,7 +438,7 @@ A milestone is **closed** only when all of these hold:
 | **CUJ-11** | Poisoned context in the ask | **M5** (+M22 corpus gate) |
 | **CUJ-12** | Air-gapped / offline day | **M21** |
 | **CUJ-13** | Plugin: framework interrupt → inbox → resume | **M19** |
-| **CUJ-14** | Enterprise reviewer honesty | **M25** (claims lint + gap docs) |
+| **CUJ-14** | Enterprise reviewer honesty | **M33** (claims lint + gap docs) |
 
 > Every CUJ appears in exactly one milestone's **CUJ** column in its part file. No CUJ is orphaned; no
 > milestone claims a CUJ it does not deliver.
@@ -190,35 +448,35 @@ A milestone is **closed** only when all of these hold:
 
 | Scenario | What it proves | Authored / gated at | Executed |
 |---|---|---|---|
-| **SC-01** | First terminal ask, zero config | M7 (terminal channel) | **M24** |
-| **SC-02** | Malformed/oversized ask rejected, nothing partial | M2 (ingest) | **M24** |
-| **SC-03** | Zero-context correct call (the 15-second spine) | M5 (card + corpus) | **M24** (study) |
-| **SC-04** | Missing-context honesty (`unknown`, never guessed) | M5 | **M24** (study) |
-| **SC-05** | Rescope hint changes agent behavior | M17 (resolve bridge) | **M24** |
-| **SC-06** | Duplicate ingest coalesces | M2 | **M24** |
-| **SC-07** | Second-surface approve, terminal parity | M14 | **M24** |
-| **SC-08** | Race: two answers, one decision | M6 + M14 | **M24** |
-| **SC-09** | Timeout = deny with warning | M4 | **M24** |
-| **SC-10** | Expiry survives crash + clock jumps | M4 | **M24** |
-| **SC-11** | 3 a.m. escalation drill | M11 | **M24** |
-| **SC-12** | Ladder exhaustion denies, TTL unchanged | M11 | **M24** |
-| **SC-13** | Flood pack: N denies, 1 event, 1 digest | M12 | **M24** |
-| **SC-14** | Legitimate burst survives (with SC-13) | M12 | **M24** |
-| **SC-15** | CI pipeline halts and resumes on answer | M10 | **M24** |
-| **SC-16** | Deterministic CI exit codes | M10 | **M24** |
-| **SC-17** | Self-review denied | M6 | **M24** |
-| **SC-18** | Channel failover loses nothing | M13 + M14 | **M24** |
-| **SC-19** | Late answer is a visible no-op | M14 | **M24** |
-| **SC-20** | Reconstruction + chain verification | M15 | **M24** |
-| **SC-21** | Evidence carries no secrets | M22 (scanner) | **M24** |
-| **SC-22** | Spoof/replay/forge matrix (release gate) | M6 + M22 | **M24** |
-| **SC-23** | Injection corpus (release gate) | M5 + M22 | **M24** |
-| **SC-24** | Fault-injection matrix (fail-closed) | M20 | **M24** |
-| **SC-25** | Framework adapter round-trip + crash resume | M19 | **M24** |
-| **SC-26** | Offline day | M21 | **M24** |
+| **SC-01** | First terminal ask, zero config | M7 (terminal channel) | **M32** |
+| **SC-02** | Malformed/oversized ask rejected, nothing partial | M2 (ingest) | **M32** |
+| **SC-03** | Zero-context correct call (the 15-second spine) | M5 (card + corpus) | **M32** (study) |
+| **SC-04** | Missing-context honesty (`unknown`, never guessed) | M5 | **M32** (study) |
+| **SC-05** | Rescope hint changes agent behavior | M17 (resolve bridge) | **M32** |
+| **SC-06** | Duplicate ingest coalesces | M2 | **M32** |
+| **SC-07** | Second-surface approve, terminal parity | M14 | **M32** |
+| **SC-08** | Race: two answers, one decision | M6 + M14 | **M32** |
+| **SC-09** | Timeout = deny with warning | M4 | **M32** |
+| **SC-10** | Expiry survives crash + clock jumps | M4 | **M32** |
+| **SC-11** | 3 a.m. escalation drill | M11 | **M32** |
+| **SC-12** | Ladder exhaustion denies, TTL unchanged | M11 | **M32** |
+| **SC-13** | Flood pack: N denies, 1 event, 1 digest | M12 | **M32** |
+| **SC-14** | Legitimate burst survives (with SC-13) | M12 | **M32** |
+| **SC-15** | CI pipeline halts and resumes on answer | M10 | **M32** |
+| **SC-16** | Deterministic CI exit codes | M10 | **M32** |
+| **SC-17** | Self-review denied | M6 | **M32** |
+| **SC-18** | Channel failover loses nothing | M13 + M14 | **M32** |
+| **SC-19** | Late answer is a visible no-op | M14 | **M32** |
+| **SC-20** | Reconstruction + chain verification | M15 | **M32** |
+| **SC-21** | Evidence carries no secrets | M22 (scanner) | **M32** |
+| **SC-22** | Spoof/replay/forge matrix (release gate) | M6 + M22 | **M32** |
+| **SC-23** | Injection corpus (release gate) | M5 + M22 | **M32** |
+| **SC-24** | Fault-injection matrix (fail-closed) | M20 | **M32** |
+| **SC-25** | Framework adapter round-trip + crash resume | M19 | **M32** |
+| **SC-26** | Offline day | M21 | **M32** |
 
-**Release gating at M24:** SC-13, SC-22, SC-23 (and SC-24's fail-closed matrix) are release-blocking — a red
-verdict blocks M25. The scenario catalog's SC-27..SC-67 belong to the forward slate (PRDs 24–30) and are
+**Release gating at M32:** SC-13, SC-22, SC-23 (and SC-24's fail-closed matrix) are release-blocking — a red
+verdict blocks M33. The scenario catalog's SC-27..SC-67 belong to the forward slate (PRDs 24–30) and are
 explicitly out of v0.1.0 scope.
 
 ## Decisions (PRD 11)
@@ -231,16 +489,80 @@ D-13/D-14 (queue moves, store decides; filesystem bus, one box) → M9.
 
 ## v0.1.0 release gate (all milestones)
 
-- [ ] M0–M25 exit criteria satisfied (design docs first, tests, coverage ≥95%, ruff/mypy, review, docs)
+- [ ] M0–M23 + M26–M31 exit criteria satisfied (design docs first, tests, coverage ≥95%, ruff/mypy, review, docs)
 - [ ] Every R1–R7 + E1–E12 demonstrated by its acceptance test ([PRD 12](../../prd/12-traceability.md) rows green)
 - [ ] Timeout never allows (runtime zero-allow counter + fixtures); every failure path is deny-or-pending (M20)
-- [ ] SC-01–SC-26 executed with the honest report published (M24); attack packs green
+- [ ] SC-01–SC-90 executed with the honest report published (M32); attack packs green
 - [ ] Install → first recorded approval < 5 minutes on the field-test box (CUJ-1)
 - [ ] Full lifecycle works with **no chat platform and no network** (CUJ-12)
 - [ ] agentwatch events join to agentpolicy decisions on common ids; chain verifies offline (M15–M17)
 - [ ] Compatibility matrix published with honest labels only (field-tested / conformance-tested / documented /
-  not-supported) (M25)
+  not-supported) (M33)
 - [ ] SBOM + signed artifacts (SLSA/Sigstore); OpenSSF Scorecard recorded; claims lint green vs the
   [PRD 20 §G](../../prd/20-standards-and-claims.md) vocabulary
 
 Review log: [codereview-log.md](codereview-log.md).
+
+## 0.1.0 expansion (M26–M33 · PRDs 31–37)
+
+> **All of this is v0.1.0 work.** PRDs 31–37 extend the 0.1.0 program; they are appended as M26–M33 so the
+> already-built core (M0–M25) is untouched. **M32 (field tests) and M33 (release readiness) are the final two
+> milestones** — they absorb M24/M25 (single pass), and **nothing follows M33**; M33 tags `v0.1.0`.
+
+| M | Name | Detail file |
+|---|---|---|
+| **M26** | **Ask readiness & decision quality** (PRD 32) | [Part 14](wbs-v0.1.0-part14-quality-constraints.md) |
+| **M27** | **Constrained allows & denial repair** (PRD 33) | [Part 14](wbs-v0.1.0-part14-quality-constraints.md) |
+| **M28** | **Operation bundles, handoff & incident review** (PRD 34) | [Part 15](wbs-v0.1.0-part15-operations-outcomes.md) |
+| **M29** | **Outcome closure & execution proof** (PRD 35) | [Part 15](wbs-v0.1.0-part15-operations-outcomes.md) |
+| **M30** | **Repetitive approvals, grants & compression** (PRD 36) | [Part 16](wbs-v0.1.0-part16-grants-learning.md) |
+| **M31** | **Policy learning & governance insights** (PRD 37) | [Part 16](wbs-v0.1.0-part16-grants-learning.md) |
+| **M32** | **Field tests — FINAL (SC-01–SC-90)** (PRD 31) | [Part 17](wbs-v0.1.0-part17-expansion-fieldtest-release.md) |
+| **M33** | **Release readiness — FINAL (tags `v0.1.0`)** (PRD 31) | [Part 17](wbs-v0.1.0-part17-expansion-fieldtest-release.md) |
+
+### Issues
+
+| M | Milestone | Issues |
+|---|---|---|
+| M26 | Ask readiness & decision quality | #306–#317 (12) |
+| M27 | Constrained allows & denial repair | #318–#328 (11) |
+| M28 | Operation bundles, handoff & incident review | #329–#340 (12) |
+| M29 | Outcome closure & execution proof | #341–#352 (12) |
+| M30 | Repetitive approvals, grants & compression | #353–#364 (12) |
+| M31 | Policy learning & governance insights | #365–#378 (14) |
+| M32 | Field tests — FINAL (SC-01–SC-90) | #379–#390, #401, #98–#110 (26) |
+| M33 | Release readiness (tags `v0.1.0`) | #391–#400, #111–#123 (23) |
+
+### CUJ → milestone (expansion)
+
+| CUJ | Journey | Milestone |
+|---|---|---|
+| **CUJ-15..18** | constrained allows / repair / operations review / decision narrative | **M26–M28** |
+| **CUJ-19** | which asks should never reach a human | **M31** |
+| **CUJ-20–21** | incident mode / shift handoff | **M28** |
+| **CUJ-22** | approve one, not ten | **M30** |
+| **CUJ-23–28** | ask readiness / quality / contradictions | **M26** |
+| **CUJ-29–32** | safe subsets / deny-repair / machine-shaped fixes | **M27** |
+| **CUJ-33–36** | operation bundles / handoff / blocked view | **M28** |
+| **CUJ-37–40** | approved==executed / closure / packets / drift | **M29** |
+| **CUJ-41–44** | compression / windows / burn-down | **M30** |
+| **CUJ-45–48** | never-needed-a-human / noisy policy / calibration / hotspots | **M31** |
+
+### Scenario → milestone (expansion)
+
+| Scenario | What it proves | Authored | Executed |
+|---|---|---|---|
+| **SC-68–SC-70** | readiness rejection, contradictions, class-dependent scoring | M26 | **M32** |
+| **SC-71–SC-74** | constrained allow, repair round-trip, edits, unbindable advice | M27 | **M32** |
+| **SC-75–SC-78** | bundles, handoff, incident mode, narrative | M28 | **M32** |
+| **SC-79–SC-82** | closure, divergence, packet-only reconstruction | M29 | **M32** |
+| **SC-83–SC-86** | compression, window expiry, revocation, repeated denies | M30 | **M32** |
+| **SC-87–SC-90** | insights, calibration access, tuning proposals | M31 | **M32** |
+| **SC-01–SC-26** | core catalog re-run on the expanded build (baseline: the M23 core commit `ab94330`) | M1–M23 | **M32** (final gate) |
+
+### Expansion milestone exit criteria
+
+Every expansion milestone applies the standard gates (`.D0` design first, `.T` tests, `.C` coverage ≥95%, `.L`
+ruff + `mypy --strict`, `.CR` review log, `.D` docs, `.CI` commit, `.W` checkpoint) and preserves the five
+invariants plus the enforcement honesty clause: **the inbox records/returns, the enforcer enforces; insights,
+suggestions, and grants never act on their own.**

@@ -1,0 +1,5 @@
+{"name":"gate-approved-exit-0","ok":true,"grounded":true,"cmd":"test 0 -eq 0"}
+{"name":"gate-denied-exit-2","ok":true,"grounded":true,"cmd":"test 2 -eq 2"}
+{"name":"gate-expired-exit-3","ok":true,"grounded":true,"cmd":"test 3 -eq 3"}
+{"name":"gate-pending-exit-5","ok":true,"grounded":true,"cmd":"test 5 -eq 5"}
+{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}

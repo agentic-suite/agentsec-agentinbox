@@ -1,0 +1,97 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentsec-agentinbox"
+dynamic = ["version"]
+description = "Local-first ask gate for consequential agent actions: ingests asks, renders decisions, records authenticated answers, and expires or denies by default."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = { file = "LICENSE" }
+authors = [{ name = "agentic-suite" }]
+keywords = ["ai-agents", "approvals", "human-in-the-loop", "security", "agentpolicy", "agentwatch"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: POSIX",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Security",
+  "Typing :: Typed",
+]
+# Standalone by design: no runtime dependencies beyond the standard library (PRD 13 N-13).
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "coverage[toml]>=7.6",
+  "mypy>=1.11",
+  "pytest>=8.2",
+  "pytest-cov>=5.0",
+  "ruff>=0.6",
+]
+
+[project.scripts]
+agentinbox = "agentinbox.cli:main"
+
+[project.entry-points."agentinbox.store"]
+memory = "agentinbox.store.memory:DRIVER"
+sqlite = "agentinbox.store.sqlite:DRIVER"
+
+[project.urls]
+Homepage = "https://github.com/agentic-suite/agentsec-agentinbox"
+Documentation = "https://github.com/agentic-suite/agentsec-agentinbox/tree/main/docs"
+Issues = "https://github.com/agentic-suite/agentsec-agentinbox/issues"
+
+[tool.hatch.version]
+path = "agentinbox/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agentinbox"]
+
+[tool.hatch.build.targets.sdist]
+include = ["agentinbox", "tests", "docs", "README.md", "LICENSE", "Makefile", "pyproject.toml"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["agentinbox", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "PT", "RUF", "S"]
+ignore = ["S101"] # asserts are the test mechanism
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S108", "S310", "S603", "S607"]
+"scripts/**" = ["S603", "S607"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["agentinbox"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["agentinbox"]
+strict = true
+warn_unreachable = true
+pretty = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+branch = true
+source = ["agentinbox"]
+omit = ["agentinbox/__main__.py"]
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+skip_covered = true
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "raise NotImplementedError"]

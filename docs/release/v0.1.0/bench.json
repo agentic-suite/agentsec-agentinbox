@@ -1,0 +1,58 @@
+[
+  {
+    "name": "N-1",
+    "value_ms": 0.232,
+    "threshold_ms": 50.0,
+    "ok": true,
+    "detail": "p50=0.23 ms, p99=0.43 ms"
+  },
+  {
+    "name": "N-2",
+    "value_ms": 1.585,
+    "threshold_ms": 100.0,
+    "ok": true,
+    "detail": "1.58 ms"
+  },
+  {
+    "name": "N-4",
+    "value_ms": 0.048,
+    "threshold_ms": 100.0,
+    "ok": true,
+    "detail": "p99=0.05 ms"
+  },
+  {
+    "name": "N-3b",
+    "value_ms": 0.007,
+    "threshold_ms": 2000.0,
+    "ok": true,
+    "detail": "p50=0.01 ms (mocked)"
+  },
+  {
+    "name": "N-3c",
+    "value_ms": 0.545,
+    "threshold_ms": 1000.0,
+    "ok": true,
+    "detail": "0.55 ms"
+  },
+  {
+    "name": "N-5",
+    "value_ms": 0.534,
+    "threshold_ms": 1000.0,
+    "ok": true,
+    "detail": "0.53 ms"
+  },
+  {
+    "name": "N-6",
+    "value_ms": 0.544,
+    "threshold_ms": 250.0,
+    "ok": true,
+    "detail": "10k resolved: p50=0.54 ms, p99=1.00 ms"
+  },
+  {
+    "name": "N-7",
+    "value_ms": 3.803,
+    "threshold_ms": 2000.0,
+    "ok": true,
+    "detail": "3.80 ms"
+  }
+]

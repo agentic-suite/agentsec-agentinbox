@@ -1,0 +1,75 @@
+{
+  "cases": [
+    {
+      "assertions": [
+        {
+          "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/channels/test_ci.py tests/cli/test_gate_cli.py",
+          "grounded": true,
+          "name": "FT-SC-15 assertions",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 2,
+      "assertions_total": 2,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-15",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s4-ci",
+      "status": "pass"
+    },
+    {
+      "assertions": [
+        {
+          "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/contract/test_exit_codes.py tests/cli/test_gate_cli.py",
+          "grounded": true,
+          "name": "FT-SC-16 assertions",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 2,
+      "assertions_total": 2,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-16",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s4-ci",
+      "status": "pass"
+    }
+  ],
+  "env": {
+    "arch": "arm64",
+    "commit": "e54972b",
+    "compose": "5.6.1",
+    "docker": "Docker version 29.5.2, build 79eb04c7d8",
+    "os": "Darwin",
+    "python": "Python-3.12.14",
+    "run_id": "s4-ci",
+    "version": "v0.1.0"
+  },
+  "generated_at": "2026-11-07T19:46:36.339555+00:00",
+  "green": true,
+  "run_id": "s4-ci",
+  "totals": {
+    "blocked": 0,
+    "fail": 0,
+    "over_claimed": 0,
+    "pass": 2
+  }
+}

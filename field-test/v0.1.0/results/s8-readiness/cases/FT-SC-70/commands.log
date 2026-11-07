@@ -1,0 +1,1 @@
++ compose exec agentinbox python /ft/scripts/run_pytest.py tests/readiness/test_scorer.py tests/readiness/test_class_config.py

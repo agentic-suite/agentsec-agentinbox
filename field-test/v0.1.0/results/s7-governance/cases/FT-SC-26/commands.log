@@ -1,0 +1,1 @@
++ compose exec agentinbox python /ft/scripts/run_pytest.py tests/ops/test_offline.py

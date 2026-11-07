@@ -1,0 +1,81 @@
+{
+  "cases": [
+    {
+      "assertions": [
+        {
+          "blocked": true,
+          "name": "blocked",
+          "ok": true,
+          "reason": "the 15-second study needs >=10 non-author participants; none are provisioned on this Docker SUT",
+          "release_gate_item": "PRD 21 Method B / M32 32.5 (#384)"
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 1,
+      "assertions_total": 2,
+      "blocked": true,
+      "class": "P/F|B",
+      "grounded": true,
+      "id": "FT-SC-03",
+      "limitation": "the 15-second study needs >=10 non-author participants; none are provisioned on this Docker SUT",
+      "llm_captured": false,
+      "llm_required": false,
+      "release_gate_item": "PRD 21 Method B / M32 32.5 (#384)",
+      "run_id": "s14-study",
+      "status": "blocked"
+    },
+    {
+      "assertions": [
+        {
+          "blocked": true,
+          "name": "blocked",
+          "ok": true,
+          "reason": "the 15-second study needs >=10 non-author participants; none are provisioned on this Docker SUT",
+          "release_gate_item": "PRD 21 Method B / M32 32.5 (#384)"
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 1,
+      "assertions_total": 2,
+      "blocked": true,
+      "class": "P/F|B",
+      "grounded": true,
+      "id": "FT-SC-04",
+      "limitation": "the 15-second study needs >=10 non-author participants; none are provisioned on this Docker SUT",
+      "llm_captured": false,
+      "llm_required": false,
+      "release_gate_item": "PRD 21 Method B / M32 32.5 (#384)",
+      "run_id": "s14-study",
+      "status": "blocked"
+    }
+  ],
+  "env": {
+    "arch": "arm64",
+    "commit": "e54972b",
+    "compose": "5.6.1",
+    "docker": "Docker version 29.5.2, build 79eb04c7d8",
+    "os": "Darwin",
+    "python": "Python-3.12.14",
+    "run_id": "s14-study",
+    "version": "v0.1.0"
+  },
+  "generated_at": "2026-11-07T19:12:22.517463+00:00",
+  "green": true,
+  "run_id": "s14-study",
+  "totals": {
+    "blocked": 2,
+    "fail": 0,
+    "over_claimed": 0,
+    "pass": 0
+  }
+}

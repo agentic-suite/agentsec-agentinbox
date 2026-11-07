@@ -1,0 +1,101 @@
+{
+  "cases": [
+    {
+      "assertions": [
+        {
+          "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/security/test_packs.py",
+          "grounded": true,
+          "name": "FT-SC-22 assertions",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 2,
+      "assertions_total": 2,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-22",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s6-attacks",
+      "status": "pass"
+    },
+    {
+      "assertions": [
+        {
+          "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/security/test_packs.py tests/security/test_hardening.py",
+          "grounded": true,
+          "name": "FT-SC-23 assertions",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 2,
+      "assertions_total": 2,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-23",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s6-attacks",
+      "status": "pass"
+    },
+    {
+      "assertions": [
+        {
+          "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/faults/test_matrix.py",
+          "grounded": true,
+          "name": "FT-SC-24 assertions",
+          "ok": false
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 2,
+      "assertions_total": 2,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-24",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s6-attacks",
+      "status": "fail"
+    }
+  ],
+  "env": {
+    "arch": "arm64",
+    "commit": "e54972b",
+    "compose": "5.6.1",
+    "docker": "Docker version 29.5.2, build 79eb04c7d8",
+    "os": "Darwin",
+    "python": "Python-3.12.14",
+    "run_id": "s6-attacks",
+    "version": "v0.1.0"
+  },
+  "generated_at": "2026-11-07T19:51:34.615817+00:00",
+  "green": false,
+  "run_id": "s6-attacks",
+  "totals": {
+    "blocked": 0,
+    "fail": 1,
+    "over_claimed": 0,
+    "pass": 2
+  }
+}

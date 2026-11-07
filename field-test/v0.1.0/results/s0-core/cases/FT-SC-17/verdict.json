@@ -1,0 +1,14 @@
+{
+  "id": "FT-SC-17",
+  "status": "pass",
+  "class": "P/F",
+  "blocked": false,
+  "grounded": true,
+  "assertions_total": 2,
+  "assertions_grounded": 2,
+  "llm_captured": false,
+  "llm_required": false,
+  "run_id": "s0-core",
+  "assertions": [{"name":"FT-SC-17 assertions","ok":true,"grounded":true,"cmd":"ft_sut python /ft/scripts/run_pytest.py tests/answers/test_pipeline.py"},{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}
+]
+}

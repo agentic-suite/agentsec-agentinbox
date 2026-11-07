@@ -1,0 +1,1 @@
++ compose exec agentinbox python /ft/scripts/run_pytest.py tests/channels/test_ci.py tests/cli/test_gate_cli.py

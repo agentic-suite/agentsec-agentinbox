@@ -5,7 +5,7 @@ reachable via HTTP, CLI, or file, so *any* agentic system with a pause-for-human
 For the highest-traffic surfaces we ship **named adapters** (channels: terminal/desktop/CI/webhook — Matrix
 next, chat platforms optional; producers:
 agentpolicy, a LangGraph reference, hook recipes per coding agent) and publish an **honest, tested
-compatibility table** — every row says *field-tested*, *conformance-tested*, or *documented*, and
+compatibility table** — every row says *field-tested*, *conformance-tested*, *documented*, or *not-supported*, and
 **unsupported is stated, not implied**. agentdrill verifies the attack-facing rows with per-harness packs.
 
 **Status:** Draft — v0.1.0 (2026-11-04) · **Owner:** @deghosal-2026 · **Parent:** agentic-suite #209 · PRD #220
@@ -29,15 +29,17 @@ requirement.
 
 | Harness | Surface we bind to | v0.1.0 status | Evidence bar |
 |---|---|---|---|
-| **Claude Code** | `PreToolUse` hook → permission decision (`ask` outcome handed to us) | ✅ **field-tested** recipe (`docs/adapters/claude-code/`) | A live session gate answered via a second surface |
-| **OpenAI Codex CLI** | Sandbox + approval surface; `--exec` wrapper for gated tools | ✅ **field-tested** recipe | Live run documented |
+| **Claude Code** | `PreToolUse` hook → permission decision (`ask` outcome handed to us) | ◐ **documented / capture-verified** recipe (`docs/adapters/harness-recipes.md`); **not field-tested** | 11/11 LLM pairs captured; the s15 end-to-end suite was removed (see the v0.1.0 compatibility matrix) |
+| **OpenAI Codex CLI** | Sandbox + approval surface; `--exec` wrapper for gated tools | ◐ **documented / capture-verified** recipe; **not field-tested** | 11/11 LLM pairs captured; the s15 end-to-end suite was removed |
 | **agentpolicy-driven agents** (any harness behind our PDP) | The `ask` decision itself | ✅ **the reference path** — this is Tier-1 coverage *by construction* for every enforcer that calls agentpolicy (covers Claude Code, Codex, Copilot-class closed surfaces, and MCP traffic via agentgate) | Wave-0 demo |
 | **GitHub Copilot (agent mode)** | Closed hook surface → reached at the lower layers (agentgate/agentseatbelt), **documented** | ◐ documented lower-layer coverage (same honest rule as agentpolicy's matrix) | Doc + layer pointer |
 | **Cursor** | No headless/evidence-capturing hook on the field-test box | ✗ **not supported** — stated with reason; revisit if a headless surface ships | — |
 | **Gemini CLI** | Approval modes exist; field-test surface unstable in this CLI build | ◐ **v0.1.x target**, not claimed at v0.1.0 | — |
 
-**≥2 Tier-1 at v0.1.0 is met by Claude Code + Codex CLI recipes *plus* the agentpolicy path** (which is
-harness-superset by construction). The matrix records each row's label honestly.
+**v0.1.0 ships two Tier-1 coding-agent recipes plus the agentpolicy path** (which is harness-superset by
+construction). The harness recipes are **documented / capture-verified, not field-tested** because the
+end-to-end s15 suite was removed; the published matrix records that label honestly rather than promoting
+the captures.
 
 ## Tier 2 — Agent frameworks (≥3 by v0.3.0)
 
@@ -70,8 +72,8 @@ committed three; the adapter pattern is identical across all of them (one file e
 
 | Surface | v0.1.0 | Label meaning |
 |---|---|---|
-| Claude Code | ✅ field-tested | Live field-test run recorded in the release report |
-| Codex CLI | ✅ field-tested | Live field-test run recorded |
+| Claude Code | ◐ documented (capture-verified) | LLM pairs captured; no end-to-end field run |
+| Codex CLI | ◐ documented (capture-verified) | LLM pairs captured; no end-to-end field run |
 | LangGraph | ✅ conformance-tested | Adapter passes the fixture suite (SC-25) in CI |
 | Temporal recipe | ✅ documented | Recipe + example, not field-tested |
 | Generic CLI/HTTP producer | ✅ conformance-tested | The contract fixtures are the tests |

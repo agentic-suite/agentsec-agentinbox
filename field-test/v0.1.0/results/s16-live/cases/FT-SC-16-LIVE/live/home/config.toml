@@ -1,0 +1,28 @@
+[classes.irreversible]
+ttl_seconds = 60
+warn_seconds = 15
+self_review = "deny"
+require_reason_on_deny = true
+ladder = []
+
+[classes.readonly]
+ttl_seconds = 4
+
+[roster.tier-1]
+terminal = ["alice"]
+
+[channels.terminal]
+enabled = true
+allow_as = true
+
+[channels.desktop]
+enabled = false
+
+[channels.webhook]
+enabled = false
+
+[bus]
+driver = "filesystem"
+
+[store]
+driver = "sqlite"

@@ -1,0 +1,1 @@
++ compose exec agentinbox python /ft/scripts/run_pytest.py tests/flood/test_buckets.py tests/flood/test_deny_digest.py

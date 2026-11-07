@@ -1,0 +1,39 @@
+# Field-test compose stack — the field-test environment for agentinbox.
+#
+# agentinbox is local-first: one CLI + a store. This overlay is the whole
+# field-test stack: the agentinbox image (the system under test) driven through
+# its CLI and the shipped test suites. There is **no LLM container and no
+# hosted model** — the decision path is deterministic by construction.
+#
+#   docker compose -f scripts/fieldtest/docker-compose.fieldtest.yml up -d agentinbox
+#
+# The image is built from the repo root (scripts/fieldtest/agentinbox.Dockerfile).
+# Results are written by the run scripts to
+# field-test/<FT_VERSION>/results/<run-id>/ on the host, never into a
+# container volume.
+
+services:
+  agentinbox:
+    build:
+      context: .
+      dockerfile: scripts/fieldtest/agentinbox.Dockerfile
+    image: agentinbox-fieldtest:${FT_TAG:-local}
+    environment:
+      AGENTINBOX_FIELD: "1"
+    healthcheck:
+      # The SUT is online only when the CLI answers.
+      test: ["CMD", "agentinbox", "--version"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 5s
+    volumes:
+      - ftdata:/data/agentinbox
+      # Harness helpers + the live test suites, so in-container runs use the
+      # real definitions, never a copy.
+      - ./scripts/fieldtest:/ft/scripts:ro
+      - ./tests:/ft/tests:ro
+    command: ["sleep", "infinity"]
+
+volumes:
+  ftdata:
