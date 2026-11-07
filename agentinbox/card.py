@@ -120,6 +120,8 @@ def build_card(
     session_fields = (
         Field("session", _text(payload.get("session_id"))),
         Field("agent", _text(payload.get("agent_id"))),
+        Field("tier", _text(ask.tier)),
+        Field("escalations", _escalation_history(transitions)),
         Field("session tail", _session_tail(context.get("session_tail")), untrusted=True),
         Field("flags", _text(", ".join(str(flag) for flag in context.get("flags") or []))),
         Field(
@@ -240,6 +242,15 @@ def _arguments(arguments: Any) -> str:
         return "unknown"
     parts = [f"{key}={value}" for key, value in sorted(arguments.items())]
     return _text("; ".join(parts))
+
+
+def _escalation_history(transitions: Sequence[TransitionRecord]) -> str:
+    rows = [
+        f"{item.detail.get('from_tier', 'unknown')} → {item.detail.get('to_tier', 'unknown')}"
+        for item in transitions
+        if item.kind == "ask-escalated"
+    ]
+    return _text(", ".join(rows)) if rows else "none"
 
 
 def _session_tail(tail: Any) -> str:

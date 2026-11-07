@@ -35,7 +35,9 @@ from agentinbox.config import (
     resolve_config_path,
     resolve_home,
 )
+from agentinbox.config_audit import record_config_change
 from agentinbox.doctor import render_explain, render_human, run_checks
+from agentinbox.escalation import Escalator
 from agentinbox.exit_codes import ExitCode
 from agentinbox.gate import gate
 from agentinbox.scheduler import Scheduler
@@ -265,6 +267,11 @@ def _serve(args: argparse.Namespace) -> int:
         print(f"{PROG}: {exc}", file=sys.stderr)
         return int(ExitCode.UNAVAILABLE)
 
+    try:
+        record_config_change(home, config)
+    except OSError as exc:
+        print(f"{PROG}: config-change evidence unavailable: {exc}", file=sys.stderr)
+
     desktop_config = config.channels.get("desktop")
     desktop = (
         DesktopChannel(config=config)
@@ -288,7 +295,7 @@ def _serve(args: argparse.Namespace) -> int:
             print(f"{PROG}: digest delivery failed: {exc}", file=sys.stderr)
 
     wiring = DeliveryWiring(store, channels, on_digest=on_digest)
-    scheduler = Scheduler(store)
+    scheduler = Scheduler(store, escalator=Escalator(store, config, bus=bus))
     try:
         if args.once:
             scheduler.tick()

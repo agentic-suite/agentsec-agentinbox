@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from agentinbox.channels.desktop import desktop_availability
-from agentinbox.config import Config, ConfigError, load_config
+from agentinbox.config import Config, ConfigError, effective_ladder_delays, load_config
 
 OK = "ok"
 WARN = "warn"
@@ -194,7 +194,8 @@ def render_explain(report: Report, home: Path, config_path: Path) -> str | None:
         lines.append(
             f"  class {name}: ttl={ask_class.ttl_seconds}s "
             f"warn={ask_class.warn_seconds} self_review={ask_class.self_review} "
-            f"ladder={list(ask_class.ladder)}"
+            f"ladder={list(ask_class.ladder)} "
+            f"ladder_delays={list(effective_ladder_delays(ask_class))}"
         )
     for tier in sorted(config.roster):
         principals = ", ".join(

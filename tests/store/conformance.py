@@ -281,6 +281,76 @@ def check_claim_revocation(store) -> None:  # type: ignore[no-untyped-def]
 # --------------------------------------------------------------------------- 7. capabilities
 
 
+def check_escalation_cas(store) -> None:  # type: ignore[no-untyped-def]
+    ask = sample_ask()
+    store.create_or_get_by_identity(ask)
+    for index, tier in enumerate(("tier-1", "on-call")):
+        store.issue_claim(
+            ClaimRecord(
+                claim_id=f"claim_esc_{index}",
+                ask_id=ask.ask_id,
+                channel="terminal",
+                tier=tier,
+                secret_hash="h" * 64,
+                issued_at=T0,
+                expires_at=T0 + timedelta(minutes=5),
+            )
+        )
+
+    event = TransitionRecord(
+        ask_id=ask.ask_id,
+        at=T0,
+        kind="ask-escalated",
+        to_status=AskStatus.PENDING,
+        detail={"to_tier": "tier-1"},
+    )
+    revoked = store.escalate(
+        ask.ask_id,
+        expected_tier=None,
+        new_tier="tier-1",
+        escalate_at=T0 + timedelta(seconds=60),
+        revoke_tiers=("tier-1",),
+        transition=event,
+    )
+    assert revoked == 1
+    stored = store.get(ask.ask_id)
+    assert stored is not None
+    assert stored.tier == "tier-1"
+    assert stored.escalate_at == T0 + timedelta(seconds=60)
+    assert stored.expires_at == ask.expires_at  # never extended
+
+    # A stale expected tier loses the CAS and writes nothing.
+    assert (
+        store.escalate(
+            ask.ask_id,
+            expected_tier=None,
+            new_tier="on-call",
+            escalate_at=None,
+            revoke_tiers=(),
+            transition=event,
+        )
+        == -1
+    )
+
+    store.cas_status(
+        ask.ask_id,
+        expected=AskStatus.PENDING,
+        new=AskStatus.DENIED,
+        transition=transition(ask, "answer", AskStatus.DENIED),
+    )
+    assert (
+        store.escalate(
+            ask.ask_id,
+            expected_tier="tier-1",
+            new_tier="on-call",
+            escalate_at=None,
+            revoke_tiers=(),
+            transition=event,
+        )
+        == -1
+    )
+
+
 def check_capabilities_fail_closed(store) -> None:  # type: ignore[no-untyped-def]
     require_capability(store, "single_writer")
     for capability in ("multi_writer", "cluster_safe"):

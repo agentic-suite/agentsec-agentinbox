@@ -9,6 +9,7 @@ The runtime is stdlib-only; ``tomllib`` is the parser and the file is never rewr
 
 from __future__ import annotations
 
+import itertools
 import os
 import re
 import stat
@@ -47,7 +48,14 @@ _FORWARD_SLATE = frozenset(
 )
 
 _CLASS_KEYS = frozenset(
-    {"ttl_seconds", "warn_seconds", "self_review", "require_reason_on_deny", "ladder"}
+    {
+        "ttl_seconds",
+        "warn_seconds",
+        "self_review",
+        "require_reason_on_deny",
+        "ladder",
+        "ladder_delays",
+    }
 )
 _THROTTLE_KEYS = frozenset({"per_agent_burst", "per_agent_rate_per_min", "flood_window_seconds"})
 _LIMITS_KEYS = frozenset({"max_hold_rounds", "max_evidence_revisions", "max_thread_entries"})
@@ -74,6 +82,25 @@ class ClassConfig:
     self_review: str = "deny"
     require_reason_on_deny: bool = False
     ladder: tuple[str, ...] = ()
+    #: Absolute offsets from ingest, one per ladder tier; the first is always 0.
+    ladder_delays: tuple[int, ...] = ()
+
+
+def default_ladder_delays(count: int, ttl_seconds: int) -> tuple[int, ...]:
+    """Sane defaults when ``ladder_delays`` is omitted: spread the ladder over the TTL."""
+    if count <= 1:
+        return (0,)
+    return tuple(
+        0 if index == 0 else max(1, ttl_seconds * index // count) for index in range(count)
+    )
+
+
+def effective_ladder_delays(ask_class: ClassConfig) -> tuple[int, ...]:
+    if not ask_class.ladder:
+        return ()
+    if ask_class.ladder_delays:
+        return ask_class.ladder_delays
+    return default_ladder_delays(len(ask_class.ladder), ask_class.ttl_seconds)
 
 
 @dataclass(frozen=True, slots=True)
@@ -183,9 +210,13 @@ def load_config(path: Path) -> Config:
 def _parse(data: dict[str, Any], path: Path) -> Config:
     _check_top_level(data)
 
+    classes = _parse_classes(_table(data.get("classes", {}), "classes"))
+    roster = _parse_roster(_table(data.get("roster", {}), "roster"))
+    _validate_ladders(classes, roster)
+
     return Config(
-        classes=_parse_classes(_table(data.get("classes", {}), "classes")),
-        roster=_parse_roster(_table(data.get("roster", {}), "roster")),
+        classes=classes,
+        roster=roster,
         throttle=_parse_throttle(_table(data.get("throttle", {}), "throttle")),
         channels=_parse_channels(_table(data.get("channels", {}), "channels")),
         bus=_parse_bus(_table(data.get("bus", {}), "bus")),
@@ -253,6 +284,12 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
             isinstance(tier, str) and tier for tier in ladder
         ):
             raise ConfigError(f"{key_path}.ladder: must be a list of non-empty strings")
+        if len(set(ladder)) != len(ladder):
+            raise ConfigError(f"{key_path}.ladder: tiers must be unique")
+
+        delays = _parse_ladder_delays(
+            table.get("ladder_delays"), key_path=key_path, ladder=ladder, ttl=ttl
+        )
 
         classes[name] = ClassConfig(
             ttl_seconds=ttl,
@@ -260,8 +297,47 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
             self_review=self_review,
             require_reason_on_deny=require_reason,
             ladder=tuple(ladder),
+            ladder_delays=delays,
         )
     return classes
+
+
+def _parse_ladder_delays(
+    raw: Any, *, key_path: str, ladder: list[Any], ttl: int
+) -> tuple[int, ...]:
+    if not ladder:
+        if raw not in (None, []):
+            raise ConfigError(f"{key_path}.ladder_delays: requires a non-empty ladder")
+        return ()
+
+    if raw is None:
+        return default_ladder_delays(len(ladder), ttl)
+
+    if not isinstance(raw, list) or not all(
+        isinstance(value, int) and not isinstance(value, bool) for value in raw
+    ):
+        raise ConfigError(
+            f"{key_path}.ladder_delays: must be a list of integer seconds, "
+            "one per ladder tier"
+        )
+    if len(raw) != len(ladder):
+        raise ConfigError(
+            f"{key_path}.ladder_delays: must have exactly {len(ladder)} entries "
+            "(one per tier)"
+        )
+    if not raw or raw[0] != 0:
+        raise ConfigError(f"{key_path}.ladder_delays: the first tier must start at 0")
+    if any(value <= previous for previous, value in itertools.pairwise(raw)):
+        raise ConfigError(
+            f"{key_path}.ladder_delays: must be strictly increasing and positive "
+            "after the first tier"
+        )
+    if raw[-1] >= ttl:
+        raise ConfigError(
+            f"{key_path}.ladder_delays: the last tier must start before the TTL "
+            f"({ttl}s)"
+        )
+    return tuple(raw)
 
 
 def _parse_roster(value: dict[str, Any]) -> dict[str, dict[str, tuple[str, ...]]]:
@@ -281,6 +357,22 @@ def _parse_roster(value: dict[str, Any]) -> dict[str, dict[str, tuple[str, ...]]
             channels[channel] = tuple(principals)
         roster[tier] = channels
     return roster
+
+
+def _validate_ladders(
+    classes: Mapping[str, ClassConfig], roster: Mapping[str, Mapping[str, tuple[str, ...]]]
+) -> None:
+    """Every ladder tier must resolve to a non-empty roster entry at load time."""
+    for name, ask_class in classes.items():
+        for tier in ask_class.ladder:
+            if tier not in roster:
+                raise ConfigError(
+                    f"[classes.{name}].ladder: tier {tier!r} has no [roster.{tier}] entry"
+                )
+            if not roster[tier]:
+                raise ConfigError(
+                    f"[roster.{tier}]: must list at least one channel and principal"
+                )
 
 
 def _positive_int(table: Mapping[str, Any], key: str, path: str) -> int:

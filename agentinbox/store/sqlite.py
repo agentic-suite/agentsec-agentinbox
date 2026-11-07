@@ -11,8 +11,9 @@ import os
 import sqlite3
 import stat
 import threading
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
+from dataclasses import replace
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -407,6 +408,64 @@ class SqliteStore:
         with self._transaction():
             cursor = self._conn.execute(statement, parameters)
             return cursor.rowcount
+
+    def escalate(
+        self,
+        ask_id: str,
+        *,
+        expected_tier: str | None,
+        new_tier: str,
+        escalate_at: datetime | None,
+        revoke_tiers: Sequence[str],
+        transition: TransitionRecord,
+    ) -> int:
+        with self._transaction():
+            if expected_tier is None:
+                cursor = self._conn.execute(
+                    "UPDATE asks SET tier = ?, escalate_at = ? "
+                    "WHERE ask_id = ? AND status = ? AND tier IS NULL",
+                    (
+                        new_tier,
+                        None if escalate_at is None else to_iso(escalate_at),
+                        ask_id,
+                        AskStatus.PENDING.value,
+                    ),
+                )
+            else:
+                cursor = self._conn.execute(
+                    "UPDATE asks SET tier = ?, escalate_at = ? "
+                    "WHERE ask_id = ? AND status = ? AND tier = ?",
+                    (
+                        new_tier,
+                        None if escalate_at is None else to_iso(escalate_at),
+                        ask_id,
+                        AskStatus.PENDING.value,
+                        expected_tier,
+                    ),
+                )
+            if cursor.rowcount != 1:
+                return -1
+
+            revoked = 0
+            if revoke_tiers:
+                placeholders = ",".join("?" for _ in revoke_tiers)
+                # Placeholders are generated `?` only; tier names stay bound parameters.
+                revoked = self._conn.execute(
+                    f"UPDATE claims SET revoked_at = ? WHERE ask_id = ? "  # noqa: S608
+                    f"AND revoked_at IS NULL AND tier IN ({placeholders})",
+                    (to_iso(transition.at), ask_id, *revoke_tiers),
+                ).rowcount
+
+            self._append_transition(
+                replace(
+                    transition,
+                    ask_id=ask_id,
+                    from_status=AskStatus.PENDING,
+                    to_status=AskStatus.PENDING,
+                    seq=0,
+                )
+            )
+            return revoked
 
     def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]:
         with self._lock:

@@ -13,6 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
+from agentinbox.escalation import Escalator
 from agentinbox.lifecycle import IllegalTransition, observe
 from agentinbox.store import (
     AskRecord,
@@ -41,10 +42,12 @@ class Scheduler:
         *,
         now: Callable[[], datetime] = utcnow,
         tick_seconds: float = DEFAULT_TICK_SECONDS,
+        escalator: Escalator | None = None,
     ) -> None:
         self.store = store
         self._now = now
         self.tick_seconds = tick_seconds
+        self.escalator = escalator
         self._last_seen: datetime | None = None
         #: Proof for tests/reviews: expiry must never produce an allow.
         self.allows_on_expiry = 0
@@ -91,6 +94,8 @@ class Scheduler:
 
         self.expired_total += expired
         self.warned_total += warned
+        if self.escalator is not None:
+            self.escalator.tick()
         return TickStats(expired=expired, warned=warned)
 
     def recover(self) -> TickStats:

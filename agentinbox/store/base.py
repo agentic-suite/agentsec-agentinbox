@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Final, Protocol
 
 #: Version of the conformance suite a driver must declare to be admitted.
-CONFORMANCE_VERSION: Final = "3"
+CONFORMANCE_VERSION: Final = "4"
 
 
 class StoreError(Exception):
@@ -213,6 +213,23 @@ class AskStore(Protocol):
     def revoke_claims(
         self, ask_id: str, *, at: datetime, tier: str | None = None
     ) -> int: ...
+
+    def escalate(
+        self,
+        ask_id: str,
+        *,
+        expected_tier: str | None,
+        new_tier: str,
+        escalate_at: datetime | None,
+        revoke_tiers: Sequence[str],
+        transition: TransitionRecord,
+    ) -> int:
+        """Advance the tier and revoke prior-tier claims atomically.
+
+        Returns the number of revoked claims, or ``-1`` when the CAS lost (another writer
+        changed the tier or the ask resolved). Never changes ``expires_at``.
+        """
+        ...
 
     def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]: ...
 

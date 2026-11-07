@@ -15,6 +15,7 @@ from typing import Any
 
 from agentinbox.config import ClassConfig, Config
 from agentinbox.contract import AskContract, ContractError, compute_action_identity, parse_ask
+from agentinbox.escalation import initial_escalation
 from agentinbox.redaction import RedactionReceipt, redact_value
 from agentinbox.store import AskRecord, AskStore, canonical_json, utcnow
 from agentinbox.trust import ProducerIdentity, TrustMap, classify_trust
@@ -182,6 +183,7 @@ def ingest(
         if ask_class.warn_seconds is None
         else contract.expires_at - timedelta(seconds=ask_class.warn_seconds)
     )
+    tier, escalate_at = initial_escalation(ask_class, moment)
     record = AskRecord(
         ask_id=ask_id,
         action_identity=contract.action_identity,
@@ -191,7 +193,8 @@ def ingest(
         expires_at=contract.expires_at,
         payload=payload,
         warn_at=warn_at,
-        tier=ask_class.ladder[0] if ask_class.ladder else None,
+        escalate_at=escalate_at,
+        tier=tier,
     )
     result = store.create_or_get_by_identity(record)
     return IngestResult(

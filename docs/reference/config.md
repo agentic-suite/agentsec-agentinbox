@@ -57,7 +57,8 @@ unreadable.
 | `warn_seconds` | int > 0 | unset | must be `< ttl_seconds` |
 | `self_review` | `deny` \| `allow` \| `escalate` | `deny` | self-approval policy |
 | `require_reason_on_deny` | bool | `false` | deny must carry a reason |
-| `ladder` | list[str] | `[]` | escalation tiers, ordered |
+| `ladder` | list[str] | `[]` | escalation tiers, ordered; each must resolve to a `[roster.<tier>]` entry |
+| `ladder_delays` | list[int] | spread over the TTL | absolute offsets from ingest, one per tier; first is `0`, strictly increasing, last `< ttl_seconds` |
 
 ```toml
 [classes.irreversible]
@@ -66,7 +67,17 @@ warn_seconds = 60
 self_review = "deny"
 require_reason_on_deny = true
 ladder = ["tier-1", "on-call"]
+ladder_delays = [0, 150]
+
+[roster.tier-1]
+terminal = ["alice"]
+
+[roster.on-call]
+terminal = ["bob"]
 ```
+
+Escalation is **routing only**: it changes the answering tier and revokes prior-tier claims, but never
+changes `expires_at`. The default delays spread the ladder over the TTL (`0, ttl/2, …`).
 
 Class **resolution** rules (what an ask with no class inherits, and "config that resolves to
 nothing is an error") arrive with the lifecycle in M2/M3. M0 validates shape and types only.

@@ -131,7 +131,7 @@ class AnswerVerifier:
 
         # --- authorization --------------------------------------------------
         ask_class = self._class_for(ask)
-        allowed = self._allowed_principals(ask_class, request.channel)
+        allowed = self._allowed_principals(ask_class, request.channel, tier=ask.tier)
         if request.principal not in allowed:
             self._reject(ask, request, now, "off_roster", "principal is not on the roster")
             raise AnswerRejected("off_roster", "principal is not authorized for this ask")
@@ -202,8 +202,14 @@ class AnswerVerifier:
             raise AnswerRejected("unknown_class", f"no configured class {name!r}")
         return ask_class
 
-    def _allowed_principals(self, ask_class: ClassConfig, channel: str) -> tuple[str, ...]:
-        tiers = ask_class.ladder or tuple(self.config.roster.keys())
+    def _allowed_principals(
+        self, ask_class: ClassConfig, channel: str, *, tier: str | None = None
+    ) -> tuple[str, ...]:
+        # A tier change is routing: only the current tier may answer (M11, R4).
+        if tier is not None:
+            tiers: tuple[str, ...] = (tier,)
+        else:
+            tiers = ask_class.ladder or tuple(self.config.roster.keys())
         allowed: list[str] = []
         for tier in tiers:
             allowed.extend(self.config.roster.get(tier, {}).get(channel, ()))

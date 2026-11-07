@@ -7,6 +7,7 @@ honest against the SQLite reference.
 from __future__ import annotations
 
 import threading
+from collections.abc import Sequence
 from dataclasses import replace
 from datetime import datetime, timedelta
 
@@ -181,6 +182,48 @@ class MemoryStore:
                     continue
                 self._claims[claim_id] = replace(claim, revoked_at=at)
                 revoked += 1
+            return revoked
+
+    def escalate(
+        self,
+        ask_id: str,
+        *,
+        expected_tier: str | None,
+        new_tier: str,
+        escalate_at: datetime | None,
+        revoke_tiers: Sequence[str],
+        transition: TransitionRecord,
+    ) -> int:
+        with self._lock:
+            self._require_open()
+            current = self._asks.get(ask_id)
+            if (
+                current is None
+                or current.status is not AskStatus.PENDING
+                or current.tier != expected_tier
+            ):
+                return -1
+            self._asks[ask_id] = replace(
+                current, tier=new_tier, escalate_at=escalate_at
+            )
+            revoked = 0
+            for claim_id, claim in list(self._claims.items()):
+                if (
+                    claim.ask_id == ask_id
+                    and claim.revoked_at is None
+                    and claim.tier in revoke_tiers
+                ):
+                    self._claims[claim_id] = replace(claim, revoked_at=transition.at)
+                    revoked += 1
+            self._append_transition(
+                replace(
+                    transition,
+                    ask_id=ask_id,
+                    from_status=AskStatus.PENDING,
+                    to_status=AskStatus.PENDING,
+                    seq=0,
+                )
+            )
             return revoked
 
     def list_deliveries(self, ask_id: str) -> list[DeliveryRecord]:

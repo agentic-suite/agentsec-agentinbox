@@ -53,7 +53,8 @@ def test_ask_round_trips_scheduling_fields(store) -> None:  # type: ignore[no-un
     loaded = store.get(result.ask.ask_id)
     assert loaded is not None
     assert loaded.warn_at == result.ask.expires_at - timedelta(seconds=60)
-    assert loaded.escalate_at is None
+    # M11: the default two-tier ladder escalates halfway through the 300s TTL.
+    assert loaded.escalate_at == NOW + timedelta(seconds=150)
     assert loaded.tier == "tier-1"
     assert loaded.created_at == NOW
     assert loaded.expires_at == result.ask.expires_at

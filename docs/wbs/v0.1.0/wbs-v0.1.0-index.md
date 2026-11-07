@@ -158,6 +158,12 @@ A milestone is **closed** only when all of these hold:
   maps approved→0, denied/cancelled→2, expired/budget→3, unavailable→4, pending→5; a lapsed budget never
   mutates the ask; SIGTERM/SIGINT records a `cancelled` transition; retries are read-only idempotent.
   Four CI recipes documented. Next: **M11** (`11.D0` escalation design).
+- **2026-11-08 — M11 Escalation ladder closed.** Issues #227–#237. **Gate:** 488 tests pass ·
+  coverage **95.51%** · `ruff` clean · `mypy --strict` clean · DCO signed. Config-driven tiers with
+  validated delays (no implicit zero delay,
+  every tier has a roster), `escalate_at` fired by the M4 scheduler, atomic tier change + prior-tier claim
+  revocation, tier-aware authorization, one `renotify` job/notification per tier, `expires_at` immutable
+  through exhaustion (SC-12), and digested `inbox-config-changed` evidence. Next: **M12** (`12.D0` flood design).
 
 ## PRD coverage matrix (every doc 00–30)
 
