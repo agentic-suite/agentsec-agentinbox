@@ -246,6 +246,11 @@ ft_case_end() {
       >> "$FT_CASE_DIR/assertions.ndjson"
     echo "  PASS no-secret-leak"
   fi
+  # The leak assertion above is appended *after* ft_finalize; recompute the
+  # counts so verdict.json matches assertions.ndjson exactly (deep validation
+  # rejects a mismatch as an over-claim).
+  FT_ASSERT_TOTAL=$(wc -l < "$FT_CASE_DIR/assertions.ndjson" | tr -d ' ')
+  FT_ASSERT_GROUNDED=$(grep -c '"grounded":true' "$FT_CASE_DIR/assertions.ndjson" || true)
   {
     printf '{\n'
     printf '  "id": "%s",\n' "$id"
@@ -367,7 +372,6 @@ ft_require_docker() {
 FT_STACK_BUILT="${FT_STACK_BUILT:-0}"
 
 _ft_stack_log() {
-  local target="$1"; shift
   if [[ -n "${FT_CASE_DIR:-}" ]]; then
     "${STACK_COMPOSE[@]}" "$@" \
       >> "$FT_CASE_DIR/stdout.log" 2>> "$FT_CASE_DIR/stderr.log"
