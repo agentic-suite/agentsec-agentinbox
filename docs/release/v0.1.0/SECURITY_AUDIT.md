@@ -80,7 +80,24 @@ the M32 field test and the M33 release work.
 **No risk grade was raised by M32.** R-R1 remains the top risk because the study
 was not run; M33 does not claim otherwise.
 
-## 5. Release decision
+## 5. Git-history secret scan
+
+Run 2026-11-07 on the release branch, full history (`file://` scan of every commit):
+
+| Scanner | Version | Result |
+|---|---|---|
+| TruffleHog | 3.99.8 | **0 verified secrets**; 3 unverified hits, all deliberate test/docs placeholders |
+| gitleaks | (brew current) | **8 hits, all the same false positive** (`prompt_cache_key` UUIDs in Codex request JSON) |
+
+Unverified/false-positive dispositions (none is a live credential):
+
+- `tests/ask/test_redaction.py` — fake Postgres URL used by the redaction tests.
+- `tests/bus/test_delivery.py` — fake URI credential used by the delivery-redaction test.
+- `docs/reference/ask-contract.md` — redaction-pattern example strings.
+- `prompt_cache_key` UUIDs in `docs/release/v0.1.0/evidence/harness/FT-T1-CODEX/` — Codex request
+  metadata, not a secret.
+
+## 6. Release decision
 
 The security audit supports the release **with the stated non-claims and the
 four accepted container-test reds**. The one product defect found in the field
