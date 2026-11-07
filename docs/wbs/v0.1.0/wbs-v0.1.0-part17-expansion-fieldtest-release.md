@@ -48,7 +48,7 @@ block release.
 
 **Goal:** Close the expanded v0.1.0 (**it absorbs M25**): claims lint, generated compatibility matrix, release notes + gap list, SBOM/signing, the Wave-0 demo, the security audit, and the tag — only after M32 is green.
 
-**CUJ:** CUJ-14 · **PRD:** PRD 31 — 0.1.0 release gate (expanded) · **Milestone:** 0.1.0 — M33 Release readiness (expanded v0.1.0)
+**CUJ:** CUJ-14 · **PRD:** PRD 31 — 0.1.0 release gate (expanded) · **Milestone:** 0.1.0 — M33 Release readiness (tags `v0.1.0`)
 
 **Work items**
 

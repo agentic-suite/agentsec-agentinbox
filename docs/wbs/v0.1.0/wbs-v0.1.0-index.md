@@ -472,7 +472,7 @@ Review log: [codereview-log.md](codereview-log.md).
 | M30 | Repetitive approvals, grants & compression | #353–#364 (12) |
 | M31 | Policy learning & governance insights | #365–#378 (14) |
 | M32 | Field tests — FINAL (SC-01–SC-90) | #379–#390, #401, #98–#110 (26) |
-| M33 | Release readiness (expanded v0.1.0) | #391–#400, #111–#123 (23) |
+| M33 | Release readiness (tags `v0.1.0`) | #391–#400, #111–#123 (23) |
 
 ### CUJ → milestone (expansion)
 
