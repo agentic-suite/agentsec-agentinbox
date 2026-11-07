@@ -225,7 +225,7 @@ re-derived from the committed result files. **Class:** **P/F** = hard gate · **
 | FT-SC-82 | outcomes | P/F | ✅ PASS | packet-only reviewer reconstructs end-to-end — grounded in Docker |
 | FT-SC-83 | grants | P/F | ✅ PASS | 12-ask compressed view, 12 answers, export complete — grounded in Docker |
 | FT-SC-84 | grants | P/F | ✅ PASS | window expires mid-burst → per-ask, 0 silent allows — grounded in Docker |
-| FT-SC-85 | grants | P/F | ▫ not run | owner revocation is immediate + loud |
+| FT-SC-85 | grants | P/F | ✅ PASS | owner revocation is immediate + loud — grounded in Docker |
 | FT-SC-86 | grants | P/F | ✅ PASS | repeated denials → insight, no auto-hardening — grounded in Docker |
 | FT-SC-87 | insights | P/F | ✅ PASS | 20 approvals → one redacted insight — grounded in Docker |
 | FT-SC-88 | insights | P/F | ✅ PASS | noisy policy → named tuning diff (PR to apply) — grounded in Docker |
