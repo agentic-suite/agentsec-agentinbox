@@ -229,6 +229,17 @@ A milestone is **closed** only when all of these hold:
   the not-verified claims table. Details in the
   [review log](codereview-log.md#prd-conformance-review-m0m20-2026-11-08).
 
+- **2026-11-07 — M21 Ops: service units, backup/restore, migrations, `report` closed.** Issues #62–#73.
+  Commit `3ac7cf5`. **Gate:** 750 tests pass · coverage **95.27%** · `ruff` clean · `mypy --strict` clean ·
+  DCO signed. `serve --install` writes user-scoped launchd/systemd units (no root); SIGTERM stops accepting,
+  flushes events, closes cleanly, and a dead `serve.lock` makes `gate` exit 4. `doctor --backup` uses the
+  SQLite online-backup path (WAL-safe) and carries key **references** only; `doctor --restore` allow-lists
+  extraction, verifies the chain, and expires overdue pending asks once (never resurrects a decision).
+  `compat` freezes the contract/exit/event surface with the additive-only matrix; every released schema
+  migrates forward and downgrade refuses loudly. `report --json` is read-only and local-only (p50/p99,
+  expiries, escalations, floods, rejected causes, deny rate by class). Doctor adds `offline`; the SC-26
+  offline day runs with non-loopback sockets blocked. Benches record N-1..N-7. Next: **M22** (`22.D0` security sweep).
+
 ## PRD coverage matrix (every doc 00–30)
 
 | PRD | Topic | Milestone(s) |
