@@ -1,0 +1,14 @@
+{
+  "id": "FT-SC-10-LIVE",
+  "status": "fail",
+  "class": "P/F",
+  "blocked": false,
+  "grounded": true,
+  "assertions_total": 3,
+  "assertions_grounded": 2,
+  "llm_captured": false,
+  "llm_required": false,
+  "run_id": "s0-core",
+  "assertions": [{"name":"sc10-expired-exactly-once","ok":false,"grounded":true,"cmd":"bash -c \n  test \"$(/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/python <<EOF\nimport json, pathlib\nrows = [json.loads(l) for l in pathlib.Path(\"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s0-core/cases/FT-SC-10-LIVE/live/export.jsonl\").read_text().splitlines() if l.strip()]\nexpired = [r for r in rows if r.get(\"kind\") == \"expired\"]\nassert len(expired) == 1, expired\nprint(\"EXPIRED-ONCE\")\nEOF\n)\" = \"EXPIRED-ONCE\""},{"name":"sc10-resolve-deny-timeout","ok":false,"grounded":false,"cmd":"bash -c \n  ASK_ID=\"$(grep -o \"ask_[a-f0-9]*\" \"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s0-core/cases/FT-SC-10-LIVE/live/export.jsonl\" | head -1)\"\n  OUT=$(\"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/agentinbox --home \"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s0-core/cases/FT-SC-10-LIVE/live/home\" gate --ask \"$ASK_ID\" --timeout 2 2>/dev/null || true)\"\n  echo \"$OUT\" | grep -q \"human_gate_timeout\" && echo DENY-TIMEOUT"},{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}
+]
+}
