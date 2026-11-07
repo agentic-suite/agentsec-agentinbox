@@ -67,6 +67,7 @@ _CLASS_KEYS = frozenset(
         "ladder_delays",
         "flood_burst",
         "flood_rate_per_min",
+        "rescope_hint",
     }
 )
 _THROTTLE_KEYS = frozenset({"per_agent_burst", "per_agent_rate_per_min", "flood_window_seconds"})
@@ -99,6 +100,8 @@ class ClassConfig:
     #: Optional per-class flood thresholds; unset inherits ``[throttle]``.
     flood_burst: int | None = None
     flood_rate_per_min: int | None = None
+    #: Advisory text echoed to the agent on expiry/deny (never policy).
+    rescope_hint: str | None = None
 
 
 def default_ladder_delays(count: int, ttl_seconds: int) -> tuple[int, ...]:
@@ -320,6 +323,15 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
         flood_burst = _optional_positive_int(table, "flood_burst", key_path)
         flood_rate = _optional_positive_int(table, "flood_rate_per_min", key_path)
 
+        rescope_hint = table.get("rescope_hint")
+        if rescope_hint is not None:
+            if not isinstance(rescope_hint, str) or not rescope_hint.strip():
+                raise ConfigError(f"{key_path}.rescope_hint: must be a non-empty string")
+            if len(rescope_hint) > 512:
+                raise ConfigError(f"{key_path}.rescope_hint: must be at most 512 characters")
+            if any(ord(character) < 32 for character in rescope_hint):
+                raise ConfigError(f"{key_path}.rescope_hint: must not contain control characters")
+
         classes[name] = ClassConfig(
             ttl_seconds=ttl,
             warn_seconds=warn,
@@ -329,6 +341,7 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
             ladder_delays=delays,
             flood_burst=flood_burst,
             flood_rate_per_min=flood_rate,
+            rescope_hint=rescope_hint,
         )
     return classes
 

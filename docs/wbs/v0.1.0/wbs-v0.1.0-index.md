@@ -192,6 +192,11 @@ A milestone is **closed** only when all of these hold:
   carries the payload), schema fixtures with payload allow-lists, join keys + producer `traceparent`,
   frozen rejection-cause map, buffered sink with flush + `event-gap` markers, and a no-untrusted-text
   fixture. Next: **M17** (`17.D0` resolve bridge).
+- **2026-11-08 — M17 agentpolicy resolve bridge closed.** Issues #293–#303. **Gate:** 587 tests pass ·
+  coverage **95.48%** · `ruff` clean · `mypy --strict` clean · DCO signed. Frozen reason-code registry; every state maps to its exact code;
+  `resolve/1.0` carries `retryable`/`retry_after`/`rescope_hint`/`answered_by`/`action_identity`; class
+  hints + deny-reason echo (capped, labelled, not policy); identity mismatch denied; the API long-poll
+  returns resolve and handles unknown/mismatch; re-reads are idempotent. Next: **M18** (`18.D0` adapters).
 
 ## PRD coverage matrix (every doc 00–30)
 

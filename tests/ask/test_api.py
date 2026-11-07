@@ -127,7 +127,31 @@ def test_unknown_ask_is_404(api: IngestAPI) -> None:
     status, body = call(api, "GET", "/v1/asks/ask_0000000000000000")
 
     assert status == 404
-    assert body["error"]["field"] == "ask_id"
+    assert body["contract"] == "resolve/1.0"
+    assert body["reason_code"] == "deny_ask_unknown"
+
+
+def test_resolve_rejects_a_different_action_identity(api: IngestAPI) -> None:
+    _, created = call(api, "POST", "/v1/asks", body=payload())
+
+    status, body = call(
+        api,
+        "GET",
+        f"/v1/asks/{created['ask_id']}?action_identity=sha256:{'b' * 64}",
+    )
+
+    assert status == 200
+    assert body["contract"] == "resolve/1.0"
+    assert body["reason_code"] == "deny_action_identity_mismatch"
+
+
+def test_resolve_is_idempotent(api: IngestAPI) -> None:
+    _, created = call(api, "POST", "/v1/asks", body=payload())
+
+    first = call(api, "GET", f"/v1/asks/{created['ask_id']}")
+    second = call(api, "GET", f"/v1/asks/{created['ask_id']}")
+
+    assert first == second
 
 
 def test_store_failure_is_503(api: IngestAPI, store) -> None:  # type: ignore[no-untyped-def]
@@ -159,7 +183,8 @@ def test_resolved_ask_returns_immediately(api: IngestAPI, store) -> None:  # typ
     status, body = call(api, "GET", f"/v1/asks/{ask_id}?wait=5s")
 
     assert status == 200
-    assert body["status"] == "approved"
+    assert body["contract"] == "resolve/1.0"
+    assert body["status"] == "allow"
     assert time.monotonic() - started < 1.0
 
 
@@ -190,7 +215,7 @@ def test_long_poll_wakes_on_notify(api: IngestAPI, store) -> None:  # type: igno
     assert not thread.is_alive()
     status, body = result["response"]
     assert status == 200
-    assert body["status"] == "denied"
+    assert body["status"] == "deny"
 
 
 def test_long_poll_times_out_with_pending(api: IngestAPI) -> None:

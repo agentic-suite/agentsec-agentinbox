@@ -1,8 +1,8 @@
-"""The ``resolve/1.0`` read path (M3).
+"""The ``resolve/1.0`` read path and the agentpolicy reason bridge (M3/M17).
 
-Status is stored; **expiry is derived on read** from ``expires_at``. Nothing here writes: a read
-that discovers an overdue ask returns deny, and M4's scheduler is what records the transition
-exactly once.
+Status is stored; **expiry is derived on read** from ``expires_at``. Nothing here writes. The
+reason codes are imported from :mod:`agentinbox.reasons` (the frozen registry), so the bridge can
+never drift from agentpolicy's vocabulary.
 """
 
 from __future__ import annotations
@@ -12,15 +12,27 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from agentinbox.config import Config
+from agentinbox.hints import author_hint
 from agentinbox.lifecycle import winning_answer
+from agentinbox.reasons import (
+    ALLOW_ASK_APPROVED,
+    ASK_FLOOD_THROTTLED,
+    DENY_ACTION_IDENTITY_MISMATCH,
+    DENY_ASK_DENIED,
+    DENY_ASK_PENDING,
+    DENY_ASK_UNKNOWN,
+    HUMAN_GATE_TIMEOUT,
+)
 from agentinbox.store import AskRecord, AskStatus, AskStore, TransitionRecord
 
-REASON_ALLOW = "allow_ask_approved"
-REASON_DENIED = "deny_ask_denied"
-REASON_TIMEOUT = "human_gate_timeout"
-REASON_FLOOD = "ask_flood_throttled"
-REASON_PENDING = "deny_ask_pending"
-REASON_UNKNOWN = "deny_ask_unknown"
+REASON_ALLOW = ALLOW_ASK_APPROVED
+REASON_DENIED = DENY_ASK_DENIED
+REASON_TIMEOUT = HUMAN_GATE_TIMEOUT
+REASON_FLOOD = ASK_FLOOD_THROTTLED
+REASON_PENDING = DENY_ASK_PENDING
+REASON_UNKNOWN = DENY_ASK_UNKNOWN
+REASON_MISMATCH = DENY_ACTION_IDENTITY_MISMATCH
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,6 +45,7 @@ class ResolveResult:
     action_identity: str | None
     answered_by: str | None = None
     rescope_hint: str | None = None
+    retry_after: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -42,6 +55,7 @@ class ResolveResult:
             "reason_code": self.reason_code,
             "explanation": self.explanation,
             "retryable": self.retryable,
+            "retry_after": self.retry_after,
             "answered_by": self.answered_by,
             "rescope_hint": self.rescope_hint,
             "action_identity": self.action_identity,
@@ -55,17 +69,40 @@ def derived_status(ask: AskRecord, *, now: datetime) -> AskStatus:
     return ask.status
 
 
-def rescope_hint(ask: AskRecord) -> str:
+def rescope_hint(
+    ask: AskRecord,
+    config: Config | None = None,
+    reason: str | None = None,
+) -> str:
     action_class = str(ask.payload.get("class", "unknown"))
-    return (
-        f"narrow the target, or request a standing approval for class {action_class} "
-        "(timeout is a deny, not a failure)"
+    environment = str(ask.payload.get("environment", "unknown"))
+    ask_class = config.classes.get(action_class) if config is not None else None
+    return author_hint(
+        ask_class.rescope_hint if ask_class is not None else None,
+        action_class=action_class,
+        environment=environment,
+        reason=reason,
     )
 
 
 def resolve_ask(
-    ask: AskRecord, *, now: datetime, transitions: Sequence[TransitionRecord] = ()
+    ask: AskRecord,
+    *,
+    now: datetime,
+    transitions: Sequence[TransitionRecord] = (),
+    config: Config | None = None,
+    action_identity: str | None = None,
 ) -> ResolveResult:
+    if action_identity is not None and action_identity != ask.action_identity:
+        return ResolveResult(
+            ask_id=ask.ask_id,
+            status="deny",
+            reason_code=REASON_MISMATCH,
+            explanation="the resolve call presented a different action identity",
+            retryable=False,
+            action_identity=ask.action_identity,
+        )
+
     status = derived_status(ask, now=now)
 
     if status is AskStatus.PENDING:
@@ -99,6 +136,7 @@ def resolve_ask(
             explanation="denied by flood protection; retry after the flood window",
             retryable=True,
             action_identity=ask.action_identity,
+            retry_after=_flood_retry_after(transitions, config),
         )
     if status is AskStatus.CANCELLED:
         return ResolveResult(
@@ -117,7 +155,7 @@ def resolve_ask(
             explanation="no answer before expiry",
             retryable=False,
             action_identity=ask.action_identity,
-            rescope_hint=rescope_hint(ask),
+            rescope_hint=rescope_hint(ask, config),
         )
     return ResolveResult(
         ask_id=ask.ask_id,
@@ -127,10 +165,33 @@ def resolve_ask(
         retryable=False,
         action_identity=ask.action_identity,
         answered_by=answered_by,
+        rescope_hint=rescope_hint(
+            ask, config, None if winner is None else winner.reason
+        ),
     )
 
 
-def resolve(store: AskStore, ask_id: str, *, now: datetime) -> ResolveResult:
+def _flood_retry_after(
+    transitions: Sequence[TransitionRecord], config: Config | None
+) -> int | None:
+    for transition in reversed(transitions):
+        if transition.kind == "flood-denied":
+            value = transition.detail.get("retry_after_s")
+            if isinstance(value, int) and not isinstance(value, bool):
+                return value
+    if config is not None:
+        return config.throttle.flood_window_seconds
+    return None
+
+
+def resolve(
+    store: AskStore,
+    ask_id: str,
+    *,
+    now: datetime,
+    config: Config | None = None,
+    action_identity: str | None = None,
+) -> ResolveResult:
     ask = store.get(ask_id)
     if ask is None:
         return ResolveResult(
@@ -141,13 +202,20 @@ def resolve(store: AskStore, ask_id: str, *, now: datetime) -> ResolveResult:
             retryable=False,
             action_identity=None,
         )
-    return resolve_ask(ask, now=now, transitions=store.transitions_for(ask_id))
+    return resolve_ask(
+        ask,
+        now=now,
+        transitions=store.transitions_for(ask_id),
+        config=config,
+        action_identity=action_identity,
+    )
 
 
 __all__ = [
     "REASON_ALLOW",
     "REASON_DENIED",
     "REASON_FLOOD",
+    "REASON_MISMATCH",
     "REASON_PENDING",
     "REASON_TIMEOUT",
     "REASON_UNKNOWN",

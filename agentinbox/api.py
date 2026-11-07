@@ -25,6 +25,7 @@ from agentinbox.config import Config
 from agentinbox.contract import ContractError
 from agentinbox.flood import FloodGuard
 from agentinbox.ingest import TOTAL_CAP_BYTES, ingest
+from agentinbox.resolve import resolve
 from agentinbox.store import AskStatus, AskStore, StoreError, utcnow
 from agentinbox.trust import ProducerIdentity
 
@@ -198,10 +199,29 @@ class _Handler(BaseHTTPRequestHandler):
             return
 
         ask_id = match.group(1)
-        wait_seconds = _parse_wait(parse_qs(parsed.query).get("wait", [None])[0])
+        query = parse_qs(parsed.query)
+        wait_seconds = _parse_wait(query.get("wait", [None])[0])
+        presented = query.get("action_identity", [None])[0]
         ask = self.server.store.get(ask_id)
         if ask is None:
-            self._error(HTTPStatus.NOT_FOUND, "ask_id", "unknown ask")
+            outcome = resolve(
+                self.server.store,
+                ask_id,
+                now=self.server.now(),
+                config=self.server.config,
+            )
+            self._send(HTTPStatus.NOT_FOUND, outcome.to_dict())
+            return
+
+        if presented is not None and presented != ask.action_identity:
+            outcome = resolve(
+                self.server.store,
+                ask_id,
+                now=self.server.now(),
+                config=self.server.config,
+                action_identity=presented,
+            )
+            self._send(HTTPStatus.OK, outcome.to_dict())
             return
 
         if wait_seconds and ask.status is AskStatus.PENDING:
@@ -215,19 +235,14 @@ class _Handler(BaseHTTPRequestHandler):
                 event.clear()
                 ask = self.server.store.get(ask_id)
 
-        if ask is None:
-            self._error(HTTPStatus.NOT_FOUND, "ask_id", "unknown ask")
-            return
-        self._send(
-            HTTPStatus.OK,
-            {
-                "ask_id": ask.ask_id,
-                "status": ask.status.value,
-                "action_identity": ask.action_identity,
-                "created_at": ask.created_at.isoformat(),
-                "expires_at": ask.expires_at.isoformat(),
-            },
+        outcome = resolve(
+            self.server.store,
+            ask_id,
+            now=self.server.now(),
+            config=self.server.config,
+            action_identity=presented,
         )
+        self._send(HTTPStatus.OK, outcome.to_dict())
 
     # ------------------------------------------------------------------ helpers
 
