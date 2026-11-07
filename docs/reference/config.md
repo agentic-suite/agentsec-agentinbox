@@ -85,6 +85,9 @@ signatures are `401`.
 | `require_reason_on_deny` | bool | `false` | deny must carry a reason |
 | `ladder` | list[str] | `[]` | escalation tiers, ordered; each must resolve to a `[roster.<tier>]` entry |
 | `ladder_delays` | list[int] | spread over the TTL | absolute offsets from ingest, one per tier; first is `0`, strictly increasing, last `< ttl_seconds` |
+| `flood_burst` | int | throttle default | per-class token-bucket capacity override |
+| `flood_rate_per_min` | int | throttle default | per-class refill-rate override |
+| `rescope_hint` | str | class/environment fallback | capped, control-stripped hint returned in `resolve` on expiry (labelled *not policy*) |
 | `require_signed_producer` | bool | `false` | reject unsigned producers for this class (makes the self-review anchor enforceable) |
 
 ```toml
@@ -135,6 +138,7 @@ All must be positive integers. Enforcement arrives with M12.
 | Key | Applies to | Default |
 |---|---|---|
 | `enabled` | all | `false` |
+| `allow_as` | terminal | `false` | permit `answer --as NAME` (recorded as an **assumed** principal) |
 | `url_ref` | webhook | unset |
 | `hmac_key_ref` | webhook | unset |
 

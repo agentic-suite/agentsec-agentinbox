@@ -12,15 +12,13 @@ ask-gate: **agentpolicy asks, agentinbox answers**.
 
 ## Status
 
-**in development — v0.1.0, milestone M0 (foundation).** The installable
-skeleton exists today: the package, the frozen CLI surface and exit-code
-contract, the fail-closed config model, `init`, and `doctor`. Nothing asks or
-answers yet, and every unimplemented command says so instead of pretending.
-The full requirement set is published early on purpose, so we can be held to
-it: the v0.1.0 core (requirements R1–R7, engineering requirements E1–E12), the
-forward product-depth slate (PRDs 24–30), and the hardening layer that gates it
-all (PRD 30). See [docs/prd/](./docs/prd/README.md) for the plan of record and
-[the WBS](./docs/wbs/v0.1.0/wbs-v0.1.0-index.md) for the build order.
+**v0.1.0 core is complete through M22 (security close-out); the release is still in development
+(M24 field tests and M25 release readiness remain).** The ask lifecycle, all channels,
+evidence/audit, operations (M21), and the security packs/scanner (M22) are implemented and tested;
+the docs (M23) are live. Field tests (M24) and the release (M25) remain, so the PyPI release and the
+`v0.1.0` tag are **not yet published** — install from source today. See the
+[WBS](./docs/wbs/v0.1.0/wbs-v0.1.0-index.md) for the build order and
+[claims and limitations](./docs/compliance/claims-and-limitations.md) for what is not claimed.
 
 ## What it does
 
@@ -77,7 +75,7 @@ recipes. The honest, per-release compatibility table (field-tested /
 conformance-tested / documented / not-supported) lives in
 [docs/prd/19-harness-compatibility.md](./docs/prd/19-harness-compatibility.md).
 
-## Install (from source, M0)
+## Install (from source today)
 
 The package is **standalone**: no runtime dependencies beyond the Python
 standard library, no network calls, no external services. Python 3.11–3.13 on
@@ -94,10 +92,37 @@ agentinbox doctor          # exit 0 on a healthy install, 4 (fail-closed) otherw
 ```
 
 `AGENTINBOX_HOME` (or `--home`) relocates the home directory. A PyPI release
-(`pip install agentsec-agentinbox`) lands with v0.1.0.
+(`pip install agentsec-agentinbox`) lands with the v0.1.0 release (M25).
+
+## Quickstart (first approval in under 5 minutes)
+
+The step-tested walkthrough is [docs/tutorials/quickstart.md](./docs/tutorials/quickstart.md).
+In short: put your OS user on the roster, then in two terminals:
+
+```sh
+# terminal 1 (blocks at the gate)
+agentinbox ask --exec "echo hello" --timeout 300
+
+# terminal 2
+agentinbox inbox
+agentinbox answer <ask_id>      # card → a → type run_command
+agentinbox report --json        # local-only metrics
+agentinbox verify-log           # hash chain
+```
 
 ## Documentation
 
+- **Quickstart:** [docs/tutorials/quickstart.md](./docs/tutorials/quickstart.md) — install → first
+  recorded approval, step-tested in under five minutes.
+- **Reference:** [CLI](./docs/reference/cli.md) · [config](./docs/reference/config.md) ·
+  [ask contract](./docs/reference/ask-contract.md) · [events](./docs/reference/events.md) ·
+  [security](./docs/reference/security.md) · [operations](./docs/reference/ops.md).
+- **Runbooks:** [docs/runbooks/](./docs/runbooks/) — channel outage, secret rotation, corruption,
+  live flood, config drift, clock incident, escalation misfire, upgrade day.
+- **Guides:** [approver guide](./docs/guides/approver-guide.md) ·
+  [honest enterprise page](./docs/guides/enterprise-honesty.md) ·
+  [producer guide](./docs/adapters/producer-guide.md) ·
+  [harness/CI/MCP/Temporal recipes](./docs/adapters/).
 - **The PRD set (00–30) is the plan of record:** [docs/prd/](./docs/prd/README.md) —
   start with the [press release](./docs/prd/00-press-release.md) and
   [why](./docs/prd/01-why.md); the [features](./docs/prd/05-features.md),
