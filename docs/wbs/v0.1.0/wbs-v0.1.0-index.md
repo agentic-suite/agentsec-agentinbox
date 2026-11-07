@@ -312,7 +312,7 @@ every M26–M31 milestone carries its own gate. The 32.7 regression baseline bec
   asks as `precedent only`. `doctor --explain` prints the effective readiness settings. Next: **M27**
   (`27.D0` constrained-allow design).
 
-- **2026-11-07 — M27 Constrained allows & denial repair closed.** Issues #318–#328. Commit `TBD`.
+- **2026-11-07 — M27 Constrained allows & denial repair closed.** Issues #318–#328. Commit `fd6ca4c`.
   **Gate:** 862 tests pass · coverage **95.03%** · `ruff` clean · `mypy --strict` clean · DCO signed.
   Producer alternatives are selectable only with a declared enforcer binding and a matching canonical
   fingerprint; otherwise advice-only. Choosing one yields `decision=allow_with_constraints`; class
