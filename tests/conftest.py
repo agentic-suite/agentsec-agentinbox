@@ -16,3 +16,12 @@ def store() -> Iterator[MemoryStore]:
         yield driver
     finally:
         driver.close()
+
+
+@pytest.fixture
+def store2() -> Iterator[MemoryStore]:
+    driver = MemoryStore()
+    try:
+        yield driver
+    finally:
+        driver.close()

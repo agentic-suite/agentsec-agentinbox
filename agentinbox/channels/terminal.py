@@ -109,7 +109,12 @@ class TerminalChannel:
                 channel_authenticated=True,
             )
         except AnswerRejected as exc:
-            self.output.write(f"answer rejected: {exc.public_cause}\n")
+            detail = (
+                f" — {exc.message}"
+                if exc.cause == "late" and exc.message
+                else ""
+            )
+            self.output.write(f"answer rejected: {exc.public_cause}{detail}\n")
             return ExitCode.UNAVAILABLE
 
         self.output.write(

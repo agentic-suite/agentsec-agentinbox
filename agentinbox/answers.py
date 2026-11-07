@@ -28,6 +28,7 @@ from agentinbox.store import (
     AskStatus,
     AskStore,
     TransitionRecord,
+    to_iso,
     utcnow,
 )
 
@@ -41,6 +42,7 @@ _PUBLIC = {
     "used": "bad_claim",
     "revoked": "bad_claim",
     "guessing": "bad_claim",
+    "late": "already_resolved",
 }
 
 
@@ -143,8 +145,8 @@ class AnswerVerifier:
 
         # --- ask state ------------------------------------------------------
         if ask.status is not AskStatus.PENDING:
-            self._late(ask, request, now)
-            raise AnswerRejected("late", "ask is already resolved")
+            winner = self._late(ask, request, now)
+            raise AnswerRejected("late", _late_message(winner))
 
         if request.decision == "deny" and ask_class.require_reason_on_deny and not request.reason:
             self._reject(ask, request, now, "reason_required", "deny requires a reason")
@@ -179,8 +181,8 @@ class AnswerVerifier:
             ),
         )
         if not won:
-            self._late(ask, request, now)
-            raise AnswerRejected("late", "another answer won the race")
+            winner = self._late(ask, request, now)
+            raise AnswerRejected("late", _late_message(winner))
 
         consumed = self.store.consume_claim(request.claim_id, ask_id=ask.ask_id, at=now)
         if not consumed:  # pragma: no cover - the claim was validated above under lock
@@ -248,7 +250,9 @@ class AnswerVerifier:
             )
         )
 
-    def _late(self, ask: AskRecord, request: AnswerRequest, now: datetime) -> None:
+    def _late(
+        self, ask: AskRecord, request: AnswerRequest, now: datetime
+    ) -> TransitionRecord | None:
         transitions: Sequence[TransitionRecord] = self.store.transitions_for(ask.ask_id)
         winner = next(
             (
@@ -271,6 +275,13 @@ class AnswerVerifier:
                 "winner_at": None if winner is None else winner.at.isoformat(),
             },
         )
+        return winner
+
+
+def _late_message(winner: TransitionRecord | None) -> str:
+    if winner is None:
+        return "ask is already resolved"
+    return f"already resolved by {winner.principal} at {to_iso(winner.at)}"
 
 
 __all__ = [

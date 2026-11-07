@@ -175,6 +175,12 @@ A milestone is **closed** only when all of these hold:
   display-only payload, refs-only secrets, http(s)-only URLs, `deliver()`-only adapter (no answer path),
   bounded retries + per-attempt Delivery records/events + failover, unroutable classes refused at load,
   `channels` health command, and five receiver recipes. Next: **M14** (`14.D0` parity design).
+- **2026-11-08 — M14 Multi-channel single truth closed.** Issues #260–#270. **Gate:** 532 tests pass ·
+  coverage **95.30%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  One `parity.decision_record`/`comparable_decision` source; surface
+  rendering for text/terminal/desktop/ci; an 8-thread race yields one `answer` and seven `late` no-ops;
+  late answers name the winner/time and record evidence; failover shows the outcome without re-asking; the
+  conformance suite runs all four surfaces and rejects a deciding channel. Next: **M15** (`15.D0` audit design).
 
 ## PRD coverage matrix (every doc 00–30)
 
