@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TextIO
 
+from agentinbox.alternatives import prior_objections
 from agentinbox.answers import AnswerRejected, AnswerRequest, AnswerVerifier
 from agentinbox.card import Card, build_card
 from agentinbox.channels.base import ChannelError
@@ -62,6 +63,8 @@ class TerminalChannel:
         reason: str | None = None,
         as_name: str | None = None,
         now: datetime | None = None,
+        alternative_id: str | None = None,
+        edits: dict[str, object] | None = None,
     ) -> ExitCode:
         moment = now or utcnow()
         if not self.interactive:
@@ -82,6 +85,7 @@ class TerminalChannel:
             transitions=store.transitions_for(ask.ask_id),
             prior_asks=prior_asks(store, ask),
             similar_cases=similar_cases(store, ask),
+            prior_objections=prior_objections(store, ask),
         )
         self.deliver(ask, card)
 
@@ -113,6 +117,8 @@ class TerminalChannel:
                     reason=reason,
                     typed_confirmation=typed,
                     assumed=assumed,
+                    alternative_id=alternative_id,
+                    edits=edits,
                 ),
                 channel_authenticated=True,
             )

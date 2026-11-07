@@ -172,7 +172,7 @@ POSIX (macOS, Linux). Python 3.11–3.13. Windows is not supported in v0.1.0 and
 | `init` | `--force` |
 | `doctor` | `--explain`; `--backup PATH`; `--restore PATH`; `--force`; `--json` |
 | `ask` | `--file PATH` \| `--exec COMMAND` (one required); `--class NAME`; `--environment NAME`; `--agent-id ID`; `--requested-by PRINCIPAL`; `--session-id ID`; `--ttl SECONDS`; `--timeout SECONDS`; `--json` |
-| `answer` | positional `ask_id`; `--approve` \| `--deny`; `--reason TEXT`; `--as NAME` |
+| `answer` | positional `ask_id`; `--approve` \| `--deny`; `--reason TEXT`; `--as NAME`; `--alternative ID`; `--edit KEY=VALUE` (repeatable) |
 | `inbox` | `--json` |
 | `serve` | `--once`; `--install`; `--api-port PORT`; `--no-api` |
 | `gate` | `--ask ASK_ID` (required); `--wait`; `--timeout SECONDS` |

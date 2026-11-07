@@ -75,6 +75,7 @@ _CLASS_KEYS = frozenset(
         "required_evidence",
         "evidence_max_age_seconds",
         "on_contradiction",
+        "edit_schema",
     }
 )
 _THROTTLE_KEYS = frozenset({"per_agent_burst", "per_agent_rate_per_min", "flood_window_seconds"})
@@ -118,6 +119,8 @@ class ClassConfig:
     evidence_max_age_seconds: int = 86400
     #: ``deliver`` (default) or ``reject`` a contradicting ask at ingest.
     on_contradiction: str = "deliver"
+    #: Argument fields an approver may edit for this class (M27); empty = no edits.
+    edit_schema: tuple[str, ...] = ()
 
 
 def default_ladder_delays(count: int, ttl_seconds: int) -> tuple[int, ...]:
@@ -383,6 +386,11 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
             raise ConfigError(
                 f"{key_path}.readiness_min_score: required when readiness_enforce is true"
             )
+        edit_schema = table.get("edit_schema", [])
+        if not isinstance(edit_schema, list) or not all(
+            isinstance(item, str) and item for item in edit_schema
+        ):
+            raise ConfigError(f"{key_path}.edit_schema: must be a list of non-empty strings")
 
         rescope_hint = table.get("rescope_hint")
         if rescope_hint is not None:
@@ -409,6 +417,7 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
             required_evidence=tuple(evidence),
             evidence_max_age_seconds=max_age,
             on_contradiction=on_contradiction,
+            edit_schema=tuple(edit_schema),
         )
     return classes
 

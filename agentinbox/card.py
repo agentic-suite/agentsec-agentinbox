@@ -13,6 +13,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from agentinbox.alternatives import (
+    alternatives_for,
+    recall_line,
+    render_alternative,
+    suggestions_for,
+)
 from agentinbox.store import AskRecord, AskStatus, TransitionRecord
 
 FIELD_CAP = 512
@@ -75,6 +81,7 @@ def build_card(
     status: AskStatus | None = None,
     prior_asks: Sequence[AskRecord] = (),
     similar_cases: Sequence[Mapping[str, Any]] = (),
+    prior_objections: Sequence[Mapping[str, Any]] = (),
 ) -> Card:
     payload: Mapping[str, Any] = ask.payload
     trust = payload.get("_trust") or {}
@@ -134,6 +141,7 @@ def build_card(
         Field("escalations", _escalation_history(transitions)),
         Field("prior asks", _prior_asks(prior_asks)),
         Field("similar cases", _similar_cases(similar_cases)),
+        Field("prior objection", recall_line(prior_objections)),
         Field("session tail", _session_tail(context.get("session_tail")), untrusted=True),
         Field("flags", _text(", ".join(str(flag) for flag in context.get("flags") or []))),
         Field(
@@ -158,11 +166,14 @@ def build_card(
         status=effective_status.value,
         ttl_seconds=remaining,
         fingerprint=_fingerprint(ask.action_identity),
-        blocks=(
-            Block("ACTION", action_fields),
-            Block("POLICY", policy_fields),
-            Block("BLAST RADIUS", blast_fields),
-            Block("SESSION SO FAR", session_fields),
+        blocks=_with_choices(
+            ask,
+            (
+                Block("ACTION", action_fields),
+                Block("POLICY", policy_fields),
+                Block("BLAST RADIUS", blast_fields),
+                Block("SESSION SO FAR", session_fields),
+            ),
         ),
         redactions=redactions,
         flags=tuple(str(flag) for flag in context.get("flags") or []),
@@ -232,6 +243,20 @@ def _surface_footer(surface: str, card: Card) -> list[str]:
 
 
 # --------------------------------------------------------------------------- helpers
+
+
+def _with_choices(
+    ask: AskRecord, blocks: tuple[Block, ...]
+) -> tuple[Block, ...]:
+    alternatives = alternatives_for(ask)
+    fields: tuple[Field, ...]
+    if alternatives:
+        fields = tuple(Field("choice", render_alternative(item)) for item in alternatives)
+    else:
+        fields = tuple(Field("suggestion", item) for item in suggestions_for(ask))
+    if not fields:
+        return blocks
+    return (Block("CHOICES", fields), *blocks)
 
 
 def _readiness_banner(readiness: object) -> str | None:

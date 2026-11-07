@@ -93,6 +93,7 @@ signatures are `401`.
 | `required_evidence` | list[str] | `[]` | evidence dimensions the class demands (`diff`, `logs`, …) |
 | `evidence_max_age_seconds` | int | `86400` | older evidence renders `stale` |
 | `on_contradiction` | `deliver` \| `reject` | `deliver` | reject contradicting asks at ingest |
+| `edit_schema` | list[str] | `[]` | argument fields an approver may edit (M27); empty = no edits |
 | `require_signed_producer` | bool | `false` | reject unsigned producers for this class (makes the self-review anchor enforceable) |
 
 ```toml

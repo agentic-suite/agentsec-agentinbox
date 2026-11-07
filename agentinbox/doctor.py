@@ -289,7 +289,8 @@ def render_explain(report: Report, home: Path, config_path: Path) -> str | None:
             f"readiness_min_score={ask_class.readiness_min_score} "
             f"required_evidence={list(ask_class.required_evidence)} "
             f"evidence_max_age_seconds={ask_class.evidence_max_age_seconds} "
-            f"on_contradiction={ask_class.on_contradiction}"
+            f"on_contradiction={ask_class.on_contradiction} "
+            f"edit_schema={list(ask_class.edit_schema)}"
         )
     lines.append(
         f"  throttle: burst={config.throttle.per_agent_burst} "

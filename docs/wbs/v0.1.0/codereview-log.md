@@ -219,3 +219,17 @@ regression test):
 | 2026-11-07 | M26 | 26.4 | Freshness could be inferred from receipt time | High | Only producer-pinned `at`/`fetched_at` are used; no basis → `unknown freshness`; mixed is explicit |
 | 2026-11-07 | M26 | 26.5 | Similar cases could read as a recommendation | High | Rendered as `precedent only` with outcome/fields, never "approve"; limited to 3 |
 | 2026-11-07 | M26 | 26.6 | Enforcing readiness without a threshold would use a silent default | Medium | Load error names the class; `doctor --explain` prints the effective settings |
+
+## M27 constrained allows review (2026-11-07)
+
+| Date | M | Item | Finding | Severity | Resolution |
+|---|---|---|---|---|---|
+| 2026-11-07 | M27 | 27.1 | A constraint offered without an enforcer would be unenforceable | High | Selectable only when `enforcer` is declared **and** the fingerprint matches; otherwise advice-only and unpickable |
+| 2026-11-07 | M27 | 27.1 | A tampered fingerprint could bind a different action | High | The fingerprint is recomputed from canonical `{id,label,enforcer,arguments,constraints}` and must match |
+| 2026-11-07 | M27 | 27.2 | Suggestions could be mistaken for choices | Medium | Rendered with `suggestion` and never recorded; unpicked leaves zero constraints (test) |
+| 2026-11-07 | M27 | 27.3 | A deny with no guidance forces prose parsing | High | Structured packet (invariant, missing evidence, scope, safe alternative, retry worthiness, tier) on resolve + audit |
+| 2026-11-07 | M27 | 27.3 | Blind retries on a pointless denial | Medium | `retry_worthiness=pointless` for red readiness or hard objections |
+| 2026-11-07 | M27 | 27.4 | An edit could silently approve a different action than the one reviewed | High | Edits are schema-bound, re-canonicalized, re-fingerprinted, and both identities are recorded |
+| 2026-11-07 | M27 | 27.4 | Edits on a deny or both choice types at once | Medium | Mutually exclusive; refused with `conflicting_choice` |
+| 2026-11-07 | M27 | 27.5 | Extending `status` would break old clients | High | `status` stays allow/deny/pending; `decision`/`constraints`/`edits`/`repair` are additive |
+| 2026-11-07 | M27 | 27.5 | Recall could recommend an outcome | Medium | Prior denials render as `prior objection … denied once`, evidence only |

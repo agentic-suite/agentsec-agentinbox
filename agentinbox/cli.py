@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any, NoReturn
 
 from agentinbox import __version__
+from agentinbox.alternatives import prior_objections
 from agentinbox.answers import AnswerVerifier
 from agentinbox.api import start_api
 from agentinbox.audit import (
@@ -226,6 +227,11 @@ def _answer(args: argparse.Namespace) -> int:
         return int(ExitCode.DENIED)
 
     decision = "approve" if args.approve else "deny" if args.deny else None
+    try:
+        edits = _parse_edits(args.edit)
+    except ValueError as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.USAGE)
     channel = TerminalChannel(
         config=config,
         output=sys.stdout,
@@ -240,6 +246,8 @@ def _answer(args: argparse.Namespace) -> int:
             decision=decision,
             reason=args.reason,
             as_name=args.as_name,
+            alternative_id=args.alternative,
+            edits=edits,
         )
     except ChannelError as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)
@@ -465,6 +473,7 @@ def _gate(args: argparse.Namespace) -> int:
             transitions=store.transitions_for(ask.ask_id),
             prior_asks=prior_asks(store, ask),
             similar_cases=similar_cases(store, ask),
+            prior_objections=prior_objections(store, ask),
         )
         sys.stdout.write(card.render("ci"))
     if result.code is ExitCode.UNAVAILABLE:
@@ -722,6 +731,18 @@ def _export(args: argparse.Namespace) -> int:
     return int(ExitCode.APPROVED)
 
 
+def _parse_edits(raw: list[str]) -> dict[str, object] | None:
+    if not raw:
+        return None
+    edits: dict[str, object] = {}
+    for item in raw:
+        key, separator, value = item.partition("=")
+        if not separator or not key:
+            raise ValueError(f"--edit must be KEY=VALUE (got {item!r})")
+        edits[key] = value
+    return edits
+
+
 def _report(args: argparse.Namespace) -> int:
     try:
         _config, store = _runtime(args)
@@ -907,6 +928,16 @@ def build_parser() -> argparse.ArgumentParser:
             choice.add_argument("--deny", action="store_true")
             sub.add_argument("--reason")
             sub.add_argument("--as", dest="as_name", metavar="NAME")
+            sub.add_argument(
+                "--alternative", metavar="ID", help="allow a producer-declared alternative"
+            )
+            sub.add_argument(
+                "--edit",
+                action="append",
+                default=[],
+                metavar="KEY=VALUE",
+                help="edit an argument field allowed by the class (repeatable)",
+            )
         if command == "ask":
             source = sub.add_mutually_exclusive_group(required=True)
             source.add_argument("--file", metavar="PATH", help="an ask/1.0 JSON file")

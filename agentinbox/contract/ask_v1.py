@@ -36,7 +36,7 @@ _REQUIRED = (
     "expires_at",
     "context",
 )
-_KNOWN = frozenset(_REQUIRED) | {"ask_id", "traceparent"}
+_KNOWN = frozenset(_REQUIRED) | {"ask_id", "traceparent", "alternatives"}
 
 
 class ContractError(Exception):
@@ -92,6 +92,7 @@ class AskContract:
     context: Mapping[str, Any]
     ask_id: str | None = None
     traceparent: str | None = None
+    alternatives: tuple[Mapping[str, Any], ...] = ()
     extra: Mapping[str, Any] = None  # type: ignore[assignment]
 
     def to_dict(self) -> dict[str, Any]:
@@ -117,6 +118,8 @@ class AskContract:
             data["ask_id"] = self.ask_id
         if self.traceparent is not None:
             data["traceparent"] = self.traceparent
+        if self.alternatives:
+            data["alternatives"] = [dict(item) for item in self.alternatives]
         for key, value in self.extra.items():
             data.setdefault(key, value)
         return data
@@ -180,8 +183,68 @@ def parse_ask(raw: Mapping[str, Any]) -> AskContract:
         context=_mapping(raw, "context"),
         ask_id=_optional_string(raw, "ask_id"),
         traceparent=_optional_string(raw, "traceparent"),
+        alternatives=_alternatives(raw.get("alternatives")),
         extra={key: value for key, value in raw.items() if key not in _KNOWN},
     )
+
+
+def _alternatives(raw: Any) -> tuple[Mapping[str, Any], ...]:
+    """Validate the optional ``alternatives[]``; malformed entries are contract errors."""
+    if raw is None:
+        return ()
+    if not isinstance(raw, list) or len(raw) > 5:
+        raise ContractError("alternatives", "must be a list of at most 5 entries")
+    normalized: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for index, item in enumerate(raw):
+        if not isinstance(item, Mapping):
+            raise ContractError(f"alternatives[{index}]", "must be an object")
+        identifier = item.get("id")
+        label = item.get("label")
+        if not isinstance(identifier, str) or not identifier:
+            raise ContractError(f"alternatives[{index}].id", "must be a non-empty string")
+        if identifier in seen:
+            raise ContractError(f"alternatives[{index}].id", "must be unique")
+        seen.add(identifier)
+        if not isinstance(label, str) or not label:
+            raise ContractError(f"alternatives[{index}].label", "must be a non-empty string")
+        enforcer = item.get("enforcer")
+        if enforcer is not None and (not isinstance(enforcer, str) or not enforcer):
+            raise ContractError(f"alternatives[{index}].enforcer", "must be a non-empty string")
+        fingerprint = item.get("fingerprint")
+        if fingerprint is not None and not isinstance(fingerprint, str):
+            raise ContractError(f"alternatives[{index}].fingerprint", "must be a string")
+        constraints = item.get("constraints") or []
+        if not isinstance(constraints, list):
+            raise ContractError(f"alternatives[{index}].constraints", "must be a list")
+        for cindex, constraint in enumerate(constraints):
+            if not isinstance(constraint, Mapping):
+                raise ContractError(
+                    f"alternatives[{index}].constraints[{cindex}]", "must be an object"
+                )
+            if not isinstance(constraint.get("id"), str) or not constraint.get("id"):
+                raise ContractError(
+                    f"alternatives[{index}].constraints[{cindex}].id",
+                    "must be a non-empty string",
+                )
+            if not isinstance(constraint.get("enforcer_ref"), str) or not constraint.get(
+                "enforcer_ref"
+            ):
+                raise ContractError(
+                    f"alternatives[{index}].constraints[{cindex}].enforcer_ref",
+                    "must name the enforcer binding",
+                )
+        normalized.append(
+            {
+                "id": identifier,
+                "label": label,
+                "enforcer": enforcer,
+                "fingerprint": fingerprint,
+                "arguments": dict(item.get("arguments") or {}),
+                "constraints": [dict(constraint) for constraint in constraints],
+            }
+        )
+    return tuple(normalized)
 
 
 def _string(raw: Mapping[str, Any], key: str, *, field: str | None = None) -> str:

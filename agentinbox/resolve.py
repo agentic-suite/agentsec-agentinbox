@@ -7,7 +7,7 @@ never drift from agentpolicy's vocabulary.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -48,12 +48,23 @@ class ResolveResult:
     answered_by: str | None = None
     rescope_hint: str | None = None
     retry_after: int | None = None
+    #: Additive decision vocabulary (M27); ``status`` stays allow/deny/pending for old clients.
+    decision: str | None = None
+    constraints: tuple[Mapping[str, Any], ...] = ()
+    edits: Mapping[str, Any] | None = None
+    alternative_fingerprint: str | None = None
+    repair: Mapping[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "contract": RESOLVE_CONTRACT,
             "ask_id": self.ask_id,
             "status": self.status,
+            "decision": self.decision or self.status,
+            "constraints": [dict(item) for item in self.constraints],
+            "edits": None if self.edits is None else dict(self.edits),
+            "alternative_fingerprint": self.alternative_fingerprint,
+            "repair": None if self.repair is None else dict(self.repair),
             "reason_code": self.reason_code,
             "explanation": self.explanation,
             "retryable": self.retryable,
@@ -121,6 +132,18 @@ def resolve_ask(
     answered_by = winner.principal if winner is not None else None
 
     if status is AskStatus.APPROVED:
+        detail: Mapping[str, Any] = (
+            {} if winner is None or winner.detail is None else winner.detail
+        )
+        constraints = tuple(
+            item for item in (detail.get("constraints") or []) if isinstance(item, Mapping)
+        )
+        edits = detail.get("edits")
+        decision = "allow"
+        if constraints:
+            decision = "allow_with_constraints"
+        if isinstance(edits, Mapping):
+            decision = "allow_with_edits"
         return ResolveResult(
             ask_id=ask.ask_id,
             status="allow",
@@ -129,6 +152,14 @@ def resolve_ask(
             retryable=False,
             action_identity=ask.action_identity,
             answered_by=answered_by,
+            decision=decision,
+            constraints=constraints,
+            edits=edits if isinstance(edits, Mapping) else None,
+            alternative_fingerprint=(
+                None
+                if detail.get("alternative_fingerprint") is None
+                else str(detail.get("alternative_fingerprint"))
+            ),
         )
     if status is AskStatus.FLOOD_DENIED:
         return ResolveResult(
@@ -150,6 +181,8 @@ def resolve_ask(
             action_identity=ask.action_identity,
         )
     if status is AskStatus.EXPIRED:
+        hint = rescope_hint(ask, config)
+        readiness = ask.payload.get("_readiness") or {}
         return ResolveResult(
             ask_id=ask.ask_id,
             status="deny",
@@ -157,8 +190,21 @@ def resolve_ask(
             explanation="no answer before expiry",
             retryable=False,
             action_identity=ask.action_identity,
-            rescope_hint=rescope_hint(ask, config),
+            rescope_hint=hint,
+            decision="deny",
+            repair={
+                "violated_invariant": "human_gate_timeout",
+                "missing_evidence": list(readiness.get("missing") or []),
+                "suggested_scope": hint,
+                "safe_alternative": None,
+                "retry_worthiness": "conditional",
+                "required_tier": ask.tier,
+            },
         )
+    winner_detail: Mapping[str, Any] = (
+        {} if winner is None or winner.detail is None else winner.detail
+    )
+    repair = winner_detail.get("repair")
     return ResolveResult(
         ask_id=ask.ask_id,
         status="deny",
@@ -170,6 +216,8 @@ def resolve_ask(
         rescope_hint=rescope_hint(
             ask, config, None if winner is None else winner.reason
         ),
+        decision="deny",
+        repair=repair if isinstance(repair, Mapping) else None,
     )
 
 

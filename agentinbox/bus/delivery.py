@@ -7,6 +7,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from agentinbox.alternatives import prior_objections
 from agentinbox.bus.base import Job, JobKind
 from agentinbox.card import build_card
 from agentinbox.lifecycle import IllegalTransition, UnknownAsk, observe
@@ -62,6 +63,7 @@ class DeliveryWiring:
             transitions=self.store.transitions_for(ask.ask_id),
             prior_asks=prior_asks(self.store, ask),
             similar_cases=similar_cases(self.store, ask),
+            prior_objections=prior_objections(self.store, ask),
         )
         for channel in self.channels:
             if self._attempt(job, ask, channel, card):

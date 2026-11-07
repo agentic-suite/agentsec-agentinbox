@@ -81,6 +81,16 @@ today** (they run in CI), not planned:
 | **R83/R85** banner + precedent | banner above ACTION, up to 3 prior cases labelled precedent | `tests/readiness/test_banner.py` |
 | **R86** class config | opt-in enforcement, load error without a threshold, `doctor --explain` | `tests/readiness/test_class_config.py` |
 
+## M27 constrained allows & denial repair (shipped tests, v0.1.0)
+
+| Req | What M27 ships | Acceptance test |
+|---|---|---|
+| **R87/R93** | alternatives with canonical fingerprints; selectable only with an enforcer binding | `tests/constraints/test_alternatives.py` |
+| **R88** | class-generic suggestions, labelled, never recorded unless picked | `tests/constraints/test_suggestions.py` |
+| **R89** | deny repair packet on resolve + audit (`pointless` suppresses retries) | `tests/constraints/test_repair.py` |
+| **R90/R91** | edit schema, re-fingerprinted approval, provenance | `tests/constraints/test_edits.py` |
+| **R92** | repair recall on resubmission; additive resolve vocabulary | `tests/constraints/test_recall.py`, `test_resolve_vocab.py` |
+
 ## Forward slate traceability (R13–R47, PRDs 24–27)
 
 The product-depth requirements are traced **inside their own PRDs** (each carries a

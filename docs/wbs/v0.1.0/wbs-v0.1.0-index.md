@@ -312,6 +312,16 @@ every M26–M31 milestone carries its own gate. The 32.7 regression baseline bec
   asks as `precedent only`. `doctor --explain` prints the effective readiness settings. Next: **M27**
   (`27.D0` constrained-allow design).
 
+- **2026-11-07 — M27 Constrained allows & denial repair closed.** Issues #318–#328. Commit `TBD`.
+  **Gate:** 862 tests pass · coverage **95.03%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  Producer alternatives are selectable only with a declared enforcer binding and a matching canonical
+  fingerprint; otherwise advice-only. Choosing one yields `decision=allow_with_constraints`; class
+  `edit_schema` allows re-canonicalized, re-fingerprinted edits with original/edited identities recorded.
+  Denials carry a repair packet (invariant, missing evidence, suggested scope, safe alternative,
+  retry worthiness, tier) on the resolve and in evidence; resubmissions show prior objections. `status`
+  stays allow/deny for old clients; `decision`/`constraints`/`edits`/`repair` are additive. Next: **M28**
+  (`28.D0` bundles/handoff design).
+
 ## PRD coverage matrix (every doc 00–30)
 
 | PRD | Topic | Milestone(s) |

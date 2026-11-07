@@ -16,13 +16,17 @@ messages stay uniform so a caller cannot probe claim existence.
 from __future__ import annotations
 
 import threading
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
+from agentinbox.alternatives import constraints_of, select_alternative
 from agentinbox.claims import secret_matches
 from agentinbox.config import ClassConfig, Config
+from agentinbox.contract import compute_action_identity
 from agentinbox.lifecycle import observe
+from agentinbox.repair import repair_packet
 from agentinbox.store import (
     AskRecord,
     AskStatus,
@@ -67,6 +71,8 @@ class AnswerRequest:
     reason: str | None = None
     typed_confirmation: str | None = None
     assumed: bool = False
+    alternative_id: str | None = None
+    edits: Mapping[str, Any] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,6 +174,49 @@ class AnswerVerifier:
                 self._reject(ask, request, now, "confirmation", "typed confirmation required")
                 raise AnswerRejected("confirmation", "typed confirmation of the action is required")
 
+        # --- constrained allow / edits --------------------------------------
+        if request.alternative_id and request.edits:
+            raise AnswerRejected("conflicting_choice", "choose one alternative or one edit set")
+        if request.alternative_id and request.decision != "approve":
+            raise AnswerRejected("conflicting_choice", "an alternative can only be allowed")
+        alternative = None
+        chosen_constraints: tuple[Mapping[str, Any], ...] = ()
+        alternative_fingerprint: str | None = None
+        if request.alternative_id:
+            try:
+                alternative = select_alternative(ask, request.alternative_id)
+            except KeyError as exc:
+                cause = str(exc.args[0])
+                self._reject(ask, request, now, cause, "alternative is not selectable")
+                raise AnswerRejected(cause, "alternative is not selectable") from None
+            chosen_constraints = constraints_of(alternative)
+            alternative_fingerprint = str(alternative.get("fingerprint"))
+
+        edits: dict[str, Any] | None = None
+        original_identity: str | None = None
+        edited_identity: str | None = None
+        if request.edits:
+            editable = set(ask_class.edit_schema)
+            if not editable:
+                self._reject(ask, request, now, "edit_schema", "class does not allow edits")
+                raise AnswerRejected("edit_schema", "class does not allow edits")
+            invalid = sorted(set(request.edits) - editable)
+            if invalid:
+                self._reject(
+                    ask, request, now, "edit_schema", f"field not editable: {invalid[0]}"
+                )
+                raise AnswerRejected("edit_schema", f"field not editable: {invalid[0]}")
+            if request.decision != "approve":
+                raise AnswerRejected("conflicting_choice", "edits only apply to an allow")
+            merged = {**dict(ask.payload.get("arguments") or {}), **dict(request.edits)}
+            edited_identity = compute_action_identity(
+                tool=str(ask.payload.get("tool", "")),
+                action=str(ask.payload.get("action", "")),
+                arguments=merged,
+            )
+            original_identity = ask.action_identity
+            edits = dict(request.edits)
+
         # --- first-wins commit ---------------------------------------------
         target = AskStatus.APPROVED if request.decision == "approve" else AskStatus.DENIED
         won = self.store.cas_status(
@@ -184,10 +233,16 @@ class AnswerVerifier:
                 channel=request.channel,
                 claim_id=request.claim_id,
                 reason=request.reason,
-                detail={
-                    "decision": request.decision,
-                    "assumed_principal": request.assumed,
-                },
+                detail=self._answer_detail(
+                    ask,
+                    request,
+                    alternative=alternative,
+                    constraints=chosen_constraints,
+                    alternative_fingerprint=alternative_fingerprint,
+                    edits=edits,
+                    original_identity=original_identity,
+                    edited_identity=edited_identity,
+                ),
             ),
         )
         if not won:
@@ -203,6 +258,36 @@ class AnswerVerifier:
         return AnswerResult(ask=resolved, winner=True, claim_id=request.claim_id)
 
     # ------------------------------------------------------------------ helpers
+
+    def _answer_detail(
+        self,
+        ask: AskRecord,
+        request: AnswerRequest,
+        *,
+        alternative: Mapping[str, Any] | None,
+        constraints: Sequence[Mapping[str, Any]],
+        alternative_fingerprint: str | None,
+        edits: Mapping[str, Any] | None,
+        original_identity: str | None,
+        edited_identity: str | None,
+    ) -> dict[str, Any]:
+        detail: dict[str, Any] = {
+            "decision": request.decision,
+            "assumed_principal": request.assumed,
+        }
+        if alternative is not None:
+            detail["alternative"] = alternative.get("id")
+            detail["alternative_fingerprint"] = alternative_fingerprint
+            detail["constraints"] = [dict(item) for item in constraints]
+        if edits:
+            detail["edits"] = dict(edits)
+            detail["original_action_identity"] = original_identity
+            detail["edited_action_identity"] = edited_identity
+        if request.decision == "deny":
+            detail["repair"] = repair_packet(
+                ask, reason=request.reason, config=self.config
+            )
+        return detail
 
     def _find_claim(self, claim_id: str):  # type: ignore[no-untyped-def]
         return self.store.get_claim(claim_id)

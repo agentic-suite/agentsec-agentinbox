@@ -190,6 +190,26 @@ def ingest(
     payload = contract.to_dict()
     payload["arguments"] = arguments
     payload["context"] = context
+    redacted_alternatives: list[dict[str, Any]] = []
+    for index, alternative in enumerate(payload.get("alternatives") or []):
+        alt_arguments, alt_receipts = redact_value(
+            dict(alternative.get("arguments") or {}),
+            f"alternatives[{index}].arguments",
+        )
+        alt_constraints: list[dict[str, Any]] = []
+        for cindex, constraint in enumerate(alternative.get("constraints") or []):
+            params, param_receipts = redact_value(
+                dict(constraint.get("params") or {}),
+                f"alternatives[{index}].constraints[{cindex}].params",
+            )
+            alt_constraints.append({**dict(constraint), "params": params})
+            receipts += param_receipts
+        redacted_alternatives.append(
+            {**dict(alternative), "arguments": alt_arguments, "constraints": alt_constraints}
+        )
+        receipts += alt_receipts
+    if redacted_alternatives:
+        payload["alternatives"] = redacted_alternatives
     for key, value in extra.items():
         payload[key] = value
     payload["_trust"] = trust.to_dict()
