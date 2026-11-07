@@ -1,0 +1,9 @@
+{
+  "agentinbox_version": "0.1.0.dev0",
+  "agentpolicy_version": "0.1.0",
+  "machine": "arm64",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.14",
+  "session_id": "sess_wave0_demo",
+  "user": "deghosal"
+}

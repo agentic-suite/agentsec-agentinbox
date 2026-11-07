@@ -19,7 +19,7 @@ honest compatibility matrix, the field evidence, and the operational runbooks.
 | Expansion runbooks | [RUNBOOKS.md](RUNBOOKS.md) | published |
 | Security audit + risk re-grade | `SECURITY_AUDIT.md` | pending M33 #117 |
 | Release notes + gap list | `RELEASE_NOTES.md` | pending M33 #114 |
-| Wave-0 demo evidence | `demo/` | pending M33 #116 |
+| Wave-0 demo evidence | [demo/](demo/transcript.txt) | published |
 | SBOM, signatures, provenance, Scorecard | release artifacts | pending M33 #395 |
 
 ## Start here

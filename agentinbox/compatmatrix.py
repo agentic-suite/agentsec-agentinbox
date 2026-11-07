@@ -46,9 +46,11 @@ ROWS: tuple[CompatRow, ...] = (
     CompatRow(
         "Producer",
         "agentpolicy reference adapter",
-        "conformance-tested",
-        "tests/adapters/test_agentpolicy.py; docs/adapters/producer-guide.md",
-        "Wave-0 demo (#116) will add field evidence; label upgrades only after it runs",
+        "field-tested",
+        "docs/release/v0.1.0/demo/transcript.txt; "
+        "docs/release/v0.1.0/demo/environment.json; "
+        "tests/adapters/test_agentpolicy.py",
+        "Wave-0 demo: production-write escalate -> ask -> human deny -> events -> export/verify",
     ),
     CompatRow(
         "Coding agent",

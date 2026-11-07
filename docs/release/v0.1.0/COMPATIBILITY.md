@@ -11,7 +11,7 @@ Every row carries exactly one PRD 19 label: **field-tested**, **conformance-test
 |---|---|---|---|---|
 | Coding agent | Claude Code | **documented** | docs/adapters/harness-recipes.md; docs/release/v0.1.0/evidence/harness/FT-T1-CLAUDE/ | 11/11 LLM pairs captured; end-to-end s15 field run removed, so not field-tested |
 | Coding agent | Codex CLI | **documented** | docs/adapters/harness-recipes.md; docs/release/v0.1.0/evidence/harness/FT-T1-CODEX/ | 11/11 LLM pairs captured; end-to-end s15 field run removed, so not field-tested |
-| Producer | agentpolicy reference adapter | **conformance-tested** | tests/adapters/test_agentpolicy.py; docs/adapters/producer-guide.md | Wave-0 demo (#116) will add field evidence; label upgrades only after it runs |
+| Producer | agentpolicy reference adapter | **field-tested** | docs/release/v0.1.0/demo/transcript.txt; docs/release/v0.1.0/demo/environment.json; tests/adapters/test_agentpolicy.py | Wave-0 demo: production-write escalate -> ask -> human deny -> events -> export/verify |
 | Coding agent | GitHub Copilot agent mode | **documented** | docs/adapters/producer-guide.md | Reached through lower-layer agentgate/agentseatbelt; no dedicated adapter |
 | Coding agent | Cursor | **not-supported** | docs/prd/19-harness-compatibility.md | No headless evidence-capturing hook on the v0.1.0 field box |
 | Coding agent | Gemini CLI | **not-supported** | docs/prd/19-harness-compatibility.md | Approval modes exist but the field surface is unstable; v0.1.x target |
