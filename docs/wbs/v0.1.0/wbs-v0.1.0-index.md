@@ -343,7 +343,7 @@ every M26–M31 milestone carries its own gate. The 32.7 regression baseline bec
   ask→policy→decision→execution→divergence; per-class closure SLA surfaces `outcome-pending-past-sla`
   in doctor without auto-closing. Next: **M30** (`30.D0` grants/compression design).
 
-- **2026-11-07 — M30 Repetitive approvals, grants & compression closed.** Issues #353–#364. Commit `TBD`.
+- **2026-11-07 — M30 Repetitive approvals, grants & compression closed.** Issues #353–#364. Commit `21198dd`.
   **Gate:** 915 tests pass · coverage **95.11%** · `ruff` clean · `mypy --strict` clean.
   Repeated materially-identical asks render as one compressed view with every row and no group decision;
   exports and the chain are unchanged. Class/session windows are owner+reason audited with `max_uses`
