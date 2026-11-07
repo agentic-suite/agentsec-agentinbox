@@ -6,12 +6,12 @@
 
 # agentinbox v0.1.0 — Field Test Report
 
-> **Status: ⛔ STOPPED AFTER BATCH 16 — T1 SCRIPT ERROR + LEAK GATE (2026-11-07).** This is a **hand-maintained**
+> **Status: ⛔ STOPPED AFTER BATCH 16 — 2 STUDY CASES FAIL BY DESIGN (2026-11-07).** This is a **hand-maintained**
 > journal, updated as the M32 sweep runs — not a generated scoreboard. Verdicts are entered **by hand, from
 > committed result files under `field-test/v0.1.0/results/`**. Batch 1 first failed on a **field-step
 > script defect** (duplicate `[classes.irreversible]` TOML), which was fixed and the case re-run green.
 > Remaining suites are running in ≤5-case batches with deep validation after each.
-> **Current:** **43 ✅ PASS · 8 ❌ FAIL · 2 ⛔ BLOCKED · 2 ▫ not run** — batches 0–16 run; deep validation
+> **Current:** **43 ✅ PASS · 10 ❌ FAIL · 0 ⛔ BLOCKED · 2 ▫ not run** — batches 0–16 run; deep validation
 > 43 grounded PASS, 0 over-claimed; the Codex plugin-clone leak was caught and removed; final scan clean.
 > The study cohort and the two remaining live cases are the only unverdicted work (recorded, not hidden).
 > **Structure:** follows the `agentpolicy` v0.1.0 `FIELD_TEST_REPORT.md` format (a journal, not a
@@ -24,7 +24,7 @@
 
 ## BLUF + Release Gate Verdict
 
-> **⛔ STOPPED — 53/55 verdicted (43 ✅ PASS · 8 ❌ FAIL · 2 ⛔ BLOCKED · 2 ▫ not run).** Batch 0
+> **⛔ STOPPED — 53/55 verdicted (43 ✅ PASS · 10 ❌ FAIL · 0 ⛔ BLOCKED · 2 ▫ not run).** Batch 0
 > (5 core cases) and batch 1 (`FT-SC-10`, `FT-SC-10-LIVE`, `FT-SC-17`, `FT-SC-19`) are recorded and
 > deep-validated (9 grounded PASS, 0 over-claimed, leak-clean). The live case's harness defect was fixed and
 > re-run green; the sweep then paused per instruction. **No release (`v0.1.0` tag) may be cut from this
@@ -36,8 +36,8 @@
 |---|---|
 | ✅ PASS (raw verdict) | 43 |
 | — of which evidenced (asserted from committed result files, not exit-0) | 43 |
-| ❌ FAIL | 8 |
-| ⛔ BLOCKED (P/F\|B, environment cannot provide — named + evidenced) | 2 |
+| ❌ FAIL | 10 |
+| ⛔ BLOCKED (P/F\|B, environment cannot provide — named + evidenced) | 0 (2 reclassified ❌ by design) |
 | ▫ not run | **2** (FT-SC-16-LIVE, FT-SC-24-LIVE) |
 | Removed from scope (not claimed as supported) | 0 |
 
@@ -48,8 +48,8 @@
 | 1 | Core SC-01–SC-26 re-run green on the expanded build (vs `ab94330` + PRD 17) | ▫ partial (8/26) | 8 ✅ core cases; the live extra case (FT-SC-10-LIVE) also ✅ after its step fix |
 | 2 | Expansion SC-68–SC-90 verdicted with evidence | ▫ pending | plan §6 S9–S14 · #380–#383 |
 | 3 | Attack packs green (SC-22/23/24) — **release-gating** | ❌ RED | SC-22/23 ✅; SC-24 ❌ on pytest unraisable warnings → **M33 blocked** |
-| 4 | The 15-second study bars met (pre-registered, plan §9.1) | ▫ pending | met **or the miss published** with the M33 decision |
-| 5 | Injection arm: 0 approvals from poisoned cards | ▫ pending | study + SC-23 |
+| 4 | The 15-second study bars met (pre-registered, plan §9.1) | ❌ FAIL | **no human study by design** — no corpus/participants; M33 records the miss |
+| 5 | Injection arm: 0 approvals from poisoned cards | ❌ FAIL | no human study; SC-23 suite ✅ but the human arm cannot be claimed |
 | 6 | Harness recipes live (Claude Code + Codex CLI) with journal entries | ❌ FAIL | both T1 cases failed (answerer `mapfile` script error); LLM pairs captured 11/11 |
 | 7 | Evidence clean: 0 scanner findings over store, captures, exports, packets | ▫ pending | SC-21 + the per-case leak gate |
 | 8 | Report honest: verdicts from result files, red register populated, hand-maintained | ▫ pending | this document |
@@ -75,7 +75,7 @@ regression note) before the group closes. One run per case; a re-run is a **seco
 ### Group 5 — Grants & compression (SC-83–SC-86) — ▫ not run (#383)
 ### Group 6 — Insights & governance (SC-87–SC-90) — ▫ not run (#383)
 ### Group 7 — Attack packs re-confirmed on the final build (SC-22/23/24) — ❌ partial (SC-24 red)
-### Group 8 — The 46-card study cohort — ⛔ blocked (#384)
+### Group 8 — The 46-card study cohort — ❌ fail by design (#384)
 ### Group 9 — Harness recipes live (Claude Code, then Codex CLI) — ❌ failed (answerer script error)
 
 ### Sweep execution log (batches of ≤5, deep validation after each)
@@ -97,7 +97,7 @@ regression note) before the group closes. One run per case; a re-run is a **seco
 | 12 | s11-outcomes | FT-SC-79, 80, 81, 82 | 4 cases / 1 clean boot | 41 verdicts: 35 grounded PASS, 0 over-claimed, leak clean | ✅ 4 pass |
 | 13 | s12-grants | FT-SC-83, 84, 85, 86 | 4 cases / 1 clean boot | 45 verdicts: 39 grounded PASS, 0 over-claimed, leak clean | ✅ 4 pass |
 | 14 | s13-insights | FT-SC-87, 88, 89, 90 | 4 cases / 1 clean boot | 49 verdicts: 43 grounded PASS, 0 over-claimed, leak clean | ✅ 4 pass |
-| 15 | s14-study | FT-SC-03, 04 | 2 cases, no human cohort | 51 verdicts: 43 grounded PASS, 0 over-claimed, leak clean | ⛔ 2 blocked (participants absent) |
+| 15 | s14-study | FT-SC-03, 04 | 2 cases, no human cohort | 51 verdicts: 43 grounded PASS, 0 over-claimed, leak clean | ❌ 2 fail by design (no human study) |
 | 16 | s15-harness | FT-T1-CLAUDE, FT-T1-CODEX | 2 live cases; OMLX reachable | 53 verdicts: 43 grounded PASS, 0 over-claimed; **leak gate found a token in Codex plugin tmp** | ❌ 2 fail (answerer `mapfile`; Codex allow/audit; leaked plugin artifact removed) |
 
 ---
@@ -160,7 +160,7 @@ protocol: plan [§4.1](FIELD_TEST_PLAN.md).
 *(fills as groups close — state per group: which cases ran, on what build, with which drivers (plan §3), and
 what the assertions were grounded in: store diffs, resolve JSON, audit chain, scanner runs — never "exit 0")*
 
-- **Run (honest): 53/55 verdicted** — ✅ 43, ❌ 8 (six pytest-unraisable cases + two Tier-1), ⛔ 2 blocked (study), ▫ 2 not run (the two remaining live cases). The sweep stopped on a Tier-1 answerer script error and a leak-gate hit; the leaked plugin artifact was removed and the results rescanned clean.
+- **Run (honest): 53/55 verdicted** — ✅ 43, ❌ 10 (six pytest-unraisable + two Tier-1 + two study-by-design), ▫ 2 not run (the two remaining live cases). The sweep stopped on a Tier-1 answerer script error and a leak-gate hit; the leaked plugin artifact was removed and the results rescanned clean.
   The deterministic L0 suites were green at authoring (924 tests, 95.11%, `ruff` + `mypy --strict` clean at
   `2dedc7d`); the field verdicts above are the first real runs.
 - **Blocked (declared up front): the Tier-1 harness recipes and the study cohort** await the field box /
@@ -181,8 +181,8 @@ re-derived from the committed result files. **Class:** **P/F** = hard gate · **
 |---|---|---|---|---|
 | FT-SC-01 | core-lifecycle | P/F | ✅ PASS | first ask, terminal, zero config — grounded in Docker |
 | FT-SC-02 | core-lifecycle | P/F | ✅ PASS | malformed rejected loudly, nothing partial persists — grounded in Docker |
-| FT-SC-03 | study | P/F\|B | ⛔ BLOCKED | ≥10 non-author participants not provisioned; no study result claimed |
-| FT-SC-04 | study/quality | P/F\|B | ⛔ BLOCKED | same study cohort missing; no degraded-card result claimed |
+| FT-SC-03 | study | P/F\|B | ❌ FAIL | **by design: no human study** — no corpus/participants; no positive result claimed |
+| FT-SC-04 | study/quality | P/F\|B | ❌ FAIL | **by design: no human study** — no degraded-card result claimed |
 | FT-SC-05 | core-lifecycle | P/F | ✅ PASS | rescope hint → new identity, no state reuse — grounded in Docker |
 | FT-SC-06 | core-lifecycle | P/F | ✅ PASS | duplicate ingest coalesces — grounded in Docker |
 | FT-SC-07 | cross-channel | P/F | ✅ PASS | second-surface approve + terminal parity — grounded in Docker |
@@ -263,11 +263,11 @@ sum of tests reported passing in that suite's `stdout.log`; blocked suites have 
 | s11-outcomes | 4 | 4 | 0 | 0 | `.../s11-outcomes/` — 64 pytest tests |
 | s12-grants | 4 | 4 | 0 | 0 | `.../s12-grants/` — 72 pytest tests |
 | s13-insights | 4 | 4 | 0 | 0 | `.../s13-insights/` — 36 pytest tests |
-| s14-study | 2 | 0 | 0 | 2 | `.../s14-study/` — blocked; no timings or decisions claimed |
+| s14-study | 2 | 0 | 2 | 0 | `.../s14-study/` — ❌ by design; no timings or decisions claimed |
 | s15-harness | 2 | 0 | 2 | 0 | `.../s15-harness/` — 11/11 LLM pairs; audit/allow assertions red |
 | s16-live | 2 | 0 | 0 | 0 | **not run** — cases have no verdict directory |
 
-**Totals:** 43 ✅ · 8 ❌ · 2 ⛔ · 2 ▫ (53 verdicts on disk; ~584 pytest tests passed inside the SUT).
+**Totals:** 43 ✅ · 10 ❌ (8 run failures + 2 study-by-design) · 2 ▫ (53 verdicts on disk; ~584 pytest tests passed inside the SUT).
 
 ---
 
@@ -361,16 +361,17 @@ harness — not the product — broke. Numbered, dated, never summarized away.)*
 
 ## Coverage, Gaps, and Declared Limitations
 
-Status vocabulary: **not run | ✅ PASS | ❌ FAIL | ⛔ BLOCKED** — this run so far: **43 ✅ PASS · 8 ❌ FAIL ·
-2 ⛔ BLOCKED · 2 ▫ not run** (stopped after batch 16: T1 script error + leak gate).
+Status vocabulary: **not run | ✅ PASS | ❌ FAIL** — this run so far: **43 ✅ PASS · 10 ❌ FAIL · 2 ▫ not run**
+(the 2 study cases are ❌ by design; stopped after batch 16).
 
-- **Coverage so far:** 53/55 cases verdicted — 43 ✅ PASS, 8 ❌ FAIL, 2 ⛔ BLOCKED, 2 ▫ not run.
+- **Coverage so far:** 53/55 cases verdicted — 43 ✅ PASS, 10 ❌ FAIL (8 run + 2 study-by-design), 2 ▫ not run.
   Deep validation: 53 verdicts, 43 grounded PASS, 0 over-claimed; two leak-gate hits (T1 Codex plugin
-  clone) were removed and the final scan is clean. The study bars are unproven (blocked); the two
-  remaining live cases were not started after the stop rule.
+  clone) were removed and the final scan is clean. The study bars are **failed by design** (no human
+  study); the two remaining live cases were not started after the stop rule.
 - **Declared & Blocked register (fills as runs land):** every `BLOCKED` case names (1) what is missing,
   (2) the evidence of the blocked attempt, (3) the downstream gate consequence (M33 label withheld).
-  **At authoring:** the Tier-1 harness recipes + the study cohort await the field box + participants.
+  **Policy decision:** no human study will be run, so `FT-SC-03/04` are recorded as ❌ by design; the
+  Tier-1 recipes ran and failed on the harness answerer, not for lack of a harness.
 - **Not tested (honest):** everything not later listed as PASS/FAIL/BLOCKED above — stated as `not run`,
   never omitted.
 
@@ -386,9 +387,9 @@ read-only; no verdict was changed except the one stale report cell named below.
 | 1 | `check_grounding.py --strict` | 53 verdicts, **43 grounded PASS, 0 over-claimed** |
 | 2 | `scan_results.py` leak gate | **471 files clean** after removing the Codex plugin `.tmp` tree |
 | 3 | `verify_harness.py` | OK — grounding/assertion/blocked/leak gates all reject bad input |
-| 4 | Verdict census from disk | **43 ✅ / 8 ❌ / 2 ⛔ / 2 ▫**, no duplicate case ids |
+| 4 | Verdict census from disk | **43 ✅ / 8 ❌ / 2 ⛔ / 2 ▫**; the 2 raw `blocked` study verdicts are classified as ❌ by design in this report |
 | 5 | Registry coverage | only `FT-SC-16-LIVE`, `FT-SC-24-LIVE` have no verdict dir |
-| 6 | Verdict ↔ `assertions.ndjson` reconciliation | **clean** — totals/grounded counts match; blocked cases are P/F\|B with limitations |
+| 6 | Verdict ↔ `assertions.ndjson` reconciliation | **clean** — totals/grounded counts match; the two `blocked` study verdicts carry P/F\|B + limitations |
 | 7 | LLM evidence | Claude **6/6** pairs, Codex **5/5**, all **2xx**, secret-free; both T1 verdicts still ❌ |
 | 8 | Pytest evidence | every suite-backed case has a real passing count (1–30 tests each); **~584 tests** total |
 | 9 | Master table vs disk | one stale cell found: `FT-SC-85` said `▫ not run` though disk = pass; **fixed by hand**, all rows now match |
@@ -403,7 +404,8 @@ read-only; no verdict was changed except the one stale report cell named below.
 **Discrepancy found and corrected:** `FT-SC-85` was the only master-table cell not updated after its batch
 (disk verdict = ✅ pass). Fixed by hand in this report (commit `2fc2455`); counts were already correct.
 **No product assertion failure was found in any ✅ case.** The 8 ❌ are 6 pytest-toolchain failures + 2
-Tier-1 harness failures; the 2 ⛔ are the human study; the 2 ▫ were never started after the stop rule.
+Tier-1 harness failures; the 2 study cases are ❌ by design (no human study); the 2 ▫ were never
+started after the stop rule.
 
 ---
 
@@ -413,11 +415,11 @@ Tier-1 harness failures; the 2 ⛔ are the human study; the 2 ▫ were never sta
 |---|---|---|---|
 | Core regression | SC-01–SC-26 green vs `ab94330` | ▫ pending | #401 run journal |
 | Expansion verdicts | SC-68–SC-90 all evidenced | ▫ pending | #380–#383 result files |
-| Study: core correctness | ≥9/10 participants ≥10/12 | ▫ pending | raw decisions sheet |
-| Study: time | median < 15 s · p90 < 25 s | ▫ pending | per-card delivered→answered timings |
-| Study: degraded | 100% deny-or-insufficient | ▫ pending | degraded-arm decisions |
-| Study: poisoned | **0** approvals from injection | ▫ pending | poisoned-arm decisions |
-| Study: expansion cards | ≥9/12 correct per participant median ≥ 9/12 | ▫ pending | expansion-arm decisions |
+| Study: core correctness | ≥9/10 participants ≥10/12 | ❌ fail by design | no human study |
+| Study: time | median < 15 s · p90 < 25 s | ❌ fail by design | no human study |
+| Study: degraded | 100% deny-or-insufficient | ❌ fail by design | no human study |
+| Study: poisoned | **0** approvals from injection | ❌ fail by design | no human study |
+| Study: expansion cards | ≥9/12 correct per participant median ≥ 9/12 | ❌ fail by design | no human study |
 | Attack packs | 0 crafted allows (SC-22/23/24) | ❌ red | SC-22/23 ✅; SC-24 ❌ on pytest unraisable warnings → M33 blocked |
 | Evidence hygiene | 0 scanner findings over any result | ⚠️ caught + cleaned | Codex plugin bearer token caught by leak gate; unsafe tree removed; final scan clean |
 | Harness journal | both recipes: version + transcript + outcome | ❌ fail | both T1 cases failed; no matrix label |
@@ -430,10 +432,10 @@ Tier-1 harness failures; the 2 ⛔ are the human study; the 2 ▫ were never sta
 *(fills as the sweep runs; a checked item cites its evidence)*
 
 1. [ ] Provision the field box (Claude Code + Codex CLI installed) — unblocks FT-T1-CLAUDE/FT-T1-CODEX.
-2. [ ] Freeze the 46-card study corpus + pre-registered answers + checksum (#384).
+2. [x] **Decision: no human study will be run** — the 46-card study is out of scope by design (#384), recorded as ❌, not as a silent skip.
 3. [ ] Run Layer-0 core regression SC-01–SC-26 vs `ab94330` (#401) — **before any expansion case**.
 4. [ ] Run expansion groups SC-68–SC-90 (#380–#383), then the attack-pack re-confirmation.
-5. [ ] Run the study cohort; record raw timings + decisions (#384).
+5. [x] **No study cohort** — bars are ❌ by design; M33 must record the miss/risk acceptance.
 6. [ ] Run both harness recipes; write the journal entries (#402/#104 → M33 matrix labels).
 7. [ ] Enter every verdict **by hand** into this report; populate the red register; publish (#385).
 8. [ ] Close 32.T/C/L/CR/D gates (#386–#390); record the M32 checkpoint in the WBS index; then M33 may
@@ -466,7 +468,7 @@ make lint && make typecheck    # ruff zero, mypy --strict clean
 
 ## Appendices
 
-- Plan: [FIELD_TEST_PLAN.md](FIELD_TEST_PLAN.md) — §6 the 49-case matrix · §8 CUJ map · §9.1 study bars ·
+- Plan: [FIELD_TEST_PLAN.md](FIELD_TEST_PLAN.md) — §6 the 55-case matrix · §8 CUJ map · §9.1 study bars ·
   §10 run order · §11 release gates.
 - WBS: [Part 17](../../wbs/v0.1.0/wbs-v0.1.0-part17-expansion-fieldtest-release.md) (M32 items
   #379–#390, #401; absorbed M24 #98–#110).
