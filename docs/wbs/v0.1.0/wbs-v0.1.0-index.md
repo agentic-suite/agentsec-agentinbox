@@ -332,7 +332,7 @@ every M26–M31 milestone carries its own gate. The 32.7 regression baseline bec
   extend. Narratives reconstruct the decision from stored transitions; timelines export with the
   bundle (`bundle/1.0`). Next: **M29** (`29.D0` outcome-closure design).
 
-- **2026-11-07 — M29 Outcome closure & execution proof closed.** Issues #341–#352. Commit `TBD`.
+- **2026-11-07 — M29 Outcome closure & execution proof closed.** Issues #341–#352. Commit `ab2498a`.
   **Gate:** 897 tests pass · coverage **95.06%** · `ruff` clean · `mypy --strict` clean.
   Approved asks close via post-terminal `outcome` observations (`executed/failed/cancelled/rolled_back/
   superseded`); status and decision never change and silence stays `unknown`. Receipts are whitelisted,
