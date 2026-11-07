@@ -83,6 +83,7 @@ def build_card(
     similar_cases: Sequence[Mapping[str, Any]] = (),
     prior_objections: Sequence[Mapping[str, Any]] = (),
     handoff: Mapping[str, Any] | None = None,
+    grant: Mapping[str, Any] | None = None,
 ) -> Card:
     payload: Mapping[str, Any] = ask.payload
     trust = payload.get("_trust") or {}
@@ -175,6 +176,7 @@ def build_card(
                 *(() if _outcome_fields(transitions) is None else (
                     Block("OUTCOME", _outcome_fields(transitions) or ()),
                 )),
+                *(() if grant is None else (Block("GRANT", _grant_fields(grant)),)),
                 Block("POLICY", policy_fields),
                 Block("BLAST RADIUS", blast_fields),
                 Block("SESSION SO FAR", session_fields),
@@ -248,6 +250,17 @@ def _surface_footer(surface: str, card: Card) -> list[str]:
 
 
 # --------------------------------------------------------------------------- helpers
+
+
+def _grant_fields(grant: Mapping[str, Any]) -> tuple[Field, ...]:
+    return (
+        Field("grant", str(grant.get("grant_id"))),
+        Field("covers", f"class={grant.get('class')} scope={grant.get('scope')}"),
+        Field("uses", f"{grant.get('uses')}/{grant.get('max_uses')}"),
+        Field("remaining", f"{grant.get('remaining_s')}s"),
+        Field("issued by", str(grant.get("issued_by"))),
+        Field("status", str(grant.get("status"))),
+    )
 
 
 def _outcome_fields(transitions: Sequence[TransitionRecord]) -> tuple[Field, ...] | None:

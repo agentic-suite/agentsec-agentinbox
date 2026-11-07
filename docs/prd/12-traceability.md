@@ -111,6 +111,16 @@ today** (they run in CI), not planned:
 | **R105** | self-contained `decision-packet/1.0`, offline chain verification, CLI `--packet` | `tests/outcomes/test_outcomes.py` |
 | **R106/R107** | ask→decision→execution→divergence trace; closure SLA + doctor finding | `tests/outcomes/test_outcomes.py` |
 
+## M30 repetitive approvals, grants & compression (shipped tests, v0.1.0)
+
+| Req | What M30 ships | Acceptance test |
+|---|---|---|
+| **R108/R112** | 12-ask compressed view with every row; no group decision; exports intact | `tests/grants/test_grants.py` |
+| **R109/R110** | class/session windows with use+rate ceilings; auto-allow only while live; one session grant | `tests/grants/test_grants.py` |
+| **R111** | card burn-down (uses/ceiling/remaining/owner/status) + doctor active grants | `tests/grants/test_grants.py` |
+| **R113** | repeated-deny insight at threshold; no auto-approve or auto-harden | `tests/grants/test_grants.py` |
+| **R114** | owner+reason issuance; chained issued/used/expired; immediate revocation | `tests/grants/test_grants.py` |
+
 ## Forward slate traceability (R13–R47, PRDs 24–27)
 
 The product-depth requirements are traced **inside their own PRDs** (each carries a

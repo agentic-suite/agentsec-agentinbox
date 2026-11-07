@@ -266,6 +266,19 @@ def ingest(
                 receipts=receipts,
             )
 
+    if result.created:
+        from agentinbox.grants import consume_grant
+
+        if consume_grant(store, result.ask, now=moment) is not None:
+            approved = store.get(result.ask.ask_id)
+            assert approved is not None
+            return IngestResult(
+                ask=approved,
+                created=True,
+                trust=trust,
+                receipts=receipts,
+            )
+
     if result.created and bus is not None:
         # One delivery job per *new* ask: a deduplicated retry never re-notifies.
         bus.publish(

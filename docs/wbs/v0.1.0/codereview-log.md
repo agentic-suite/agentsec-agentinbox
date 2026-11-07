@@ -257,3 +257,16 @@ regression test):
 | 2026-11-07 | M29 | 29.4 | Divergence silently absorbed | High | Chained `outcome-divergence`, card `UNACKNOWLEDGED`, explicit acknowledgement; no approval path |
 | 2026-11-07 | M29 | 29.5 | A packet that needs the store to understand | High | Self-contained packet + offline chain verification; tamper test raises |
 | 2026-11-07 | M29 | 29.6 | SLA auto-closing or hiding unclosed asks | Medium | `outcome_sla_pending` + doctor WARN; never writes a closure |
+
+## M30 grants & compression review (2026-11-07)
+
+| Date | M | Item | Finding | Severity | Resolution |
+|---|---|---|---|---|---|
+| 2026-11-07 | M30 | 30.1 | A compressed group becoming a group approval | High | View only; every row and per-ask record/claim/audit preserved; no group decision |
+| 2026-11-07 | M30 | 30.1 | Compression dropping asks from exports | High | Exports unchanged; each ask remains in the store/chain (test) |
+| 2026-11-07 | M30 | 30.2 | A window silently allowing past its ceiling | High | max_uses and max_per_minute checked per use; the next ask reverts to pending (test) |
+| 2026-11-07 | M30 | 30.2 | An expired/revoked window still covering | High | Active check on every ingest; expiry/revocation writes a chained event; no silent allow |
+| 2026-11-07 | M30 | 30.3 | Two active session grants | Medium | Refused on issuance; `end_session` expires loudly |
+| 2026-11-07 | M30 | 30.4 | A spent grant disappearing from the card | Medium | Burn-down falls back to the grant whose window contained the ask and renders `spent` |
+| 2026-11-07 | M30 | 30.5 | Repeated denies compressed away | Medium | `repeated_denials` insight at threshold; nothing auto-approves/hardens |
+| 2026-11-07 | M30 | 30.6 | Unbounded/unaudited grants | High | Owner+reason+issuer required; issued/used/expired/revoked are chained events |

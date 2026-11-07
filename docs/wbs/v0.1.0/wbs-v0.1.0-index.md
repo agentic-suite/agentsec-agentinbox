@@ -343,6 +343,15 @@ every M26–M31 milestone carries its own gate. The 32.7 regression baseline bec
   ask→policy→decision→execution→divergence; per-class closure SLA surfaces `outcome-pending-past-sla`
   in doctor without auto-closing. Next: **M30** (`30.D0` grants/compression design).
 
+- **2026-11-07 — M30 Repetitive approvals, grants & compression closed.** Issues #353–#364. Commit `TBD`.
+  **Gate:** 915 tests pass · coverage **95.11%** · `ruff` clean · `mypy --strict` clean.
+  Repeated materially-identical asks render as one compressed view with every row and no group decision;
+  exports and the chain are unchanged. Class/session windows are owner+reason audited with `max_uses`
+  and `max_per_minute`; a live window auto-allows with `authorization.source=window-grant`, and expiry,
+  revocation, session end, or a spent ceiling immediately reverts to per-ask approval. The card shows
+  burn-down including spent grants; doctor lists active grants. Five repeated denies surface as a tuning
+  insight only. Next: **M31** (`31.D0` insights design).
+
 ## PRD coverage matrix (every doc 00–30)
 
 | PRD | Topic | Milestone(s) |

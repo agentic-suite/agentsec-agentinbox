@@ -70,6 +70,7 @@ def run_checks(home: Path, config_path: Path) -> Report:
         _clock(),
         _clock_skew(home / "inbox.db"),
         _outcome_sla(home, config),
+        _grants(home, config),
     )
     return Report(checks=checks, config=config)
 
@@ -95,6 +96,32 @@ def _outcome_sla(home: Path, config: Config | None) -> Check:
         ids = ", ".join(item["ask_id"] for item in pending)
         return Check("outcome-sla", WARN, f"{len(pending)} approved ask(s) past closure SLA: {ids}")
     return Check("outcome-sla", OK, "no approved ask past its closure SLA")
+
+
+def _grants(home: Path, config: Config | None) -> Check:
+    if config is None:
+        return Check("grants", WARN, "config invalid; grants not evaluated")
+    if not (home / "inbox.db").exists():
+        return Check("grants", OK, "no store yet")
+    from agentinbox.grants import active_grants
+    from agentinbox.store.loader import load_store
+
+    try:
+        store = load_store(config.store.driver, home=home)
+    except Exception as exc:  # pragma: no cover
+        return Check("grants", WARN, f"cannot open store: {exc}")
+    try:
+        active = active_grants(store)
+    finally:
+        store.close()
+    if active:
+        detail = "; ".join(
+            f"{item.grant_id} {item.status} uses={item.uses}/{item.max_uses} "
+            f"owner={item.owner}"
+            for item in active
+        )
+        return Check("grants", OK, detail)
+    return Check("grants", OK, "no active grants")
 
 
 def _platform() -> Check:
