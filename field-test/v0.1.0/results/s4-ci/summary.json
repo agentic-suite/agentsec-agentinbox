@@ -6,7 +6,7 @@
           "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/channels/test_ci.py tests/cli/test_gate_cli.py",
           "grounded": true,
           "name": "FT-SC-15 assertions",
-          "ok": false
+          "ok": true
         },
         {
           "cmd": "scan artifacts for secrets",
@@ -24,7 +24,7 @@
       "llm_captured": false,
       "llm_required": false,
       "run_id": "s4-ci",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "assertions": [
@@ -32,7 +32,7 @@
           "cmd": "ft_sut python /ft/scripts/run_pytest.py tests/contract/test_exit_codes.py tests/cli/test_gate_cli.py",
           "grounded": true,
           "name": "FT-SC-16 assertions",
-          "ok": false
+          "ok": true
         },
         {
           "cmd": "scan artifacts for secrets",
@@ -50,7 +50,7 @@
       "llm_captured": false,
       "llm_required": false,
       "run_id": "s4-ci",
-      "status": "fail"
+      "status": "pass"
     }
   ],
   "env": {
@@ -63,13 +63,13 @@
     "run_id": "s4-ci",
     "version": "v0.1.0"
   },
-  "generated_at": "2026-11-07T19:08:59.259852+00:00",
-  "green": false,
+  "generated_at": "2026-11-07T19:46:36.339555+00:00",
+  "green": true,
   "run_id": "s4-ci",
   "totals": {
     "blocked": 0,
-    "fail": 2,
+    "fail": 0,
     "over_claimed": 0,
-    "pass": 0
+    "pass": 2
   }
 }

@@ -6,6 +6,7 @@ the same transaction as the transition it records. File ``0600`` inside a ``0700
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import sqlite3
@@ -160,10 +161,11 @@ class SqliteStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         _chmod(self.path.parent, 0o700)
         if not self.path.exists():
+            # A *new* db is created private. An *existing* db is never re-chmod'ed:
+            # a permission-locked store must FAIL CLOSED, not silently self-heal
+            # (M32 field finding FT-SC-24-LIVE / Defect #5).
             descriptor = os.open(self.path, os.O_CREAT | os.O_RDWR, 0o600)
             os.close(descriptor)
-        else:
-            _chmod(self.path, 0o600)
 
         try:
             self._conn = sqlite3.connect(
@@ -179,7 +181,16 @@ class SqliteStore:
             with self._lock:
                 self._migrate()
         except sqlite3.Error as exc:
+            # A failed open must not leak its connection (pytest 9 reaps it as an
+            # unraisable ResourceWarning — M32 field finding FT-SC-24).
+            with contextlib.suppress(Exception):
+                self._conn.close()
             raise StoreError(f"store unavailable: {exc}") from exc
+        except Exception:
+            # Same for non-sqlite failures (e.g. SchemaVersionError mid-migration).
+            with contextlib.suppress(Exception):
+                self._conn.close()
+            raise
 
     # ------------------------------------------------------------------ schema
 

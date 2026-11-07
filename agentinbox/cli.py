@@ -217,6 +217,12 @@ def _runtime(args: argparse.Namespace) -> tuple[Config, AskStore]:
     return config, store
 
 
+def _close_store(store: AskStore) -> None:
+    """Close deterministically at every exit path (pytest 9 GC must never reap it)."""
+    with contextlib.suppress(Exception):
+        store.close()
+
+
 def _answer(args: argparse.Namespace) -> int:
     try:
         config, store = _runtime(args)
@@ -484,6 +490,7 @@ def _gate(args: argparse.Namespace) -> int:
     if result.code is ExitCode.UNAVAILABLE:
         print(f"{PROG}: gate unavailable: {result.reason}", file=sys.stderr)
     print(f"{PROG}: ask {args.ask}: {result.status} ({result.reason})")
+    _close_store(store)
     return int(result.code)
 
 
@@ -706,57 +713,60 @@ def _export(args: argparse.Namespace) -> int:
         print(f"{PROG}: {exc}", file=sys.stderr)
         return int(ExitCode.UNAVAILABLE)
 
-    if getattr(args, "packet", False):
-        if not args.ask:
-            print(f"{PROG}: --packet requires --ask", file=sys.stderr)
-            return int(ExitCode.USAGE)
+    try:
+        if getattr(args, "packet", False):
+            if not args.ask:
+                print(f"{PROG}: --packet requires --ask", file=sys.stderr)
+                return int(ExitCode.USAGE)
+            try:
+                packet = decision_packet(store, args.ask)
+            except KeyError as exc:
+                print(f"{PROG}: {exc.args[0]}", file=sys.stderr)
+                return int(ExitCode.UNAVAILABLE)
+            text = packet_json(packet)
+            if args.out:
+                path = Path(args.out)
+                if not path.is_absolute():
+                    print(f"{PROG}: --out must be an absolute path", file=sys.stderr)
+                    return int(ExitCode.USAGE)
+                path.write_text(text, encoding="utf-8")
+                with contextlib.suppress(OSError):  # pragma: no cover
+                    os.chmod(path, 0o600)
+                print(f"{PROG}: wrote {path}")
+            else:
+                sys.stdout.write(text)
+            return int(ExitCode.APPROVED)
+
         try:
-            packet = decision_packet(store, args.ask)
+            records = export_records(
+                store,
+                session_id=args.session,
+                ask_id=args.ask,
+                format=args.format,
+                now=utcnow,
+            )
         except KeyError as exc:
             print(f"{PROG}: {exc.args[0]}", file=sys.stderr)
             return int(ExitCode.UNAVAILABLE)
-        text = packet_json(packet)
+        except (StoreError, ValueError) as exc:
+            print(f"{PROG}: {exc}", file=sys.stderr)
+            return int(ExitCode.UNAVAILABLE)
+
+        text = export_jsonl(records) if args.format == "jsonl" else export_csv(records)
         if args.out:
             path = Path(args.out)
             if not path.is_absolute():
                 print(f"{PROG}: --out must be an absolute path", file=sys.stderr)
                 return int(ExitCode.USAGE)
             path.write_text(text, encoding="utf-8")
-            with contextlib.suppress(OSError):  # pragma: no cover
+            with contextlib.suppress(OSError):  # pragma: no cover - exotic filesystems
                 os.chmod(path, 0o600)
             print(f"{PROG}: wrote {path}")
         else:
             sys.stdout.write(text)
         return int(ExitCode.APPROVED)
-
-    try:
-        records = export_records(
-            store,
-            session_id=args.session,
-            ask_id=args.ask,
-            format=args.format,
-            now=utcnow,
-        )
-    except KeyError as exc:
-        print(f"{PROG}: {exc.args[0]}", file=sys.stderr)
-        return int(ExitCode.UNAVAILABLE)
-    except (StoreError, ValueError) as exc:
-        print(f"{PROG}: {exc}", file=sys.stderr)
-        return int(ExitCode.UNAVAILABLE)
-
-    text = export_jsonl(records) if args.format == "jsonl" else export_csv(records)
-    if args.out:
-        path = Path(args.out)
-        if not path.is_absolute():
-            print(f"{PROG}: --out must be an absolute path", file=sys.stderr)
-            return int(ExitCode.USAGE)
-        path.write_text(text, encoding="utf-8")
-        with contextlib.suppress(OSError):  # pragma: no cover - exotic filesystems
-            os.chmod(path, 0o600)
-        print(f"{PROG}: wrote {path}")
-    else:
-        sys.stdout.write(text)
-    return int(ExitCode.APPROVED)
+    finally:
+        _close_store(store)
 
 
 def _parse_edits(raw: list[str]) -> dict[str, object] | None:
@@ -780,30 +790,31 @@ def _report(args: argparse.Namespace) -> int:
 
     try:
         data = build_report(store).to_dict()
-    finally:
-        store.close()
 
-    if getattr(args, "json", False):
-        print(json.dumps(data, sort_keys=True))
+        if getattr(args, "json", False):
+            print(json.dumps(data, sort_keys=True))
+            return int(ExitCode.APPROVED)
+
+        response = data["response_time_s"]
+        print(f"asks: {data['total_asks']} (pending {data['pending']})")
+        print(
+            f"response p50/p99: {response['p50']}s / {response['p99']}s "
+            f"({response['samples']} samples)"
+        )
+        print(
+            f"expiries: {data['expiries']} · escalations: {data['escalation_firings']} · "
+            f"floods: {data['flood_events']}"
+        )
+        causes = data["answer_rejected_causes"]
+        if causes:
+            rendered = ", ".join(f"{cause}={count}" for cause, count in causes.items())
+            print(f"answer rejected: {rendered}")
+        for class_name, rate in data["deny_rate_by_class"].items():
+            print(f"deny rate {class_name}: {rate:.0%}")
         return int(ExitCode.APPROVED)
 
-    response = data["response_time_s"]
-    print(f"asks: {data['total_asks']} (pending {data['pending']})")
-    print(
-        f"response p50/p99: {response['p50']}s / {response['p99']}s "
-        f"({response['samples']} samples)"
-    )
-    print(
-        f"expiries: {data['expiries']} · escalations: {data['escalation_firings']} · "
-        f"floods: {data['flood_events']}"
-    )
-    causes = data["answer_rejected_causes"]
-    if causes:
-        rendered = ", ".join(f"{cause}={count}" for cause, count in causes.items())
-        print(f"answer rejected: {rendered}")
-    for class_name, rate in data["deny_rate_by_class"].items():
-        print(f"deny rate {class_name}: {rate:.0%}")
-    return int(ExitCode.APPROVED)
+    finally:
+        _close_store(store)
 
 
 def _conformance(args: argparse.Namespace) -> int:
