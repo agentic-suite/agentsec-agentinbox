@@ -1,10 +1,17 @@
 # agentinbox
 
+[![CI](https://github.com/agentic-suite/agentsec-agentinbox/actions/workflows/ci.yml/badge.svg)](https://github.com/agentic-suite/agentsec-agentinbox/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![PyPI](https://img.shields.io/pypi/v/agentsec-agentinbox?label=pypi)](https://pypi.org/project/agentsec-agentinbox/)
+[![Status: released v0.1.0](https://img.shields.io/badge/status-released%20v0.1.0-brightgreen)](docs/release/v0.1.0/RELEASE_NOTES.md)
+[![Ruff](https://img.shields.io/badge/code%20style-ruff-000000)](https://github.com/astral-sh/ruff)
+[![Type checked](https://img.shields.io/badge/mypy-strict-blue)](https://github.com/python/mypy)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/agentic-suite/agentsec-agentinbox/badge)](https://scorecard.dev/viewer/?uri=github.com/agentic-suite/agentsec-agentinbox)
+
 > **Block / limit** — The approval control plane for consequential agent actions: every agent `ask` becomes a
 > decision a human can make in seconds — from the terminal, a desktop notification, a CI checkpoint, or a
 > signed webhook. No chat platform required.
-
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/agentic-suite/agentsec-agentinbox/badge)](https://scorecard.dev/viewer/?uri=github.com/agentic-suite/agentsec-agentinbox)
 
 Part of the [agentic-suite](https://github.com/agentic-suite) — open-source,
 harness-agnostic security for AI agents. agentinbox is the human half of the
