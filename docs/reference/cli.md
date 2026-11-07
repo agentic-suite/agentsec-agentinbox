@@ -59,7 +59,10 @@ integers so the contract cannot drift.
 | `version` | **works** — prints `agentinbox <version>` (or JSON with `--json`) |
 | `inbox`, `answer` | **works** (M7) — list pending asks; answer via the terminal channel |
 | `serve` | **works** (M9) — scheduler + bus consumer; `--once` drains and exits; see [bus.md](bus.md) |
-| `ask`, `gate`, `export`, `verify-log`, `channels`, `report` | **stubs** — print `agentinbox: <command> is not implemented in v0.1.0 (scheduled: M<n>)` to stderr and exit `4` |
+| `gate` | **works** (M10) — CI checkpoint with the reserved exit codes; see [gate.md](gate.md) |
+| `channels` | **works** (M13) — configured channels and health |
+| `export`, `verify-log` | **works** (M15) — ordered evidence + chain verification; see [audit.md](audit.md) |
+| `ask`, `report` | **stubs** — print `agentinbox: <command> is not implemented in v0.1.0 (scheduled: M<n>)` to stderr and exit `4` |
 
 Stub rules:
 

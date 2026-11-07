@@ -141,6 +141,54 @@ def test_a_network_failure_is_a_channel_error(store) -> None:  # type: ignore[no
         channel(cfg, Post(fail=True)).deliver(ask)
 
 
+def test_the_default_poster_rejects_non_http_schemes() -> None:
+    from agentinbox.channels.webhook import _default_post
+
+    with pytest.raises(ChannelError, match="http"):
+        _default_post("file:///etc/passwd", b"{}", {})
+
+
+def test_the_default_poster_posts(monkeypatch: pytest.MonkeyPatch) -> None:
+    from agentinbox.channels.webhook import _default_post
+
+    class Response:
+        status = 204
+
+        def read(self) -> bytes:
+            return b""
+
+        def __enter__(self) -> Response:
+            return self
+
+        def __exit__(self, *args: object) -> bool:
+            return False
+
+    monkeypatch.setattr(
+        "agentinbox.channels.webhook.urllib.request.urlopen",
+        lambda *args, **kwargs: Response(),
+    )
+    assert _default_post("https://hooks.example/abc", b"{}", {}) == 204
+
+
+def test_an_enabled_webhook_without_refs_fails_closed(store) -> None:  # type: ignore[no-untyped-def]
+    cfg = config(url_ref=None, key_ref=None)
+    ask = make(store, cfg)
+    with pytest.raises(ChannelError, match="url_ref"):
+        channel(cfg, Post()).deliver(ask)
+
+
+def test_secret_reference_edges(tmp_path: Path) -> None:
+    empty = tmp_path / "empty.key"
+    empty.write_text("", encoding="utf-8")
+
+    with pytest.raises(SecretError):
+        resolve_ref(None)
+    with pytest.raises(SecretError, match="unknown reference"):
+        resolve_ref("vault:secret")
+    with pytest.raises(SecretError, match="empty"):
+        resolve_ref(f"file:{empty}")
+
+
 def test_file_references_are_supported(tmp_path: Path) -> None:
     key_file = tmp_path / "hook.key"
     key_file.write_text("file-secret\n", encoding="utf-8")

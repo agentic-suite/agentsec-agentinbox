@@ -32,7 +32,17 @@ _BUS_DRIVERS = frozenset({"filesystem", "in-proc"})
 _SELF_REVIEW = frozenset({"deny", "allow", "escalate"})
 
 _TOP_LEVEL = frozenset(
-    {"classes", "roster", "throttle", "channels", "bus", "store", "limits", "webui"}
+    {
+        "classes",
+        "roster",
+        "throttle",
+        "channels",
+        "bus",
+        "store",
+        "limits",
+        "webui",
+        "audit",
+    }
 )
 _FORWARD_SLATE = frozenset(
     {
@@ -147,6 +157,13 @@ class WebuiConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class AuditConfig:
+    """Retention policy: ``never``, ``1y``, or ``<n>d``."""
+
+    retention: str = "never"
+
+
+@dataclass(frozen=True, slots=True)
 class Config:
     classes: Mapping[str, ClassConfig] = field(default_factory=dict)
     roster: Mapping[str, Mapping[str, tuple[str, ...]]] = field(default_factory=dict)
@@ -156,6 +173,7 @@ class Config:
     store: StoreConfig = field(default_factory=StoreConfig)
     limits: LimitsConfig = field(default_factory=LimitsConfig)
     webui: WebuiConfig = field(default_factory=WebuiConfig)
+    audit: AuditConfig = field(default_factory=AuditConfig)
 
 
 # --------------------------------------------------------------------------- home paths
@@ -230,6 +248,7 @@ def _parse(data: dict[str, Any], path: Path) -> Config:
         store=_parse_store(_table(data.get("store", {}), "store")),
         limits=_parse_limits(_table(data.get("limits", {}), "limits")),
         webui=_parse_webui(_table(data.get("webui", {}), "webui")),
+        audit=_parse_audit(_table(data.get("audit", {}), "audit")),
     )
 
 
@@ -526,6 +545,19 @@ def _parse_webui(value: dict[str, Any]) -> WebuiConfig:
     return WebuiConfig(enabled=enabled, bind=bind)
 
 
+_RETENTION = re.compile(r"^(never|1y|[1-9][0-9]*d)$")
+
+
+def _parse_audit(value: dict[str, Any]) -> AuditConfig:
+    _reject_unknown(value, frozenset({"retention"}), "audit")
+    retention = value.get("retention", "never")
+    if not isinstance(retention, str) or not _RETENTION.fullmatch(retention):
+        raise ConfigError(
+            "[audit].retention: must be never, 1y, or a number of days like 90d"
+        )
+    return AuditConfig(retention=retention)
+
+
 def _validate_loopback_bind(bind: str) -> None:
     host, separator, port_text = bind.rpartition(":")
     if not separator:
@@ -610,6 +642,9 @@ max_thread_entries = 20
 [webui]
 enabled = false
 bind = "127.0.0.1:8377"
+
+[audit]
+retention = "never"
 """
 
 HOME_SUBDIRS = (

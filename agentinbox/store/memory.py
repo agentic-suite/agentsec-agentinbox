@@ -7,9 +7,10 @@ honest against the SQLite reference.
 from __future__ import annotations
 
 import threading
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from datetime import datetime, timedelta
+from typing import Any
 
 from agentinbox.store.base import (
     CONFORMANCE_VERSION,
@@ -170,6 +171,19 @@ class MemoryStore:
             if delivery.delivery_id in self._deliveries:
                 raise StoreError(f"delivery already recorded: {delivery.delivery_id}")
             self._deliveries[delivery.delivery_id] = delivery
+            self._append_audit(
+                "delivery",
+                delivery.ask_id,
+                delivery.at,
+                {
+                    "delivery_id": delivery.delivery_id,
+                    "channel": delivery.channel,
+                    "attempt": delivery.attempt,
+                    "status": delivery.status,
+                    "target": delivery.target,
+                    "error": delivery.error,
+                },
+            )
 
     def revoke_claims(
         self, ask_id: str, *, at: datetime, tier: str | None = None
@@ -233,6 +247,20 @@ class MemoryStore:
             self._require_open()
             created = flood.flood_id not in self._floods
             self._floods[flood.flood_id] = flood
+            if created:
+                self._append_audit(
+                    "flood",
+                    flood.flood_id,
+                    flood.at,
+                    {
+                        "agent_id": flood.agent_id,
+                        "session_id": flood.session_id,
+                        "window_start": to_iso(flood.window_start),
+                        "window_end": to_iso(flood.window_end),
+                        "denied_count": flood.denied_count,
+                        "first_ask_id": flood.first_ask_id,
+                    },
+                )
             return created
 
     def get_flood(self, flood_id: str) -> FloodRecord | None:
@@ -286,6 +314,43 @@ class MemoryStore:
     def verify_chain(self) -> None:
         verify_audit_chain(self.audit_entries())
 
+    def append_audit(
+        self, *, kind: str, ref_id: str, at: datetime, payload: Mapping[str, Any]
+    ) -> AuditEntry:
+        with self._lock:
+            self._require_open()
+            return self._append_audit(kind, ref_id, at, payload)
+
+    def prune_evidence(self, before: datetime, *, at: datetime) -> tuple[int, int]:
+        with self._lock:
+            self._require_open()
+            transitions = 0
+            for ask_id, rows in list(self._transitions.items()):
+                kept = [row for row in rows if row.at >= before]
+                transitions += len(rows) - len(kept)
+                if kept:
+                    self._transitions[ask_id] = kept
+                else:
+                    del self._transitions[ask_id]
+            deliveries = [
+                delivery_id
+                for delivery_id, delivery in self._deliveries.items()
+                if delivery.at < before
+            ]
+            for delivery_id in deliveries:
+                del self._deliveries[delivery_id]
+            self._append_audit(
+                "retention-pruned",
+                "retention",
+                at,
+                {
+                    "before": to_iso(before),
+                    "transitions": transitions,
+                    "deliveries": len(deliveries),
+                },
+            )
+            return transitions, len(deliveries)
+
     # ------------------------------------------------------------------ internals
 
     def _require_open(self) -> None:
@@ -297,11 +362,17 @@ class MemoryStore:
         seq = len(existing) + 1
         stored = replace(transition, seq=seq)
         existing.append(stored)
+        return self._append_audit(
+            "transition", stored.ask_id, stored.at, dict(stored.detail)
+        )
 
-        detail = dict(stored.detail)
+    def _append_audit(
+        self, kind: str, ref_id: str, at: datetime, payload: Mapping[str, Any]
+    ) -> AuditEntry:
+        detail = dict(payload)
         prev_hash = self._audit[-1].entry_hash if self._audit else GENESIS_HASH
         audit_seq = len(self._audit) + 1
-        at = to_iso(stored.at)
+        at_text = to_iso(at)
         digest = payload_digest(detail)
         entry = AuditEntry(
             seq=audit_seq,
@@ -309,14 +380,14 @@ class MemoryStore:
             entry_hash=chain_hash(
                 prev_hash=prev_hash,
                 seq=audit_seq,
-                kind="transition",
-                ref_id=stored.ask_id,
-                at=at,
+                kind=kind,
+                ref_id=ref_id,
+                at=at_text,
                 digest=digest,
             ),
-            kind="transition",
-            ref_id=stored.ask_id,
-            at=stored.at,
+            kind=kind,
+            ref_id=ref_id,
+            at=at,
             payload_digest=digest,
         )
         self._audit.append(entry)

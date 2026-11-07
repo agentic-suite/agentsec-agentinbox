@@ -11,11 +11,12 @@ import os
 import sqlite3
 import stat
 import threading
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import replace
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 from agentinbox.store.base import (
     CONFORMANCE_VERSION,
@@ -395,6 +396,19 @@ class SqliteStore:
                 )
             except sqlite3.IntegrityError as exc:
                 raise StoreError(f"delivery already recorded: {delivery.delivery_id}") from exc
+            self._append_audit(
+                "delivery",
+                delivery.ask_id,
+                delivery.at,
+                {
+                    "delivery_id": delivery.delivery_id,
+                    "channel": delivery.channel,
+                    "attempt": delivery.attempt,
+                    "status": delivery.status,
+                    "target": delivery.target,
+                    "error": delivery.error,
+                },
+            )
 
     def revoke_claims(
         self, ask_id: str, *, at: datetime, tier: str | None = None
@@ -500,6 +514,19 @@ class SqliteStore:
                     to_iso(flood.at),
                 ),
             )
+            self._append_audit(
+                "flood",
+                flood.flood_id,
+                flood.at,
+                {
+                    "agent_id": flood.agent_id,
+                    "session_id": flood.session_id,
+                    "window_start": to_iso(flood.window_start),
+                    "window_end": to_iso(flood.window_end),
+                    "denied_count": flood.denied_count,
+                    "first_ask_id": flood.first_ask_id,
+                },
+            )
             return True
 
     def get_flood(self, flood_id: str) -> FloodRecord | None:
@@ -585,6 +612,32 @@ class SqliteStore:
     def verify_chain(self) -> None:
         verify_audit_chain(self.audit_entries())
 
+    def append_audit(
+        self, *, kind: str, ref_id: str, at: datetime, payload: Mapping[str, Any]
+    ) -> AuditEntry:
+        with self._transaction():
+            return self._append_audit(kind, ref_id, at, payload)
+
+    def prune_evidence(self, before: datetime, *, at: datetime) -> tuple[int, int]:
+        with self._transaction():
+            transitions = self._conn.execute(
+                "DELETE FROM transitions WHERE at < ?", (to_iso(before),)
+            ).rowcount
+            deliveries = self._conn.execute(
+                "DELETE FROM deliveries WHERE at < ?", (to_iso(before),)
+            ).rowcount
+            self._append_audit(
+                "retention-pruned",
+                "retention",
+                at,
+                {
+                    "before": to_iso(before),
+                    "transitions": transitions,
+                    "deliveries": deliveries,
+                },
+            )
+            return transitions, deliveries
+
     # ------------------------------------------------------------------ internals
 
     def _append_transition(self, transition: TransitionRecord) -> AuditEntry:
@@ -614,34 +667,40 @@ class SqliteStore:
             ),
         )
 
+        return self._append_audit("transition", transition.ask_id, transition.at, detail)
+
+    def _append_audit(
+        self, kind: str, ref_id: str, at: datetime, payload: Mapping[str, Any]
+    ) -> AuditEntry:
         previous = self._conn.execute(
             "SELECT entry_hash FROM audit ORDER BY seq DESC LIMIT 1"
         ).fetchone()
         prev_hash = GENESIS_HASH if previous is None else str(previous[0])
         row = self._conn.execute("SELECT COALESCE(MAX(seq), 0) + 1 FROM audit").fetchone()
         audit_seq = int(row[0])
-        at = to_iso(transition.at)
+        at_text = to_iso(at)
+        detail = dict(payload)
         digest = payload_digest(detail)
         entry_hash = chain_hash(
             prev_hash=prev_hash,
             seq=audit_seq,
-            kind="transition",
-            ref_id=transition.ask_id,
-            at=at,
+            kind=kind,
+            ref_id=ref_id,
+            at=at_text,
             digest=digest,
         )
         self._conn.execute(
             "INSERT INTO audit (seq, prev_hash, entry_hash, kind, ref_id, at, payload_digest)"
             " VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (audit_seq, prev_hash, entry_hash, "transition", transition.ask_id, at, digest),
+            (audit_seq, prev_hash, entry_hash, kind, ref_id, at_text, digest),
         )
         return AuditEntry(
             seq=audit_seq,
             prev_hash=prev_hash,
             entry_hash=entry_hash,
-            kind="transition",
-            ref_id=transition.ask_id,
-            at=transition.at,
+            kind=kind,
+            ref_id=ref_id,
+            at=at,
             payload_digest=digest,
         )
 

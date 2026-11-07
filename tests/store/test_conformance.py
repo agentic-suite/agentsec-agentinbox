@@ -41,6 +41,7 @@ def store(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[AskStore]:
         conformance.check_claim_revocation,
         conformance.check_escalation_cas,
         conformance.check_flood_accounting,
+        conformance.check_audit_covers_entities,
         conformance.check_capabilities_fail_closed,
     ],
     ids=lambda check: check.__name__,

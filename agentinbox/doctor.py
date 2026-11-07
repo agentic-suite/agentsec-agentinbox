@@ -188,6 +188,7 @@ def render_explain(report: Report, home: Path, config_path: Path) -> str | None:
         f"  store.driver: {config.store.driver}",
         f"  bus.driver: {config.bus.driver}",
         f"  webui.bind: {config.webui.bind} (enabled={config.webui.enabled})",
+        f"  audit.retention: {config.audit.retention}",
     ]
     for name in sorted(config.classes):
         ask_class = config.classes[name]

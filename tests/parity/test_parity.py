@@ -100,6 +100,15 @@ def test_every_surface_renders_the_same_decision(store) -> None:  # type: ignore
     ]
 
 
+def test_unknown_asks_raise(store) -> None:  # type: ignore[no-untyped-def]
+    import pytest
+
+    with pytest.raises(KeyError):
+        decision_record(store, "ask_missing")
+    with pytest.raises(KeyError):
+        surface_outcome(store, "ask_missing", surface="text", now=NOW)
+
+
 def test_a_pending_surface_updates_after_the_decision(store) -> None:  # type: ignore[no-untyped-def]
     ask = make(store)
     before = surface_outcome(store, ASK_ID, surface="desktop", now=NOW)

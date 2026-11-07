@@ -376,6 +376,53 @@ def check_flood_accounting(store) -> None:  # type: ignore[no-untyped-def]
     assert store.get_flood("flood_missing") is None
 
 
+def check_audit_covers_entities(store) -> None:  # type: ignore[no-untyped-def]
+    from agentinbox.store import DeliveryRecord, FloodRecord
+
+    ask = sample_ask()
+    store.create_or_get_by_identity(ask)
+    store.record_delivery(
+        DeliveryRecord(
+            delivery_id="delivery_audit",
+            ask_id=ask.ask_id,
+            channel="terminal",
+            attempt=1,
+            status="delivered",
+            at=T0,
+        )
+    )
+    store.record_flood(
+        FloodRecord(
+            flood_id="flood_audit",
+            agent_id=ask.agent_id,
+            session_id=ask.session_id,
+            window_start=T0,
+            window_end=T0,
+            denied_count=1,
+            first_ask_id=ask.ask_id,
+            at=T0,
+        )
+    )
+
+    kinds = [entry.kind for entry in store.audit_entries()]
+    assert "delivery" in kinds
+    assert "flood" in kinds
+    store.verify_chain()
+
+    export = store.append_audit(
+        kind="export", ref_id="sess_0", at=T0, payload={"format": "jsonl"}
+    )
+    assert export.seq == len(store.audit_entries())
+    store.verify_chain()
+
+    _transitions, deliveries = store.prune_evidence(
+        T0 + timedelta(seconds=1), at=T0
+    )
+    assert deliveries == 1
+    assert store.audit_entries()[-1].kind == "retention-pruned"
+    store.verify_chain()
+
+
 def check_capabilities_fail_closed(store) -> None:  # type: ignore[no-untyped-def]
     require_capability(store, "single_writer")
     for capability in ("multi_writer", "cluster_safe"):

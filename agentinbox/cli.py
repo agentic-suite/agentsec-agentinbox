@@ -18,10 +18,12 @@ import signal
 import sys
 import threading
 from collections.abc import Callable, Sequence
+from pathlib import Path
 from typing import Any, NoReturn
 
 from agentinbox import __version__
 from agentinbox.answers import AnswerVerifier
+from agentinbox.audit import apply_retention, export_csv, export_jsonl, export_records
 from agentinbox.bus import BusError, DeliveryWiring, Job, load_bus
 from agentinbox.card import build_card
 from agentinbox.channels.base import ChannelError
@@ -42,7 +44,7 @@ from agentinbox.exit_codes import ExitCode
 from agentinbox.gate import gate
 from agentinbox.scheduler import Scheduler
 from agentinbox.secrets import SecretError, resolve_ref
-from agentinbox.store import AskStore, StoreError, parse_iso, utcnow
+from agentinbox.store import AskStore, ChainHashMismatch, StoreError, parse_iso, utcnow
 from agentinbox.store.loader import load_store
 
 PROG = "agentinbox"
@@ -295,6 +297,11 @@ def _serve(args: argparse.Namespace) -> int:
         except (KeyError, ValueError, ChannelError) as exc:
             print(f"{PROG}: digest delivery failed: {exc}", file=sys.stderr)
 
+    try:
+        apply_retention(store, config)
+    except StoreError as exc:
+        print(f"{PROG}: retention failed: {exc}", file=sys.stderr)
+
     wiring = DeliveryWiring(store, channels, on_digest=on_digest)
     scheduler = Scheduler(store, escalator=Escalator(store, config, bus=bus))
     try:
@@ -316,6 +323,64 @@ def _serve(args: argparse.Namespace) -> int:
     finally:
         bus.close()
         store.close()
+
+
+def _verify_log(args: argparse.Namespace) -> int:
+    try:
+        _config, store = _runtime(args)
+    except (ConfigError, StoreError) as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    try:
+        entries = store.audit_entries()
+        store.verify_chain()
+    except ChainHashMismatch as exc:
+        print(f"{PROG}: chain verification failed: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+    except StoreError as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    print(f"ok: {len(entries)} audit entries verify")
+    return int(ExitCode.APPROVED)
+
+
+def _export(args: argparse.Namespace) -> int:
+    try:
+        _config, store = _runtime(args)
+    except (ConfigError, StoreError) as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    try:
+        records = export_records(
+            store,
+            session_id=args.session,
+            ask_id=args.ask,
+            format=args.format,
+            now=utcnow,
+        )
+    except KeyError as exc:
+        print(f"{PROG}: {exc.args[0]}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+    except (StoreError, ValueError) as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    text = export_jsonl(records) if args.format == "jsonl" else export_csv(records)
+    if args.out:
+        path = Path(args.out)
+        if not path.is_absolute():
+            print(f"{PROG}: --out must be an absolute path", file=sys.stderr)
+            return int(ExitCode.USAGE)
+        path.write_text(text, encoding="utf-8")
+        with contextlib.suppress(OSError):  # pragma: no cover - exotic filesystems
+            os.chmod(path, 0o600)
+        print(f"{PROG}: wrote {path}")
+    else:
+        sys.stdout.write(text)
+    return int(ExitCode.APPROVED)
 
 
 def _channels(args: argparse.Namespace) -> int:
@@ -418,6 +483,10 @@ def build_parser() -> argparse.ArgumentParser:
             handler = _gate
         elif command == "channels":
             handler = _channels
+        elif command == "verify-log":
+            handler = _verify_log
+        elif command == "export":
+            handler = _export
         else:
             handler = _stub(command)
         sub.set_defaults(handler=handler)
@@ -440,6 +509,14 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument(
                 "--once", action="store_true", help="drain the bus once and exit (tests/cron)"
             )
+        if command == "export":
+            scope = sub.add_mutually_exclusive_group(required=True)
+            scope.add_argument("--session", metavar="SESSION_ID")
+            scope.add_argument("--ask", metavar="ASK_ID")
+            sub.add_argument(
+                "--format", choices=("jsonl", "csv"), default="jsonl"
+            )
+            sub.add_argument("--out", metavar="PATH", help="absolute output path")
         if command == "gate":
             sub.add_argument("--ask", required=True, metavar="ASK_ID")
             sub.add_argument("--wait", action="store_true", help="block until resolved")
@@ -481,6 +558,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "serve",
         "gate",
         "channels",
+        "export",
+        "verify-log",
     }:
         parser.print_usage(sys.stderr)
         print(f"{PROG}: error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)

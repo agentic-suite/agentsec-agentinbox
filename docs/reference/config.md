@@ -49,6 +49,17 @@ unreadable.
 
 ## Sections
 
+### `[audit]` — retention
+
+| Key | Type | Default | Notes |
+|---|---|---|---|
+| `retention` | `never` \| `1y` \| `<n>d` | `never` | detail older than the cutoff is pruned with a chain marker |
+
+```toml
+[audit]
+retention = "90d"
+```
+
 ### `[classes.<name>]` — ask classes
 
 | Key | Type | Default | Notes |

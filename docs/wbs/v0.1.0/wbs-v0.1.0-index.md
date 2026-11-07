@@ -181,6 +181,12 @@ A milestone is **closed** only when all of these hold:
   rendering for text/terminal/desktop/ci; an 8-thread race yields one `answer` and seven `late` no-ops;
   late answers name the winner/time and record evidence; failover shows the outcome without re-asking; the
   conformance suite runs all four surfaces and rejects a deciding channel. Next: **M15** (`15.D0` audit design).
+- **2026-11-08 — M15 Audit chain, verify-log + export closed.** Issues #271–#281. **Gate:** 561 tests pass
+  · coverage **95.55%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  Transitions, deliveries, floods, exports, and retention
+  markers append chained entries; `verify-log` names the first bad seq; `export --session/--ask --format
+  jsonl|csv [--out]` emits ordered asks/transitions/deliveries/chain (0600, audited); retention prunes
+  detail with a chain marker; no import authority exists (negative test). Next: **M8–M15 complete**.
 
 ## PRD coverage matrix (every doc 00–30)
 

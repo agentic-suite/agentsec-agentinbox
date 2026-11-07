@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Final, Protocol
 
 #: Version of the conformance suite a driver must declare to be admitted.
-CONFORMANCE_VERSION: Final = "5"
+CONFORMANCE_VERSION: Final = "6"
 
 
 class StoreError(Exception):
@@ -252,6 +252,18 @@ class AskStore(Protocol):
         ...
 
     def get_flood(self, flood_id: str) -> FloodRecord | None: ...
+
+    def audit_entries(self) -> list[AuditEntry]: ...
+
+    def verify_chain(self) -> None: ...
+
+    def append_audit(
+        self, *, kind: str, ref_id: str, at: datetime, payload: Mapping[str, Any]
+    ) -> AuditEntry: ...
+
+    def prune_evidence(self, before: datetime, *, at: datetime) -> tuple[int, int]:
+        """Delete transitions/deliveries older than ``before`` and append a chain marker."""
+        ...
 
     def export_session(self, session_id: str) -> SessionExport: ...
 
