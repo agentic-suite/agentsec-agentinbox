@@ -352,6 +352,15 @@ every M26–M31 milestone carries its own gate. The 32.7 regression baseline bec
   burn-down including spent grants; doctor lists active grants. Five repeated denies surface as a tuning
   insight only. Next: **M31** (`31.D0` insights design).
 
+- **2026-11-07 — M31 Policy learning & governance insights closed.** Issues #365–#378. Commit `TBD`.
+  **Gate:** 924 tests pass · coverage **95.11%** · `ruff` clean · `mypy --strict` clean.
+  Redacted, aggregated insights cover repetitive approvals (grant/rule/self-cert proposal), deny clusters,
+  class × tier × hour hotspots, evidence gaps, and divergence-driven hardening. Calibration is aggregate
+  by default; per-principal rows require `[insights].governance_principals` and write a chained access
+  event. Insights export as `insights/1.0`, pass the evidence scanner, expire after `stale_after_seconds`,
+  and actions record reviewer + origin for a git-reviewed PR — nothing auto-applies. **M26–M31 feature
+  milestones are complete**; next is M32 field tests (blocked on the field box/humans), then M33 release.
+
 ## PRD coverage matrix (every doc 00–30)
 
 | PRD | Topic | Milestone(s) |

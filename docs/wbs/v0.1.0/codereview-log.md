@@ -270,3 +270,17 @@ regression test):
 | 2026-11-07 | M30 | 30.4 | A spent grant disappearing from the card | Medium | Burn-down falls back to the grant whose window contained the ask and renders `spent` |
 | 2026-11-07 | M30 | 30.5 | Repeated denies compressed away | Medium | `repeated_denials` insight at threshold; nothing auto-approves/hardens |
 | 2026-11-07 | M30 | 30.6 | Unbounded/unaudited grants | High | Owner+reason+issuer required; issued/used/expired/revoked are chained events |
+
+## M31 insights review (2026-11-07)
+
+| Date | M | Item | Finding | Severity | Resolution |
+|---|---|---|---|---|---|
+| 2026-11-07 | M31 | 31.1 | Insight payload leaking raw arguments | High | Shape is key names + value types only; export scanner test finds no raw command |
+| 2026-11-07 | M31 | 31.1 | A repetitive approval auto-granting itself | High | Insight proposes; no grant/rule/config is written by computation |
+| 2026-11-07 | M31 | 31.2 | Deny noise hiding as a success metric | Medium | Cluster names `reason_code`, count, and a tuning suggestion; state unchanged |
+| 2026-11-07 | M31 | 31.3 | Hotspot correlation implying individual blame | Medium | Groups are class × tier × hour; recommendation is roster/TTL, never a person |
+| 2026-11-07 | M31 | 31.4 | Per-principal calibration becoming a ranking | High | Aggregate by default; per-principal requires governance principal and writes an access event |
+| 2026-11-07 | M31 | 31.5 | Evidence insight asserting a policy change | Medium | Recommendation only; owner applies via config review |
+| 2026-11-07 | M31 | 31.6 | Divergence auto-hardening the class | High | Proposed diff only; a test asserts decisions are unchanged |
+| 2026-11-07 | M31 | 31.7 | Action without an accountable reviewer/origin | High | `insight-action` records insight id, kind, reviewer, and origin; applying is a reviewed PR |
+| 2026-11-07 | M31 | 31.8 | Stale insights lingering | Medium | Expiry is last-seen + `stale_after_seconds`; contract test |

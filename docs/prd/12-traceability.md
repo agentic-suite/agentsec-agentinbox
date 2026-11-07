@@ -121,6 +121,17 @@ today** (they run in CI), not planned:
 | **R113** | repeated-deny insight at threshold; no auto-approve or auto-harden | `tests/grants/test_grants.py` |
 | **R114** | owner+reason issuance; chained issued/used/expired; immediate revocation | `tests/grants/test_grants.py` |
 
+## M31 policy learning & governance insights (shipped tests, v0.1.0)
+
+| Req | What M31 ships | Acceptance test |
+|---|---|---|
+| **R115** | repetitive-approval insight at threshold with redacted representative | `tests/insights/test_insights.py` |
+| **R116** | deny clusters by reason+shape with tuning suggestions | `tests/insights/test_insights.py` |
+| **R117** | class × tier × hour hotspots with routing/TTL recommendation | `tests/insights/test_insights.py` |
+| **R118** | aggregate calibration; gated per-principal view + access log; no rankings | `tests/insights/test_insights.py` |
+| **R119/R120** | evidence-gap and divergence-hardening proposals (never automatic) | `tests/insights/test_insights.py` |
+| **R121/R122** | reviewable action export with origin; scanner-clean redacted payloads; stale expiry | `tests/insights/test_insights.py` |
+
 ## Forward slate traceability (R13–R47, PRDs 24–27)
 
 The product-depth requirements are traced **inside their own PRDs** (each carries a

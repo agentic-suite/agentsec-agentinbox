@@ -191,6 +191,18 @@ Positive integers; enforcement arrives in M20+.
 
 The overlay never converts a deny to an allow; every state is recorded as a chained audit event.
 
+### `[insights]` — policy-learning thresholds (M31)
+
+| Key | Values | Default | Meaning |
+|---|---|---|---|
+| `governance_principals` | list[str] | `[]` | who may request per-principal calibration (access is logged) |
+| `approval_threshold` | int | `20` | similar approvals needed for a repetitive-approval insight |
+| `deny_threshold` | int | `10` | same-reason denials needed for a deny-cluster insight |
+| `hotspot_threshold` | int | `3` | escalation/expiry events per class × tier × hour |
+| `stale_after_seconds` | int | `86400` | insights older than this are not returned |
+
+Insights are aggregated and redacted; they never carry raw arguments.
+
 ### `[webui]`
 
 | Key | Default | v0.1.0 |

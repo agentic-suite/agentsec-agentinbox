@@ -44,6 +44,7 @@ _TOP_LEVEL = frozenset(
         "audit",
         "producers",
         "incident",
+        "insights",
     }
 )
 _FORWARD_SLATE = frozenset(
@@ -199,6 +200,17 @@ class ProducerConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class InsightsConfig:
+    """Governance access and thresholds for PRD 37 insights (M31)."""
+
+    governance_principals: tuple[str, ...] = ()
+    approval_threshold: int = 20
+    deny_threshold: int = 10
+    hotspot_threshold: int = 3
+    stale_after_seconds: int = 86400
+
+
+@dataclass(frozen=True, slots=True)
 class IncidentConfig:
     """Bounded incident-mode overlay (M28): faster routing, same accountability."""
 
@@ -222,6 +234,7 @@ class Config:
     audit: AuditConfig = field(default_factory=AuditConfig)
     producers: Mapping[str, ProducerConfig] = field(default_factory=dict)
     incident: IncidentConfig = field(default_factory=IncidentConfig)
+    insights: InsightsConfig = field(default_factory=InsightsConfig)
 
 
 # --------------------------------------------------------------------------- home paths
@@ -299,6 +312,7 @@ def _parse(data: dict[str, Any], path: Path) -> Config:
         audit=_parse_audit(_table(data.get("audit", {}), "audit")),
         producers=_parse_producers(_table(data.get("producers", {}), "producers")),
         incident=_parse_incident(_table(data.get("incident", {}), "incident")),
+        insights=_parse_insights(_table(data.get("insights", {}), "insights")),
     )
 
 
@@ -668,6 +682,45 @@ def _parse_webui(value: dict[str, Any]) -> WebuiConfig:
 
 
 _RETENTION = re.compile(r"^(never|1y|[1-9][0-9]*d)$")
+
+
+def _parse_insights(value: dict[str, Any]) -> InsightsConfig:
+    _reject_unknown(
+        value,
+        frozenset(
+            {
+                "governance_principals",
+                "approval_threshold",
+                "deny_threshold",
+                "hotspot_threshold",
+                "stale_after_seconds",
+            }
+        ),
+        "insights",
+    )
+    principals = value.get("governance_principals", [])
+    if not isinstance(principals, list) or not all(
+        isinstance(item, str) and item for item in principals
+    ):
+        raise ConfigError("[insights].governance_principals: must be a list of principals")
+    numbers: dict[str, int] = {}
+    for key, default in (
+        ("approval_threshold", 20),
+        ("deny_threshold", 10),
+        ("hotspot_threshold", 3),
+        ("stale_after_seconds", 86400),
+    ):
+        number = value.get(key, default)
+        if not isinstance(number, int) or isinstance(number, bool) or number < 1:
+            raise ConfigError(f"[insights].{key}: must be a positive integer")
+        numbers[key] = number
+    return InsightsConfig(
+        governance_principals=tuple(principals),
+        approval_threshold=numbers["approval_threshold"],
+        deny_threshold=numbers["deny_threshold"],
+        hotspot_threshold=numbers["hotspot_threshold"],
+        stale_after_seconds=numbers["stale_after_seconds"],
+    )
 
 
 def _parse_incident(value: dict[str, Any]) -> IncidentConfig:
