@@ -1,0 +1,137 @@
+{
+  "cases": [
+    {
+      "assertions": [
+        {
+          "cmd": "/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/python - /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s16-live/cases/FT-SC-10-LIVE/live/export.jsonl",
+          "grounded": true,
+          "name": "sc10-expired-exactly-once",
+          "ok": true
+        },
+        {
+          "cmd": "/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/python - /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s16-live/cases/FT-SC-10-LIVE/live/home /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s16-live/cases/FT-SC-10-LIVE/live/export.jsonl",
+          "grounded": true,
+          "name": "sc10-resolve-deny-timeout",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 3,
+      "assertions_total": 3,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-10-LIVE",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s16-live",
+      "status": "pass"
+    },
+    {
+      "assertions": [
+        {
+          "cmd": "test 0 -eq 0",
+          "grounded": true,
+          "name": "gate-approved-exit-0",
+          "ok": true
+        },
+        {
+          "cmd": "test 2 -eq 2",
+          "grounded": true,
+          "name": "gate-denied-exit-2",
+          "ok": true
+        },
+        {
+          "cmd": "test 3 -eq 3",
+          "grounded": true,
+          "name": "gate-expired-exit-3",
+          "ok": true
+        },
+        {
+          "cmd": "test 5 -eq 5",
+          "grounded": true,
+          "name": "gate-pending-exit-5",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 5,
+      "assertions_total": 5,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-16-LIVE",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s16-live",
+      "status": "pass"
+    },
+    {
+      "assertions": [
+        {
+          "cmd": "bash -c \n  \"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/agentinbox\" --home \"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s16-live/cases/FT-SC-24-LIVE/live/corrupt\" inbox >/dev/null 2>&1\n  rc=$?\n  test $rc -eq 4 && echo FAIL-CLOSED-4",
+          "grounded": true,
+          "name": "fault-corrupt-store-fails-closed",
+          "ok": true
+        },
+        {
+          "cmd": "bash -c \n  \"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/agentinbox\" --home \"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s16-live/cases/FT-SC-24-LIVE/live/locked\" inbox >/dev/null 2>&1\n  rc=$?\n  test $rc -eq 4 && echo FAIL-CLOSED-4",
+          "grounded": true,
+          "name": "fault-locked-store-fails-closed",
+          "ok": false
+        },
+        {
+          "cmd": "bash -c \n  test ! -x \"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s16-live/cases/FT-SC-24-LIVE/live/corrupt/allow-marker\" && echo NO-SILENT-ALLOW",
+          "grounded": true,
+          "name": "fault-no-silent-allow",
+          "ok": true
+        },
+        {
+          "cmd": "scan artifacts for secrets",
+          "grounded": true,
+          "name": "no-secret-leak",
+          "ok": true
+        }
+      ],
+      "assertions_grounded": 4,
+      "assertions_total": 4,
+      "blocked": false,
+      "class": "P/F",
+      "grounded": true,
+      "id": "FT-SC-24-LIVE",
+      "llm_captured": false,
+      "llm_required": false,
+      "run_id": "s16-live",
+      "status": "fail"
+    }
+  ],
+  "env": {
+    "arch": "arm64",
+    "commit": "cc5ba62",
+    "compose": "5.6.1",
+    "docker": "Docker version 29.5.2, build 79eb04c7d8",
+    "os": "Darwin",
+    "python": "Python-3.12.14",
+    "run_id": "s16-live",
+    "version": "v0.1.0"
+  },
+  "generated_at": "2026-11-07T19:38:49.559322+00:00",
+  "green": false,
+  "run_id": "s16-live",
+  "totals": {
+    "blocked": 0,
+    "fail": 1,
+    "over_claimed": 0,
+    "pass": 2
+  }
+}

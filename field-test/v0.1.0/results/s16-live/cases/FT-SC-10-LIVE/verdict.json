@@ -1,0 +1,14 @@
+{
+  "id": "FT-SC-10-LIVE",
+  "status": "pass",
+  "class": "P/F",
+  "blocked": false,
+  "grounded": true,
+  "assertions_total": 3,
+  "assertions_grounded": 3,
+  "llm_captured": false,
+  "llm_required": false,
+  "run_id": "s16-live",
+  "assertions": [{"name":"sc10-expired-exactly-once","ok":true,"grounded":true,"cmd":"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/python - /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s16-live/cases/FT-SC-10-LIVE/live/export.jsonl"},{"name":"sc10-resolve-deny-timeout","ok":true,"grounded":true,"cmd":"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/python - /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s16-live/cases/FT-SC-10-LIVE/live/home /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s16-live/cases/FT-SC-10-LIVE/live/export.jsonl"},{"name":"no-secret-leak","ok":true,"grounded":true,"cmd":"scan artifacts for secrets"}
+]
+}

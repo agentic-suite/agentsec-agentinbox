@@ -1,0 +1,29 @@
+[classes.irreversible]
+ttl_seconds = 8
+warn_seconds = 3
+self_review = "deny"
+require_reason_on_deny = true
+ladder = []
+
+[roster.tier-1]
+terminal = ["alice"]
+
+[throttle]
+per_agent_burst = 20
+per_agent_rate_per_min = 10
+flood_window_seconds = 30
+
+[channels.terminal]
+enabled = true
+
+[channels.desktop]
+enabled = false
+
+[channels.webhook]
+enabled = false
+
+[bus]
+driver = "filesystem"
+
+[store]
+driver = "sqlite"
