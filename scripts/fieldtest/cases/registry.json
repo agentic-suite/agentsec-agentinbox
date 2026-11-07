@@ -1,0 +1,469 @@
+[
+  {
+    "id": "FT-SC-01",
+    "suite": "s0-core",
+    "class": "P/F",
+    "pytest": [
+      "tests/cli/test_cuj1.py"
+    ],
+    "note": "first ask, terminal, zero config"
+  },
+  {
+    "id": "FT-SC-02",
+    "suite": "s0-core",
+    "class": "P/F",
+    "pytest": [
+      "tests/ask/test_validation.py",
+      "tests/ask/test_contract.py"
+    ],
+    "note": "malformed ask rejected loudly; nothing partial persists"
+  },
+  {
+    "id": "FT-SC-05",
+    "suite": "s0-core",
+    "class": "P/F",
+    "pytest": [
+      "tests/config/test_hints.py",
+      "tests/lifecycle/test_resolve.py"
+    ],
+    "note": "rescope hint -> new identity, no state reuse"
+  },
+  {
+    "id": "FT-SC-06",
+    "suite": "s0-core",
+    "class": "P/F",
+    "pytest": [
+      "tests/ask/test_api.py"
+    ],
+    "note": "duplicate ingest coalesces"
+  },
+  {
+    "id": "FT-SC-09",
+    "suite": "s0-core",
+    "class": "P/F",
+    "pytest": [
+      "tests/scheduler/test_expiry.py",
+      "tests/lifecycle/test_resolve.py"
+    ],
+    "note": "timeout = deny + warning"
+  },
+  {
+    "id": "FT-SC-10",
+    "suite": "s0-core",
+    "class": "P/F",
+    "pytest": [
+      "tests/scheduler/test_recovery.py",
+      "tests/scheduler/test_clock.py"
+    ],
+    "note": "expiry survives crash; clock step-back does not extend TTL"
+  },
+  {
+    "id": "FT-SC-17",
+    "suite": "s0-core",
+    "class": "P/F",
+    "pytest": [
+      "tests/answers/test_pipeline.py"
+    ],
+    "note": "self-review denied (+ allowed variant)"
+  },
+  {
+    "id": "FT-SC-19",
+    "suite": "s0-core",
+    "class": "P/F",
+    "pytest": [
+      "tests/answers/test_pipeline.py"
+    ],
+    "note": "late answer is a visible no-op"
+  },
+  {
+    "id": "FT-SC-07",
+    "suite": "s1-cross-channel",
+    "class": "P/F",
+    "pytest": [
+      "tests/channels/test_conformance.py",
+      "tests/parity/test_parity.py"
+    ],
+    "note": "second-surface approve + terminal parity"
+  },
+  {
+    "id": "FT-SC-08",
+    "suite": "s1-cross-channel",
+    "class": "P/F",
+    "pytest": [
+      "tests/parity/test_races.py"
+    ],
+    "note": "race: one decision, second rejected late"
+  },
+  {
+    "id": "FT-SC-18",
+    "suite": "s1-cross-channel",
+    "class": "P/F",
+    "pytest": [
+      "tests/parity/test_failover.py"
+    ],
+    "note": "channel failover, no duplicate notify"
+  },
+  {
+    "id": "FT-SC-11",
+    "suite": "s2-escalation",
+    "class": "P/F",
+    "pytest": [
+      "tests/escalation/test_tiers.py",
+      "tests/escalation/test_revocation.py"
+    ],
+    "note": "3 a.m. drill, tier claims revoked"
+  },
+  {
+    "id": "FT-SC-12",
+    "suite": "s2-escalation",
+    "class": "P/F",
+    "pytest": [
+      "tests/escalation/test_no_extension.py"
+    ],
+    "note": "ladder exhaustion denies; TTL never extended"
+  },
+  {
+    "id": "FT-SC-13",
+    "suite": "s3-flood",
+    "class": "P/F",
+    "pytest": [
+      "tests/flood/test_buckets.py",
+      "tests/flood/test_deny_digest.py"
+    ],
+    "note": "attack pack: burst allowed / overflow denied (counts recorded)"
+  },
+  {
+    "id": "FT-SC-14",
+    "suite": "s3-flood",
+    "class": "P/F",
+    "pytest": [
+      "tests/flood/test_headroom.py"
+    ],
+    "note": "legitimate burst passes together with SC-13"
+  },
+  {
+    "id": "FT-SC-15",
+    "suite": "s4-ci",
+    "class": "P/F",
+    "pytest": [
+      "tests/channels/test_ci.py",
+      "tests/cli/test_gate_cli.py"
+    ],
+    "note": "pipeline halts on gate, resumes on answer"
+  },
+  {
+    "id": "FT-SC-16",
+    "suite": "s4-ci",
+    "class": "P/F",
+    "pytest": [
+      "tests/contract/test_exit_codes.py",
+      "tests/cli/test_gate_cli.py"
+    ],
+    "note": "deterministic exit matrix, idempotent retry"
+  },
+  {
+    "id": "FT-SC-20",
+    "suite": "s5-evidence",
+    "class": "P/F",
+    "pytest": [
+      "tests/audit/test_chain.py",
+      "tests/audit/test_export.py",
+      "tests/cli/test_audit_cli.py"
+    ],
+    "note": "reconstruction + chain; tamper names seq"
+  },
+  {
+    "id": "FT-SC-21",
+    "suite": "s5-evidence",
+    "class": "P/F",
+    "pytest": [
+      "tests/security/test_scanner.py",
+      "tests/security/test_hardening.py"
+    ],
+    "note": "0 scanner findings; receipts complete"
+  },
+  {
+    "id": "FT-SC-22",
+    "suite": "s6-attacks",
+    "class": "P/F",
+    "pytest": [
+      "tests/security/test_packs.py"
+    ],
+    "note": "RELEASE-GATING: 10 spoof/replay/forge attacks"
+  },
+  {
+    "id": "FT-SC-23",
+    "suite": "s6-attacks",
+    "class": "P/F",
+    "pytest": [
+      "tests/security/test_packs.py",
+      "tests/security/test_hardening.py"
+    ],
+    "note": "RELEASE-GATING: 10 poisoned cards, 0 approvals"
+  },
+  {
+    "id": "FT-SC-24",
+    "suite": "s6-attacks",
+    "class": "P/F",
+    "pytest": [
+      "tests/faults/test_matrix.py"
+    ],
+    "note": "RELEASE-GATING: fail-closed matrix, 0 silent allows"
+  },
+  {
+    "id": "FT-SC-25",
+    "suite": "s7-governance",
+    "class": "P/F",
+    "pytest": [
+      "tests/adapters/test_langgraph.py"
+    ],
+    "note": "LangGraph round-trip + crash-resume, one execution"
+  },
+  {
+    "id": "FT-SC-26",
+    "suite": "s7-governance",
+    "class": "P/F",
+    "pytest": [
+      "tests/ops/test_offline.py"
+    ],
+    "note": "offline day, doctor green, no outbound attempts"
+  },
+  {
+    "id": "FT-SC-68",
+    "suite": "s8-readiness",
+    "class": "P/F",
+    "pytest": [
+      "tests/readiness/test_rejection.py"
+    ],
+    "note": "pre-write bounce, nothing stored, repair contract"
+  },
+  {
+    "id": "FT-SC-69",
+    "suite": "s8-readiness",
+    "class": "P/F",
+    "pytest": [
+      "tests/readiness/test_contradictions.py"
+    ],
+    "note": "contradiction visible / reject-on-ingest"
+  },
+  {
+    "id": "FT-SC-70",
+    "suite": "s8-readiness",
+    "class": "P/F",
+    "pytest": [
+      "tests/readiness/test_scorer.py",
+      "tests/readiness/test_class_config.py"
+    ],
+    "note": "same weak ask, different class bands"
+  },
+  {
+    "id": "FT-SC-71",
+    "suite": "s9-constrained",
+    "class": "P/F",
+    "pytest": [
+      "tests/constraints/test_alternatives.py"
+    ],
+    "note": "one-click constrained allow + constraint set"
+  },
+  {
+    "id": "FT-SC-72",
+    "suite": "s9-constrained",
+    "class": "P/F",
+    "pytest": [
+      "tests/constraints/test_repair.py",
+      "tests/constraints/test_recall.py"
+    ],
+    "note": "repair packet round trip, no human re-teach"
+  },
+  {
+    "id": "FT-SC-73",
+    "suite": "s9-constrained",
+    "class": "P/F",
+    "pytest": [
+      "tests/constraints/test_edits.py"
+    ],
+    "note": "edit re-fingerprints; enforcer runs the edited form"
+  },
+  {
+    "id": "FT-SC-74",
+    "suite": "s9-constrained",
+    "class": "P/F",
+    "pytest": [
+      "tests/constraints/test_alternatives.py",
+      "tests/constraints/test_edges.py"
+    ],
+    "note": "unbindable = advice only, cannot be picked"
+  },
+  {
+    "id": "FT-SC-75",
+    "suite": "s10-operations",
+    "class": "P/F",
+    "pytest": [
+      "tests/bundles/test_operations.py"
+    ],
+    "note": "20-ask bundle: one screen, 20 answers, no approve-all"
+  },
+  {
+    "id": "FT-SC-76",
+    "suite": "s10-operations",
+    "class": "P/F",
+    "pytest": [
+      "tests/bundles/test_operations.py"
+    ],
+    "note": "shift handoff preserves TTL + notes"
+  },
+  {
+    "id": "FT-SC-77",
+    "suite": "s10-operations",
+    "class": "P/F",
+    "pytest": [
+      "tests/bundles/test_operations.py"
+    ],
+    "note": "incident mode, denies still deny"
+  },
+  {
+    "id": "FT-SC-78",
+    "suite": "s10-operations",
+    "class": "P/F",
+    "pytest": [
+      "tests/bundles/test_operations.py"
+    ],
+    "note": "narrative reproduces a 3 a.m. denial"
+  },
+  {
+    "id": "FT-SC-79",
+    "suite": "s11-outcomes",
+    "class": "P/F",
+    "pytest": [
+      "tests/outcomes/test_outcomes.py"
+    ],
+    "note": "executed closure + offline-verifiable packet"
+  },
+  {
+    "id": "FT-SC-80",
+    "suite": "s11-outcomes",
+    "class": "P/F",
+    "pytest": [
+      "tests/outcomes/test_outcomes.py"
+    ],
+    "note": "exceeded manifest loud, never absorbed"
+  },
+  {
+    "id": "FT-SC-81",
+    "suite": "s11-outcomes",
+    "class": "P/F",
+    "pytest": [
+      "tests/outcomes/test_outcomes.py"
+    ],
+    "note": "rollback leaves the decision untouched"
+  },
+  {
+    "id": "FT-SC-82",
+    "suite": "s11-outcomes",
+    "class": "P/F",
+    "pytest": [
+      "tests/outcomes/test_outcomes.py"
+    ],
+    "note": "packet-only reviewer reconstructs end-to-end"
+  },
+  {
+    "id": "FT-SC-83",
+    "suite": "s12-grants",
+    "class": "P/F",
+    "pytest": [
+      "tests/grants/test_grants.py"
+    ],
+    "note": "12-ask compressed view, 12 answers, export complete"
+  },
+  {
+    "id": "FT-SC-84",
+    "suite": "s12-grants",
+    "class": "P/F",
+    "pytest": [
+      "tests/grants/test_grants.py"
+    ],
+    "note": "window expires mid-burst -> per-ask, 0 silent allows"
+  },
+  {
+    "id": "FT-SC-85",
+    "suite": "s12-grants",
+    "class": "P/F",
+    "pytest": [
+      "tests/grants/test_grants.py"
+    ],
+    "note": "owner revocation immediate + loud"
+  },
+  {
+    "id": "FT-SC-86",
+    "suite": "s12-grants",
+    "class": "P/F",
+    "pytest": [
+      "tests/grants/test_grants.py"
+    ],
+    "note": "repeated denials -> insight, no auto-hardening"
+  },
+  {
+    "id": "FT-SC-87",
+    "suite": "s13-insights",
+    "class": "P/F",
+    "pytest": [
+      "tests/insights/test_insights.py"
+    ],
+    "note": "20 approvals -> one redacted insight"
+  },
+  {
+    "id": "FT-SC-88",
+    "suite": "s13-insights",
+    "class": "P/F",
+    "pytest": [
+      "tests/insights/test_insights.py"
+    ],
+    "note": "noisy policy -> named tuning diff (PR to apply)"
+  },
+  {
+    "id": "FT-SC-89",
+    "suite": "s13-insights",
+    "class": "P/F",
+    "pytest": [
+      "tests/insights/test_insights.py"
+    ],
+    "note": "calibration aggregate; per-principal gated + logged"
+  },
+  {
+    "id": "FT-SC-90",
+    "suite": "s13-insights",
+    "class": "P/F",
+    "pytest": [
+      "tests/insights/test_insights.py"
+    ],
+    "note": "divergence -> proposal only, nothing applies itself"
+  },
+  {
+    "id": "FT-SC-03",
+    "suite": "s14-study",
+    "class": "P/F|B",
+    "requires": "study",
+    "note": "the 15-second spine \u2014 46-card study, plan \u00a79.1"
+  },
+  {
+    "id": "FT-SC-04",
+    "suite": "s14-study",
+    "class": "P/F|B",
+    "requires": "study",
+    "note": "degraded cards -> explicit unknown + deny"
+  },
+  {
+    "id": "FT-T1-CLAUDE",
+    "suite": "s15-harness",
+    "class": "P/F|B",
+    "requires": "host-harness",
+    "note": "Claude Code PreToolUse live \u2014 journal: version, transcript, gate outcome"
+  },
+  {
+    "id": "FT-T1-CODEX",
+    "suite": "s15-harness",
+    "class": "P/F|B",
+    "requires": "host-harness",
+    "note": "Codex CLI wrapper live \u2014 deny + expiry behavior recorded"
+  }
+]

@@ -8,7 +8,7 @@
 
 > **Status: ▫ NOT RUN (plan frozen, sweep pending).** This is a **hand-maintained** journal, updated as the
 > M32 sweep runs — not a generated scoreboard. Verdicts are entered **by hand, from committed result files
-> under `docs/field-test/v0.1.0/results/`**; counts below are placeholders until real runs exist and are
+> under `field-test/v0.1.0/results/`**; counts below are placeholders until real runs exist and are
 > never auto-filled. Nothing in this template claims a result it does not have.
 > **Current:** **0 ✅ PASS · 0 ❌ FAIL · 0 ⛔ BLOCKED · 49 ▫ not run (plan frozen 2026-11-07)** — every row of
 > the master table starts `not run`; the plan ([FIELD_TEST_PLAN.md](FIELD_TEST_PLAN.md) §6) is frozen and
@@ -93,7 +93,7 @@ regression note) before the group closes. One run per case; a re-run is a **seco
 | Codex CLI | *(version, or "absent → FT-T1-CODEX BLOCKED")* |
 | Study corpus | *(checksum + participant count, once frozen — plan §9.1)* |
 | Clock / sync | *(UTC, `doctor` clock check result)* |
-| Results / journal | `docs/field-test/v0.1.0/results/<suite>/` · `journal/<case>/` |
+| Results / journal | `field-test/v0.1.0/results/<suite>/` · `journal/<case>/` |
 
 ---
 
@@ -124,8 +124,8 @@ start `not run`; verdicts are entered by hand, one per case, from `results/<suit
 |---|---|---|---|---|
 | FT-SC-01 | core-lifecycle | P/F | ▫ not run | first ask, terminal, zero config — plan §S1 |
 | FT-SC-02 | core-lifecycle | P/F | ▫ not run | malformed rejected loudly, nothing partial persists |
-| FT-SC-03 | study | P/F | ▫ not run | the 15-second spine — bars in plan §9.1 |
-| FT-SC-04 | study/quality | P/F | ▫ not run | degraded cards → explicit `unknown` + deny |
+| FT-SC-03 | study | P/F\|B | ▫ not run | the 15-second spine — bars in plan §9.1 |
+| FT-SC-04 | study/quality | P/F\|B | ▫ not run | degraded cards → explicit `unknown` + deny |
 | FT-SC-05 | core-lifecycle | P/F | ▫ not run | rescope hint → new identity, no state reuse |
 | FT-SC-06 | core-lifecycle | P/F | ▫ not run | duplicate ingest coalesces |
 | FT-SC-07 | cross-channel | P/F | ▫ not run | second-surface approve + terminal parity |
@@ -264,8 +264,8 @@ Status vocabulary: **not run | PASS | FAIL | BLOCKED** — this run so far: **0 
 
 ```sh
 # Environment + harness (recorded per run)
-#   fingerprint -> docs/field-test/v0.1.0/results/<suite>/env.json
-#   raw logs    -> docs/field-test/v0.1.0/journal/<case>/  (never in this report)
+#   fingerprint -> field-test/v0.1.0/results/<suite>/env.json
+#   raw logs    -> field-test/v0.1.0/journal/<case>/  (never in this report)
 
 # Layer-0 backstop (the deterministic suites under every case)
 make test                      # 924 tests, >=95% coverage

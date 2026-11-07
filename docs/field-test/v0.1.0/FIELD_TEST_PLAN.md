@@ -2,7 +2,7 @@
 
 **Milestone:** M32 Field Tests — FINAL (SC-01–SC-90 + the 15-second study) · **Authored:** `32.D0` (#379), 2026-11-07
 **Plan (this doc) →** report `docs/field-test/v0.1.0/FIELD_TEST_REPORT.md` (hand-maintained template, already published)
-**Harness:** the `agentinbox` CLI + the `tests/` suites + the harness recipes below · **Results:** `docs/field-test/v0.1.0/results/<suite>/` · **Journal:** `docs/field-test/v0.1.0/journal/` (raw transcripts, never in the report).
+**Harness:** the `agentinbox` CLI + the `tests/` suites + the harness recipes below · **Results:** `field-test/v0.1.0/results/<suite>/` · **Journal:** `field-test/v0.1.0/journal/` (raw transcripts, never in the report).
 
 **BLUF.** agentinbox v0.1.0 is the **human decision gate for agent-initiated irreversible actions** — a local-first inbox that mints a gated ask, delivers one card, accepts one answer bound to the exact action identity, and resolves `allow` / `deny` / `pending`, with a hash-chained audit of every move. This field test is the **only** field-test pass for v0.1.0 (it absorbs the M24 core pass): it must prove the **core catalog SC-01–SC-26 re-run green on the expanded build** (against the M23 core commit `ab94330` + PRD 17 expected behavior, after six expansion milestones M26–M31 landed on top), the **expansion scenarios SC-68–SC-90** (readiness, constrained allows, operations, outcome closure, grants/compression, insights), **one** zero-context 15-second study covering core + expansion CUJs, and the **Claude Code / Codex CLI harness recipes run live** (feeding the M33 compatibility matrix labels). The plan is frozen here so M32 execution is a matter of **running, not deciding**.
 
@@ -42,7 +42,7 @@ Cases whose environment is genuinely unavailable (no Claude Code / Codex CLI on 
 | Deterministic suites per scenario group (tests/readiness, constraints, bundles, outcomes, grants, insights, answers, ask, escalation, flood, faults, security, conformance, cli, docs) | ✅ available (these are the L0 drivers) |
 | Harness recipes (Claude Code `PreToolUse`, Codex CLI wrapper) | ✅ documented (`docs/adapters/harness-recipes.md`) — not yet run live |
 | Study corpus (12 + 12 degraded + 10 poisoned + 12 expansion, pre-registered answers, checksum) | ☐ to freeze (32.5/#384, §S12) |
-| Field-test result/journal scaffolding (`docs/field-test/v0.1.0/results/`, `journal/`) | ☐ to create on first run |
+| Field-test result/journal scaffolding (`field-test/v0.1.0/results/`, `journal/`) | ☐ to create on first run |
 | Report template | ✅ this plan's companion (`FIELD_TEST_REPORT.md`, hand-maintained marker) |
 | Field box (macOS/Linux POSIX box with the CLI, Claude Code, Codex CLI installed) + ≥10 study participants | ☐ **BLOCKED** — not yet provisioned; recorded here, not hidden |
 
@@ -116,8 +116,8 @@ The **entire** SC-01–SC-26 block runs **before** any expansion case is evaluat
 |---|---|---|---|---|---|---|
 | FT-SC-01 | First ask, terminal, zero config | 17 SC-01 | cli | `init` → `ask` → `inbox` → typed `answer` | card shows all four blocks + TTL; `ask-raised`→`ask-delivered(terminal)`→`ask-answered(approved, principal)`; resolve `allow/allow_ask_approved`; audit reconstructs ≤3 transitions | P/F |
 | FT-SC-02 | Malformed ask rejected loudly | 17 SC-02 | ci | conformance fixtures + CLI 400s | 400 with field-named diagnostics (missing `expires_at`, 300 KiB args, floating expiry); **no record, no delivery**; nothing partial persists | P/F |
-| FT-SC-03 | Zero-context correct call (spine) | 17 SC-03 · 21 B | hum | the frozen corpus (§S12) | ≥9/10 participants ≥10/12 correct; median <15 s; p90 <25 s; missing fields render `unknown` | P/F |
-| FT-SC-04 | Missing-context honesty | 17 SC-04 | ci+hum | degraded corpus | every stripped field renders explicit `unknown`; correct decision flips to deny — 0 silent blanks, 0 guessed values | P/F |
+| FT-SC-03 | Zero-context correct call (spine) | 17 SC-03 · 21 B | hum | the frozen corpus (§S12) | ≥9/10 participants ≥10/12 correct; median <15 s; p90 <25 s; missing fields render `unknown` | P/F\|B |
+| FT-SC-04 | Missing-context honesty | 17 SC-04 | ci+hum | degraded corpus | every stripped field renders explicit `unknown`; correct decision flips to deny — 0 silent blanks, 0 guessed values | P/F\|B |
 | FT-SC-05 | Rescope hint changes the agent's behavior | 17 SC-05 | cli | deny → re-ask `--dry-run` | hint in the resolve payload; second ask = **new** identity; first stays denied; no state reuse | P/F |
 | FT-SC-06 | Duplicate ingest coalesces | 17 SC-06 | ci | 3× same POST | same `ask_id` ×3; one delivery; `deduplicated` ×2; approver sees one card | P/F |
 | FT-SC-09 | Timeout = deny with warning | 17 SC-09 | cli | short-TTL ask, nobody answers | `ask-warned` at T-60 on both channels; `ask-expired` at T=300; resolve `deny/human_gate_timeout/retryable=false` + hint; jitter ≤1 s; zero allow paths | P/F |
