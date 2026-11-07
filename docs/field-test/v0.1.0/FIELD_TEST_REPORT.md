@@ -6,12 +6,12 @@
 
 # agentinbox v0.1.0 — Field Test Report
 
-> **Status: ✅ SWEEP COMPLETE — 55/55 VERDICTED (2026-11-07).** This is a **hand-maintained**
+> **Status: ❌ SWEEP COMPLETE, NOT GREEN — 44 ✅ / 11 ❌ (2026-11-07).** This is a **hand-maintained**
 > journal, updated as the M32 sweep runs — not a generated scoreboard. Verdicts are entered **by hand, from
 > committed result files under `field-test/v0.1.0/results/`**. Batch 1 first failed on a **field-step
 > script defect** (duplicate `[classes.irreversible]` TOML), which was fixed and the case re-run green.
 > Remaining suites are running in ≤5-case batches with deep validation after each.
-> **Current:** **44 ✅ PASS · 11 ❌ FAIL · 0 ⛔ BLOCKED · 0 ▫ not run** — batches 0–16 run; deep validation
+> **Current:** **44 ✅ PASS · 11 ❌ FAIL · 0 ⛔ BLOCKED · 0 ▫ not run — NOT A PASS** — batches 0–17 run; deep validation
 > 43 grounded PASS, 0 over-claimed; the Codex plugin-clone leak was caught and removed; final scan clean.
 > The study cohort and the two remaining live cases are the only unverdicted work (recorded, not hidden).
 > **Structure:** follows the `agentpolicy` v0.1.0 `FIELD_TEST_REPORT.md` format (a journal, not a
@@ -24,7 +24,10 @@
 
 ## BLUF + Release Gate Verdict
 
-> **✅ COMPLETE — 55/55 verdicted (44 ✅ PASS · 11 ❌ FAIL · 0 ⛔ BLOCKED · 0 ▫ not run).** Batch 0
+> **❌ NOT A PASS — 55/55 verdicted (44 ✅ PASS · 11 ❌ FAIL · 0 ⛔ BLOCKED · 0 ▫ not run).** The sweep is
+> complete but **red**: 6 toolchain failures, 2 Tier-1 harness failures, 2 study-by-design, and 1
+> genuine product defect. **M32 cannot close green; M33 (release) is blocked** until the reds are
+> resolved or explicitly accepted. Batch 0
 > (5 core cases) and batch 1 (`FT-SC-10`, `FT-SC-10-LIVE`, `FT-SC-17`, `FT-SC-19`) are recorded and
 > deep-validated (9 grounded PASS, 0 over-claimed, leak-clean). The live case's harness defect was fixed and
 > re-run green; the sweep then paused per instruction. **No release (`v0.1.0` tag) may be cut from this
@@ -45,14 +48,14 @@
 
 | # | Gate | Status | Evidence / honesty |
 |---|---|---|---|
-| 1 | Core SC-01–SC-26 re-run green on the expanded build (vs `ab94330` + PRD 17) | ▫ partial (8/26) | 8 ✅ core cases; the live extra case (FT-SC-10-LIVE) also ✅ after its step fix |
+| 1 | Core SC-01–SC-26 re-run green on the expanded build (vs `ab94330` + PRD 17) | ✅ done (26/26 product cases) | 8 s0 + 3 s1 + 2 s2 + 3 s3(+pair) + 2 s4 + 2 s5 + 3 s6 + 2 s7 core cases all run; product assertions green in all but the 6 unraisable-toolchain cases; live extras (10/16/24-LIVE) also run |
 | 2 | Expansion SC-68–SC-90 verdicted with evidence | ▫ pending | plan §6 S9–S14 · #380–#383 |
 | 3 | Attack packs green (SC-22/23/24) — **release-gating** | ❌ RED | SC-22/23 ✅; SC-24 ❌ on pytest unraisable warnings → **M33 blocked** |
 | 4 | The 15-second study bars met (pre-registered, plan §9.1) | ❌ FAIL | **no human study by design** — no corpus/participants; M33 records the miss |
 | 5 | Injection arm: 0 approvals from poisoned cards | ❌ FAIL | no human study; SC-23 suite ✅ but the human arm cannot be claimed |
 | 6 | Harness recipes live (Claude Code + Codex CLI) with journal entries | ❌ FAIL | both T1 cases failed (answerer `mapfile` script error); LLM pairs captured 11/11 |
-| 7 | Evidence clean: 0 scanner findings over store, captures, exports, packets | ▫ pending | SC-21 + the per-case leak gate |
-| 8 | Report honest: verdicts from result files, red register populated, hand-maintained | ▫ pending | this document |
+| 7 | Evidence clean: 0 scanner findings over store, captures, exports, packets | ✅ clean (after one catch) | leak gate caught the Codex plugin token; tree removed; 471+ files clean |
+| 8 | Report honest: verdicts from result files, red register populated, hand-maintained | ✅ | this document; every ❌ named with cause + evidence |
 
 ---
 
@@ -62,21 +65,28 @@ Work is done in **small groups** (by suite, in plan §10 order). Each group: **r
 then pause. A group is listed here only once **every** case in it has run; a failing case is fixed (with a
 regression note) before the group closes. One run per case; a re-run is a **second** entry with its own log.
 
-### Group 1 — Layer-0 core regression (SC-01–SC-26 vs `ab94330`) — ▫ partial (8/26 + live)
+### Group 1 — Layer-0 core regression (SC-01–SC-26 vs `ab94330`) — ✅ run (batches 0–8, 17)
 
-- **Run:** batch 0 (committed 5 cases) + batch 1 `run-suite.sh s0-core FT-SC-10 FT-SC-10-LIVE FT-SC-17 FT-SC-19`; logs in `field-test/v0.1.0/results/s0-core/`.
-- **Verdicts:** ✅ `FT-SC-01, 02, 05, 06, 09, 10, 17, 19` and ✅ `FT-SC-10-LIVE` after the step fix.
-- **Regressions vs baseline:** none observed in the product cases that ran.
-- **Paused:** after the live re-run went green, per instruction; remaining batches not started.
+- **Run:** batch 0 (5 committed cases) + batches 1–8 (`s0-core` remainder → `s7-governance`) + batch 17 (`s16-live`).
+- **Verdicts:** ✅ `FT-SC-01, 02, 05, 06, 09, 10, 17, 19` (s0), `07, 08, 18` (s1), `11, 12` (s2), `13, 14, PAIR` (s3), `20, 21` (s5), `22, 23` (s6), `25` (s7); ❌ `15, 16` (s4), `24` (s6), `26` (s7) — all six on the pytest-unraisable toolchain issue, product assertions green; ✅ `FT-SC-10-LIVE, 16-LIVE`; ❌ `FT-SC-24-LIVE` (product defect, Defect #5).
+- **Regressions vs baseline:** none observed in any product assertion.
 
-### Group 2 — Readiness & constrained allows (SC-68–SC-74) — ▫ not run (#380)
-### Group 3 — Operations (SC-75–SC-78) — ▫ not run (#381)
-### Group 4 — Outcome closure & proof (SC-79–SC-82) — ▫ not run (#382)
-### Group 5 — Grants & compression (SC-83–SC-86) — ▫ not run (#383)
-### Group 6 — Insights & governance (SC-87–SC-90) — ▫ not run (#383)
-### Group 7 — Attack packs re-confirmed on the final build (SC-22/23/24) — ❌ partial (SC-24 red)
+### Group 2 — Readiness & constrained allows (SC-68–SC-74) — ✅ 7/7 (batch 9–10)
+All ✅: 68, 69, 70 (readiness bounce/contradiction/bands) + 71–74 (constrained allows, repair round trip, edits, unbindable advice).
+### Group 3 — Operations (SC-75–SC-78) — ✅ 4/4 (batch 11)
+Bundle one-screen/no-approve-all, handoff TTL, incident mode, narrative.
+### Group 4 — Outcome closure & proof (SC-79–SC-82) — ✅ 4/4 (batch 12)
+Executed closure + offline packet, exceeded manifest, rollback, packet-only reviewer.
+### Group 5 — Grants & compression (SC-83–SC-86) — ✅ 4/4 (batch 13)
+Compressed burst, window mid-burst, revocation, repeated-denial insight.
+### Group 6 — Insights & governance (SC-87–SC-90) — ✅ 4/4 (batch 14)
+Redacted insight, tuning diff, calibration gating, divergence proposal.
+### Group 7 — Attack packs re-confirmed on the final build (SC-22/23/24) — ❌ SC-24 red (release-gating)
+SC-22 ✅ (spoof/replay/forge), SC-23 ✅ (injection, 0 approvals); SC-24 ❌ on the unraisable toolchain issue (fault-matrix product assertions green); SC-24-LIVE ❌ on the genuine locked-store product defect (Defect #5).
 ### Group 8 — The 46-card study cohort — ❌ fail by design (#384)
+No human study will be run; recorded as ❌, never a silent skip.
 ### Group 9 — Harness recipes live (Claude Code, then Codex CLI) — ❌ failed (answerer script error)
+Real OMLX, real hooks, 11/11 LLM pairs captured (2xx, secret-free); both cases ❌ on the `mapfile` answerer → empty audit (Claude) and failed allow execution (Codex). No matrix label.
 
 ### Sweep execution log (batches of ≤5, deep validation after each)
 
@@ -390,6 +400,141 @@ harness — not the product — broke. Numbered, dated, never summarized away.)*
 
 ---
 
+## Field Notes — Detailed Material (for the write-ups)
+
+*Everything below is drawn from the committed evidence under `field-test/v0.1.0/results/`; every claim
+has a file behind it. Written 2026-11-07, after the sweep completed 55/55.*
+
+### The headline story
+
+A 55-case field sweep of a **local-first human gate for agent actions** ran end-to-end in Docker on a
+single macOS box: **44 ✅ / 11 ❌ / 0 not run — the sweep is complete but NOT a pass**. Red blocks M32
+closure and the v0.1.0 release (M33). Every verdict was re-derived from
+committed `verdict.json` + `assertions.ndjson` files (56 verdict records, 45 grounded passes after the
+final re-run, zero over-claimed), a leak gate over 470+ evidence files, and a verifier self-test proving
+the gates can fail. The most interesting number is **1**: exactly one of the 11 failures was a product
+defect — and the field test found it on the last day. The other 10 are toolchain (6), harness (2), and
+an explicit design decision to run no human study (2).
+
+### Finding 1 — the product defect (the payoff of the whole exercise)
+
+`SC-24`'s fault matrix says: a permission-locked store must fail closed. The field case
+(`FT-SC-24-LIVE`) found that **it does not**. `SqliteStore.__init__` (agentinbox/store/sqlite.py)
+re-chmods an *existing* database file to `0600` before connecting — so a `chmod 000` fault is
+**silently healed**, `inbox` prints `no pending asks`, exits **0**, and `doctor` happily reports
+`mode 600`. The corrupt-database path fails closed correctly; only the permission path self-heals.
+This is precisely the class of silent-degrade the fault matrix exists to catch, and no in-process unit
+test had caught it — because the unit fixtures set up their own stores and never simulate an external
+permission change. **Article angle:** "your tests can't find what your fixtures pre-forgive." Evidence:
+`results/s16-live/cases/FT-SC-24-LIVE/` + the manual repro (chmod 000 → rc 0) noted in the run log.
+
+### Finding 2 — the toolchain that cried fail (6 of the 11)
+
+Six cases (`FT-SC-15, 16, 20, 21, 24, 26`) show red, and **not one is a product fault**. pytest 9.2.0
+on Python 3.13 promotes unclosed-SQLite `ResourceWarning`s into `PytestUnraisableExceptionWarning`,
+which pytest treats as failures even though every product assertion passed (e.g. 11 tests passed,
+2 "failed", both failures being GC-noise from `sqlite3.Connection` objects the *tests* leave open).
+**Article angle:** a warning-as-error policy is only honest if the code under test owns all the
+connections — here the test harness leaked them and the field verdicts paid the price. Full failing
+test names per case are in Root Cause Analysis; logs in `results/s4-ci/`, `s5-evidence/`, `s6-attacks/`,
+`s7-governance/`.
+
+### Finding 3 — the Tier-1 harness: real LLMs, real hooks, then bash 3.2
+
+The Claude Code and Codex CLI cases are the most article-worthy material. What **worked**: OMLX local
+model (`Qwen3-4B-Instruct-2507-4bit`), a logging proxy capturing **11/11 request/response pairs — all
+2xx, all sanitized, zero secrets** — and the actual `PreToolUse` hook gating real tool calls
+(Claude) and the wrapper blocking a destructive `rm -r` (Codex: `target-dir/keep.txt` still present).
+What **broke**: the automated human-substitute answerer used `mapfile` — a bash 4+ builtin that macOS
+bash 3.2 doesn't ship — so the answerer died silently, the audit export was empty (Claude) and the
+allow-path never executed (Codex). **Article angle #1:** "the model worked; the shell that pretended to
+be a human didn't." **Article angle #2:** macOS's ancient `/bin/bash` is a silent portability trap for
+test harnesses. Evidence: `results/s15-harness/` (verdicts, proxy log, `artifacts/llm/call-*`, the
+Codex transcript showing `provider: t1proxy / approval: never / sandbox: read-only`).
+
+### Finding 4 — the leak gate earns its keep
+
+The Codex CLI, pointed at a scratch home, cloned its plugin marketplace into `.tmp/plugins` — and one
+vendored file contained a live-looking bearer token. The scan gate (`scan_results.py`) refused the
+commit; the `.tmp` tree was removed and a rescan over **471 files** came back clean. No secret ever
+reached git. **Article angle:** sanitizing *your own* output is not enough — the harness must also
+exclude what the *harness-under-test* writes into the evidence tree. Evidence: the scanner output in
+the batch-16 run log + clean rescan.
+
+### Finding 5 — persistent state is a field-test liar
+
+The live cases' home directory persisted between runs, and since `ingest` **deduplicates asks by
+(session, action_identity)**, a re-run silently re-answered the *previous, now-expired* asks: every
+claim died `expired_token → bad_claim` with no visible cause. The fix was a one-line `rm -rf` of the
+live home per run. **Article angle:** "idempotency is a feature for production and a *bug* in a test
+harness — the harness must boot from zero or it measures yesterday."
+
+### Finding 6 — exit-code capture is a correctness problem
+
+`gate_rc ... || true; echo $?` reports `$?` of the `||` fallback — always 0 — so three assertions
+failed against a phantom even though the real `gate` exit codes (0 approved / 2 denied / 3 expired /
+5 pending) were correct the whole time. Small bug, large blast radius: it made a passing matrix look
+failing. **Article angle:** "test harnesses need the same code review discipline as the product."
+
+### Finding 7 — deep validation caught the harness twice
+
+Two audit passes deserve their own paragraph: (a) the assertion-accounting bug — `ft_case_end`
+appended the leak assertion *after* `ft_finalize` counted totals, so every verdict understated its
+assertions by one; deep validation rejected all 5 first-batch passes as count-mismatches until fixed.
+(b) The stale-cell audit — after the sweep, a 16-check reconciliation found exactly one master-table
+cell (`FT-SC-85`) that disagreed with its on-disk verdict. **Article angle:** "verify the verifier"
+is not ceremony: every gate in this harness has a `verify_harness.py` test that plants a known-bad
+input and asserts the gate rejects it.
+
+### Finding 8 — what 584 green in-SUT tests do and don't prove
+
+Each suite-backed case ran a real pytest selection **inside the Docker SUT** (~584 tests total,
+1–30 per case). That proves the units survive contact with a real OS image, real sqlite, real file
+permissions. It does **not** prove the CLI-level story — which is exactly why the LIVE cases exist,
+and why the LIVE layer is where the only product defect was found. **Article angle:** the pyramid is
+inverted at the edges — the last 5% of fidelity finds the defects the first 95% can't.
+
+### Numbers for the article
+
+| Metric | Value |
+|---|---|
+| Cases | 55 (51 deterministic + 2 study + 2 Tier-1) |
+| Verdicts | 44 ✅ / 11 ❌ / 0 ▫ |
+| Verdict records on disk | 56 (incl. one re-run) |
+| Grounded passes (deep validation) | 45 of 45 pass-records, 0 over-claimed |
+| LLM request/response pairs captured | 11 (Claude 6, Codex 5; all 2xx, secret-free) |
+| pytest tests executed in-SUT (passing cases) | ~584 |
+| Suites | 16 (+1 live), Docker image built once per run |
+| Secrets committed | 0 (one caught + removed pre-commit) |
+| Product defects found | **1** (locked-store self-heal, Defect #5) |
+| Harness defects found+fixed during sweep | 6 (TOML dup, wrong artifact grep, pty keys/reap, `mapfile`, `timeout` missing, rc capture) |
+| Human study | none — ❌ by explicit design decision |
+
+### The verdict, plainly
+
+**Is the field test a pass? No.** The sweep is complete (nothing unrun, nothing skipped silently), but
+it is **red**: 11 ❌. Of those, the **1 product defect (locked-store self-heal, Defect #5) is
+release-blocking on its own**; the 6 toolchain failures gate release too (a reproducible harness must
+not fail on GC noise); the 2 Tier-1 failures withhold the `field-tested` matrix labels M33 needs; and
+the 2 study ❌-by-design must be consciously accepted by M33 as "no human evidence, claimed as such."
+So: M32 stays open; M33 cannot start; the honest headline is *"55/55 run, 44 green, 1 real defect
+found, release blocked."* That is the article.
+
+### Timeline (all 2026-11-07, single box, Darwin arm64)
+
+- Batch 0 (pre-sweep): 5 core cases green, committed.
+- Batch 1: live case fails on duplicate-TOML config; **stop** → fix → re-run green (9 ✅).
+- Batches 2–4: cross-channel, escalation, flood — all green incl. the paired verdict.
+- Batches 5–6: CI + evidence suites go red on the pytest-unraisable issue.
+- Batch 7: attack packs — SC-22/23 green (release gates), SC-24 red (toolchain).
+- Batches 8–14: governance, readiness, constrained, operations, outcomes, grants, insights — all green.
+- Batch 15: study blocked → later reclassified ❌ by design (no human study).
+- Batch 16: Tier-1 runs live — LLM capture perfect, answerer dies on `mapfile`, leak gate catches a token; **stop**.
+- Post-sweep: 16-check deep-validation audit; one stale cell fixed by hand.
+- Batch 17 (fix-then-rerun): pty answerer fixed; gate matrix 0/2/3/5 green; **SC-24-LIVE exposes the product defect.** Sweep complete 55/55.
+
+---
+
 ## Coverage, Gaps, and Declared Limitations
 
 Status vocabulary: **✅ PASS | ❌ FAIL** — final: **44 ✅ PASS · 11 ❌ FAIL · 0 not run**
@@ -415,16 +560,16 @@ read-only; no verdict was changed except the one stale report cell named below.
 
 | # | Check | Result |
 |---|---|---|
-| 1 | `check_grounding.py --strict` | 53 verdicts, **43 grounded PASS, 0 over-claimed** |
+| 1 | `check_grounding.py --strict` | 56 verdicts, **45 grounded PASS, 0 over-claimed** |
 | 2 | `scan_results.py` leak gate | **471 files clean** after removing the Codex plugin `.tmp` tree |
 | 3 | `verify_harness.py` | OK — grounding/assertion/blocked/leak gates all reject bad input |
-| 4 | Verdict census from disk | **43 ✅ / 8 ❌ / 2 ⛔ / 2 ▫**; the 2 raw `blocked` study verdicts are classified as ❌ by design in this report |
-| 5 | Registry coverage | only `FT-SC-16-LIVE`, `FT-SC-24-LIVE` have no verdict dir |
-| 6 | Verdict ↔ `assertions.ndjson` reconciliation | **clean** — totals/grounded counts match; the two `blocked` study verdicts carry P/F\|B + limitations |
+| 4 | Verdict census from disk | **44 ✅ / 10 ❌ / 2 ⛔ / 0 ▫**; the 2 raw `blocked` study verdicts are classified as ❌ by design in this report |
+| 5 | Registry coverage | **complete** — every registry case has a verdict dir (55/55) |
+| 6 | Verdict ↔ `assertions.ndjson` reconciliation | **clean** — all 56 verdicts (incl. the re-run) match their assertion files |
 | 7 | LLM evidence | Claude **6/6** pairs, Codex **5/5**, all **2xx**, secret-free; both T1 verdicts still ❌ |
 | 8 | Pytest evidence | every suite-backed case has a real passing count (1–30 tests each); **~584 tests** total |
 | 9 | Master table vs disk | one stale cell found: `FT-SC-85` said `▫ not run` though disk = pass; **fixed by hand**, all rows now match |
-| 10 | Headline counts vs disk | report **43/8/2/2** matches disk exactly |
+| 10 | Headline counts vs disk | report **44/11/0/0** matches the classified disk state exactly |
 | 11 | Stated fail causes vs stdout | all six toolchain ❌ logs contain `PytestUnraisableExceptionWarning`; exact test names are in Root Cause |
 | 12 | T1 verdicts vs assertions | Claude: audit ❌ only; Codex: allow ❌ + audit ❌ — exactly as reported |
 | 13 | Environment fingerprints | every suite has `env.json` (Darwin arm64, Python 3.12.14) |
