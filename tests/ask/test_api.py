@@ -8,6 +8,7 @@ import time
 import urllib.error
 import urllib.request
 from collections.abc import Iterator
+from datetime import timedelta
 from typing import Any
 
 import pytest
@@ -129,6 +130,32 @@ def test_unknown_ask_is_404(api: IngestAPI) -> None:
     assert status == 404
     assert body["contract"] == "resolve/1.0"
     assert body["reason_code"] == "deny_ask_unknown"
+
+
+def test_a_reloaded_config_is_applied_to_the_running_api(api: IngestAPI) -> None:
+    from agentinbox.config import ClassConfig, Config
+
+    api.update_config(
+        Config(classes={"irreversible": ClassConfig(ttl_seconds=600)})
+    )
+    body = payload(
+        expires_at=(NOW + timedelta(seconds=500))
+        .isoformat(timespec="microseconds")
+        .replace("+00:00", "Z")
+    )
+
+    status, _ = call(api, "POST", "/v1/asks", body=body)
+
+    assert status == 201
+
+
+def test_update_config_can_replace_the_flood_guard(api: IngestAPI, store) -> None:  # type: ignore[no-untyped-def]
+    from agentinbox.flood import FloodGuard
+
+    api.update_config(config(), flood_guard=FloodGuard(store, config(), now=lambda: NOW))
+
+    status, _ = call(api, "GET", "/v1/asks/ask_0000000000000000")
+    assert status == 404
 
 
 def test_resolve_rejects_a_different_action_identity(api: IngestAPI) -> None:

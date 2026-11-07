@@ -258,7 +258,6 @@ def test_a_locked_store_makes_the_producer_fail_closed(
 ) -> None:
     from agentinbox.cli import main
 
-    monkeypatch.setattr("agentinbox.cli.getpass.getuser", lambda: "requester")
     home = tmp_path / "home"
     init_home(home, resolve_config_path(home))
     marker = tmp_path / "locked-never"

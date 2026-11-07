@@ -28,6 +28,8 @@ The command runs only after the answer is recorded; deny/expiry exits without ex
 | `--file PATH` | ingest a validated `ask/1.0` JSON object |
 | `--class C` | class name (default `irreversible`) |
 | `--environment E` | environment label (default `local`) |
+| `--agent-id A` | agent identity recorded on the ask |
+| `--requested-by R` | requester recorded for self-review (defaults to the agent id / `agent://agentinbox-cli`, never the human OS user) |
 | `--ttl S` | requested TTL, at most the class ceiling |
 | `--timeout S` | CI-style wait budget (independent of the ask TTL) |
 

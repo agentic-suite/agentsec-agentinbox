@@ -94,7 +94,7 @@ human's behalf.
 | **Requirement** | A misbehaving agent cannot spam the inbox: per-agent/session/environment **token-bucket throttling**, **duplicate-identity coalescing**, and **flood auto-deny** as a first-class event. |
 | **Behavior** | Bucket trip → new asks auto-denied with `ask_flood_throttled` → **one** `ask-flood` event (counts, window, offending agent/session) → **one digest notification** ("N asks denied; first ask shown"). Pre-flood pending asks stay answerable. Legitimate bursts stay under the threshold (dedupe + batching first). |
 | **Config** | Per action class + per agent; threshold, burst, and window in config; `doctor` explains the effective limits. |
-| **Acceptance** | Flood pack (200 asks / 30 s) → 200 denies, 1 event, 1 notification, approver sees a digest; a 20-action migration burst remains fully answerable. |
+| **Acceptance** | Flood pack (200 asks / 30 s from one key) → the burst capacity is allowed, the remaining asks are denied (`flood_denied` + `ask_flood_throttled`), exactly 1 event, 1 digest; a 20-action migration burst from a different key remains fully answerable (the discriminator is behavior, not volume). |
 | **Test** | `tests/test_flood.py`, `tests/test_burst_legitimate.py`, SC-13/SC-14. |
 
 ### R8–R10 (v1.x, scoped not built)
@@ -127,7 +127,7 @@ and the audit chain in one file. All timers derive from persisted absolute insta
 
 ### E3 — Unforgeable, single-use claim tokens
 
-Every rendered card carries a **claim token**: 256-bit secret, stored **hashed**, bound to `ask_id` +
+Every rendered card carries a **claim token**: 128-bit secret, stored **hashed**, bound to `ask_id` +
 `action_identity` + channel + tier, expiring with the ask, **single-use**, invalidated on escalation tier
 change and on resolution. A forwarded link, a replayed request, or a token answered late does nothing.
 *Acceptance:* replay/forward/late/stale-token fixtures all fail closed and log `answer-rejected` with reason.

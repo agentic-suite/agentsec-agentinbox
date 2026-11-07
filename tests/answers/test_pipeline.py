@@ -57,6 +57,44 @@ def test_deny_with_reason(store) -> None:  # type: ignore[no-untyped-def]
     assert store.transitions_for(ask.ask_id)[-1].reason == "missing rollback plan"
 
 
+def test_claim_secrets_are_128_bits_and_hashed(store) -> None:  # type: ignore[no-untyped-def]
+    ask, _cfg = make_ask(store)
+    minted = mint(store, ask)
+
+    assert len(minted.secret) == 32
+    assert len(bytes.fromhex(minted.secret)) == 16
+
+    stored = store.get_claim(minted.claim.claim_id)
+    assert stored is not None
+    assert stored.secret_hash != minted.secret
+    assert minted.secret not in stored.secret_hash
+
+
+def test_self_review_uses_the_signed_producer_principal(store) -> None:  # type: ignore[no-untyped-def]
+    from agentinbox.ingest import ingest
+    from agentinbox.trust import ProducerIdentity
+    from tests.ask.conftest import payload
+
+    cfg = answer_config(roster=("alice", "maya"))
+    ask = ingest(
+        payload(requested_by="maya@team"),
+        store=store,
+        config=cfg,
+        producer=ProducerIdentity(
+            adapter="agentpolicy", authenticated=True, principal="alice"
+        ),
+        now=NOW,
+    ).ask
+    minted = mint(store, ask)
+
+    with pytest.raises(AnswerRejected) as caught:
+        AnswerVerifier(store, cfg, now=lambda: NOW).submit(
+            request(ask, minted), channel_authenticated=True
+        )
+
+    assert caught.value.cause == "self_review"
+
+
 def test_a_claim_bound_to_another_identity_is_rejected(store) -> None:  # type: ignore[no-untyped-def]
     from agentinbox.claims import MintedClaim, hash_secret
     from agentinbox.store import ClaimRecord
@@ -82,6 +120,22 @@ def test_a_claim_bound_to_another_identity_is_rejected(store) -> None:  # type: 
 
     assert caught.value.cause == "identity_mismatch"
     assert store.get(ask.ask_id).status is AskStatus.PENDING  # type: ignore[union-attr]
+
+
+def test_a_late_answer_on_an_expired_ask_names_no_winner(store) -> None:  # type: ignore[no-untyped-def]
+    from agentinbox.lifecycle import transition
+
+    ask, cfg = make_ask(store)
+    transition(store, ask.ask_id, AskStatus.EXPIRED, kind="expired", at=NOW)
+    minted = mint(store, ask)
+
+    with pytest.raises(AnswerRejected) as caught:
+        AnswerVerifier(store, cfg, now=lambda: NOW).submit(
+            request(ask, minted), channel_authenticated=True
+        )
+
+    assert caught.value.cause == "late"
+    assert "already resolved" in caught.value.message
 
 
 def test_unauthenticated_channel_cannot_answer(store) -> None:  # type: ignore[no-untyped-def]

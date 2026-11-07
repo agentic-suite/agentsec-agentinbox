@@ -35,8 +35,9 @@ Healthy path exits `0` in under two seconds; any red check exits `4`.
 
 ## Reload
 
-Send `SIGHUP` to the daemon. A valid file is applied (escalation policy) and recorded; an invalid file is refused,
-the last-good config stays, and the failure is recorded with the error. No in-flight ask changes.
+Send `SIGHUP` to the daemon. A valid file is applied in place — delivery channels, escalation policy, retention,
+and the running API's config/flood guard — and recorded; an invalid file is refused, the last-good config stays,
+and the failure is recorded with the error. No in-flight ask changes and the API keeps its bind/token.
 
 ## Producer rule
 

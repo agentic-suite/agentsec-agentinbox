@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from agentinbox.ingest import ingest
 from agentinbox.store import canonical_json
 from agentinbox.trust import TRUSTED_FIELDS, ProducerIdentity, classify_trust
@@ -45,6 +47,37 @@ def test_stored_payload_marks_unverified_fields(store) -> None:  # type: ignore[
     assert trust["trusted"] == []
     assert "policy_ref" in trust["unverified"]
     assert "arguments" in trust["untrusted"]
+
+
+def test_a_class_can_require_a_signed_producer(store) -> None:  # type: ignore[no-untyped-def]
+    from agentinbox.config import ClassConfig, Config
+    from agentinbox.contract import ContractError
+
+    cfg = Config(
+        classes={
+            "irreversible": ClassConfig(
+                ttl_seconds=300, require_signed_producer=True
+            )
+        }
+    )
+
+    with pytest.raises(ContractError, match="signed producer"):
+        ingest(
+            payload(),
+            store=store,
+            config=cfg,
+            producer=ProducerIdentity.unauthenticated(),
+            now=NOW,
+        )
+
+    result = ingest(
+        payload(),
+        store=store,
+        config=cfg,
+        producer=ProducerIdentity(adapter="agentpolicy", authenticated=True),
+        now=NOW,
+    )
+    assert result.created is True
 
 
 def test_stored_payload_marks_trusted_fields_when_authenticated(store) -> None:  # type: ignore[no-untyped-def]

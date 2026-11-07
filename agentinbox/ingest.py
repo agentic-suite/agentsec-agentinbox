@@ -147,6 +147,12 @@ def ingest(
 ) -> IngestResult:
     moment = now or utcnow()
     contract = validate_ask(raw, now=moment, config=config)
+    ask_class = config.classes[contract.action_class]
+    if ask_class.require_signed_producer and not producer.authenticated:
+        raise ContractError(
+            "producer",
+            f"class {contract.action_class!r} requires a signed producer adapter",
+        )
 
     if contract.ask_id is not None:
         existing = store.get(contract.ask_id)
@@ -182,7 +188,6 @@ def ingest(
     }
 
     ask_id = contract.ask_id or f"ask_{secrets.token_hex(8)}"
-    ask_class = config.classes[contract.action_class]
     warn_at = (
         None
         if ask_class.warn_seconds is None

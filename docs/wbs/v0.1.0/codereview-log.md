@@ -140,20 +140,19 @@ regression test):
 | R5 / read-only posture | `verify-log` opened the store through the migrating loader, writing an old DB it was only supposed to inspect | `verify-log` uses `read_audit_entries` (read-only sqlite, no migration); a v1 store stays v1 and gains no audit table |
 | R5 / event log | The JSONL event sink replayed the whole chain after a restart (duplicate lines) | `EventTracer` persists the last **delivered** sequence in `<home>/logs/events.seq`; a down sink keeps the cursor behind and replays (at-least-once) instead of losing events |
 | R1 / T10 | `requested_by` was never a trusted-class field, so a signed adapter's self-review anchor was still unverified | Added to the trusted profile; a signed adapter's value is verified, an unsigned producer's is labelled unverified |
+| E3 | PRD 05 said the claim secret is 256-bit while PRD 18 and the implementation use 128-bit | PRD 05 E3 reconciled to **128-bit**; a test pins 32 hex chars (16 bytes) and the hashed-at-rest property |
+| R7 | PRD 05 R7 said a 200/30 s pack yields 200 denies, contradicting the 20-action burst requirement | PRD 05 R7, PRD 17 SC-13, and WBS 12.3 reconciled: burst capacity allowed, remainder denied (20/180 defaults), one event, one digest; a test pins `allowed == per_agent_burst` |
+| T10 | Unsigned producers can lie about `requested_by`, so self-review was unenforceable for them | The verifier uses a signed adapter's verified principal as the requester; `require_signed_producer = true` makes the class reject unsigned asks; the CLI sets `requested_by` to the agent (`--requested-by`), not the human |
+| E9 / reload | A valid SIGHUP only swapped the escalation policy; channels/API kept the old config | Reload now rebuilds delivery channels/wiring, the scheduler escalator, retention, and `IngestAPI.update_config` (same bind/token); next tick uses the new policy |
+| PRD 19/20 claims | No artifact separated code conformance from field/release claims | Added `docs/compliance/claims-and-limitations.md` with verified / not-verified / honest-label tables |
 
-**Noted, deliberately unchanged or deferred:**
+**Remaining, deliberately out of this pass:**
 
-- **Claim entropy:** PRD 05 E3 says "256-bit"; PRD 18 §guessing and the claims design say **128-bit**. The
-  implementation follows PRD 18 (128 bits, OS CSPRNG, hashed at rest). PRD 05's wording should be reconciled.
-- **Flood pack:** R7's literal "200 asks/30 s → 200 denies" conflicts with the same paragraph's "a 20-action
-  migration burst remains fully answerable". With burst 20 the pack yields 180 denies + 20 burst-capacity asks,
-  one event, one digest. Documented in the flood reference; SC-13 should be written as "N denies + one
-  event/digest, no more than the burst capacity reaches the approver".
-- **`requested_by` trust:** the value is now trusted for a signed adapter and unverified for an unsigned producer;
-  `self_review=deny` remains best-effort against an unsigned agent owner who lies (the card labels it).
-- **Event sink restart:** a persisted delivered-cursor now prevents a clean-restart replay; a crash while the
-  sink is down replays the buffered facts (at-least-once, stable `event_id`) rather than losing them.
-- **Reload scope:** a valid SIGHUP reload swaps the escalation policy and records the change; channels/API pick up
-  other policy on restart. Documented in the fail-closed reference.
-- **M21+:** service units, backup/restore, `report`, offline day, benches, and the final field tests (M32/M33)
-  remain out of this pass.
+- **Unsigned `requested_by`:** an operator must set `require_signed_producer = true` to make the self-review
+  anchor enforceable for a class; the default accepts unsigned local producers (the card labels the field
+  unverified). This is a policy choice, not an unresolved bug.
+- **Field/release verification:** zero-context studies, SC-01–SC-26/SC-68–SC-90, real agentwatch/agentpolicy
+  joins, harness recipes, M21 ops, benches, signing/SBOM/Scorecard. These require the field-test box and the
+  release pipeline; they are listed as **not verified** in
+  [`docs/compliance/claims-and-limitations.md`](../../compliance/claims-and-limitations.md) and are not claimed
+  as done.

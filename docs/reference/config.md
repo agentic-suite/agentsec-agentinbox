@@ -72,7 +72,8 @@ key_ref = "env:AGENTINBOX_ADAPTER_KEY"
 ```
 
 A signed adapter makes the trusted fields (`class`, `criticality`, `data_class`, `environment`, `policy_ref`,
-`reason_code`) verified for rendering. Unknown adapters and bad signatures are `401`.
+`reason_code`, `requested_by`) verified for rendering and for the self-review anchor. Unknown adapters and bad
+signatures are `401`.
 
 ### `[classes.<name>]` — ask classes
 
@@ -84,6 +85,7 @@ A signed adapter makes the trusted fields (`class`, `criticality`, `data_class`,
 | `require_reason_on_deny` | bool | `false` | deny must carry a reason |
 | `ladder` | list[str] | `[]` | escalation tiers, ordered; each must resolve to a `[roster.<tier>]` entry |
 | `ladder_delays` | list[int] | spread over the TTL | absolute offsets from ingest, one per tier; first is `0`, strictly increasing, last `< ttl_seconds` |
+| `require_signed_producer` | bool | `false` | reject unsigned producers for this class (makes the self-review anchor enforceable) |
 
 ```toml
 [classes.irreversible]

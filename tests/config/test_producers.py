@@ -48,6 +48,31 @@ def test_invalid_producer_configs_refuse(tmp_path: Path, body: str, message: str
         load_config(write(tmp_path, body))
 
 
+def test_a_class_can_require_a_signed_producer(tmp_path: Path) -> None:
+    path = write(
+        tmp_path,
+        """
+[classes.x]
+ttl_seconds = 60
+require_signed_producer = true
+""",
+    )
+    assert load_config(path).classes["x"].require_signed_producer is True
+
+
+def test_require_signed_producer_must_be_a_bool(tmp_path: Path) -> None:
+    path = write(
+        tmp_path,
+        """
+[classes.x]
+ttl_seconds = 60
+require_signed_producer = "yes"
+""",
+    )
+    with pytest.raises(ConfigError, match="require_signed_producer"):
+        load_config(path)
+
+
 def test_doctor_explains_producers(tmp_path: Path) -> None:
     path = write(
         tmp_path,

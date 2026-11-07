@@ -114,6 +114,38 @@ def test_a_literal_producer_key_fails() -> None:
     assert any(check.name == "producers" and not check.ok for check in report.checks)
 
 
+def test_a_deciding_channel_fails_the_kit(monkeypatch: pytest.MonkeyPatch) -> None:
+    class Deciding:
+        name = "terminal"
+
+        def deliver(self, ask, card) -> None:  # type: ignore[no-untyped-def]
+            return None
+
+        def authenticate(self, *, as_name: str | None = None) -> str | None:
+            return "alice"
+
+        def decide(self) -> None:
+            return None
+
+    monkeypatch.setattr(
+        "agentinbox.conformance.TerminalChannel", lambda **_kwargs: Deciding()
+    )
+    report = run_conformance(config(), now=NOW)
+
+    assert not report.ok
+    assert any(check.name == "channels" and not check.ok for check in report.checks)
+
+
+def test_event_drift_fails_the_kit(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "agentinbox.conformance.EVENT_TYPES", frozenset({"ask-raised"})
+    )
+    report = run_conformance(config(), now=NOW)
+
+    assert not report.ok
+    assert any(check.name == "events" and not check.ok for check in report.checks)
+
+
 def test_the_shipped_fixture_is_contract_valid() -> None:
     from agentinbox.ingest import ingest
     from agentinbox.store.memory import MemoryStore

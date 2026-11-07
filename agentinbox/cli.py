@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import getpass
 import json
 import os
 import secrets as _secrets
@@ -289,7 +288,10 @@ def _exec_ask_body(args: argparse.Namespace, config: Config) -> dict[str, Any]:
             "clause": "local CLI producer",
         },
         "criticality": "normal",
-        "requested_by": getpass.getuser(),
+        # The requester is the agent, not the human who happens to run the CLI (self-review).
+        "requested_by": (
+            args.requested_by or args.agent_id or "agent://agentinbox-cli"
+        ),
         "expires_at": to_iso(now + timedelta(seconds=ttl)),
         "context": {},
     }
@@ -446,47 +448,79 @@ def _serve(args: argparse.Namespace) -> int:
     except OSError as exc:
         print(f"{PROG}: config-change evidence unavailable: {exc}", file=sys.stderr)
 
-    desktop_config = config.channels.get("desktop")
-    desktop = (
-        DesktopChannel(config=config)
-        if desktop_config is not None and desktop_config.enabled
-        else None
-    )
-    channels: list[object] = [desktop] if desktop is not None else []
+    def make_digest(
+        desktop: DesktopChannel | None,
+    ) -> Callable[[Job], None]:
+        def on_digest(job: Job) -> None:
+            if desktop is None:
+                return
+            payload = job.payload
+            try:
+                window_start = parse_iso(str(payload["window_start"]))
+                desktop.notify_digest(
+                    window_start=window_start,
+                    first_ask_id=job.ask_id,
+                    count=int(payload.get("count", 0)),
+                )
+            except (KeyError, ValueError, ChannelError) as exc:
+                print(f"{PROG}: digest delivery failed: {exc}", file=sys.stderr)
 
-    def on_digest(job: Job) -> None:
-        if desktop is None:
-            return
-        payload = job.payload
-        try:
-            window_start = parse_iso(str(payload["window_start"]))
-            desktop.notify_digest(
-                window_start=window_start,
-                first_ask_id=job.ask_id,
-                count=int(payload.get("count", 0)),
-            )
-        except (KeyError, ValueError, ChannelError) as exc:
-            print(f"{PROG}: digest delivery failed: {exc}", file=sys.stderr)
+        return on_digest
 
+    def build_channels(
+        current: Config,
+    ) -> tuple[list[object], Callable[[Job], None]]:
+        desktop_config = current.channels.get("desktop")
+        desktop = (
+            DesktopChannel(config=current)
+            if desktop_config is not None and desktop_config.enabled
+            else None
+        )
+        return (
+            [desktop] if desktop is not None else [],
+            make_digest(desktop),
+        )
+
+    channels, on_digest = build_channels(config)
     try:
         apply_retention(store, config)
     except StoreError as exc:
         print(f"{PROG}: retention failed: {exc}", file=sys.stderr)
 
-    wiring = DeliveryWiring(store, channels, on_digest=on_digest)
+    api: Any = None
+    state: dict[str, DeliveryWiring] = {
+        "wiring": DeliveryWiring(store, channels, on_digest=on_digest)
+    }
+
+    def handle(job: Job) -> None:
+        state["wiring"].handle(job)
+
     scheduler = Scheduler(
         store, escalator=Escalator(store, config, bus=bus), bus=bus
     )
 
     def on_hup(_signum: int, _frame: object) -> None:
         result = holder.reload()
-        if result.ok:
-            scheduler.escalator = Escalator(store, result.config, bus=bus)
-            record_config_change(home, result.config)
-            print(f"{PROG}: config reloaded")
-        else:
+        if not result.ok:
             record_config_failure(home, result.error or "invalid config")
             print(f"{PROG}: config reload refused: {result.error}", file=sys.stderr)
+            return
+        new_channels, new_digest = build_channels(result.config)
+        state["wiring"] = DeliveryWiring(
+            store, new_channels, on_digest=new_digest
+        )
+        scheduler.escalator = Escalator(store, result.config, bus=bus)
+        if api is not None:
+            api.update_config(
+                result.config,
+                flood_guard=FloodGuard(store, result.config, bus=bus),
+            )
+        try:
+            apply_retention(store, result.config)
+        except StoreError as exc:
+            print(f"{PROG}: retention failed: {exc}", file=sys.stderr)
+        record_config_change(home, result.config)
+        print(f"{PROG}: config reloaded")
 
     with contextlib.suppress(ValueError, OSError):
         signal.signal(signal.SIGHUP, on_hup)
@@ -501,12 +535,11 @@ def _serve(args: argparse.Namespace) -> int:
     try:
         if args.once:
             scheduler.tick()
-            bus.consume(wiring.handle)
+            bus.consume(handle)
             tracer.drain()
             tracer.sink.flush()
             return int(ExitCode.APPROVED)
 
-        api = None
         if not args.no_api:
             token = os.environ.get("AGENTINBOX_API_TOKEN") or _secrets.token_hex(32)
             token_path = home / "api-token"
@@ -514,8 +547,8 @@ def _serve(args: argparse.Namespace) -> int:
             descriptor = os.open(
                 token_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600
             )
-            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-                handle.write(token + "\n")
+            with os.fdopen(descriptor, "w", encoding="utf-8") as token_file:
+                token_file.write(token + "\n")
             try:
                 api = start_api(
                     store=store,
@@ -543,7 +576,7 @@ def _serve(args: argparse.Namespace) -> int:
         trace_thread = threading.Thread(target=trace_loop, daemon=True)
         trace_thread.start()
         try:
-            bus.run(wiring.handle, stop)
+            bus.run(handle, stop)
         except KeyboardInterrupt:
             pass
         finally:
@@ -777,6 +810,7 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("--class", dest="ask_class", default="irreversible")
             sub.add_argument("--environment", default="local")
             sub.add_argument("--agent-id", default=None)
+            sub.add_argument("--requested-by", default=None)
             sub.add_argument("--session-id", default=None)
             sub.add_argument("--ttl", type=int, default=None)
             sub.add_argument("--timeout", type=float, default=None)

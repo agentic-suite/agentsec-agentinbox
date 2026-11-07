@@ -88,7 +88,6 @@ def run_in_thread(argv: list[str]) -> tuple[threading.Thread, dict[str, int]]:
 def test_exec_runs_only_after_approval(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("agentinbox.cli.getpass.getuser", lambda: "requester")
     home = make_home(tmp_path)
     marker = tmp_path / "executed"
 
@@ -96,6 +95,7 @@ def test_exec_runs_only_after_approval(
         ["--home", str(home), "ask", "--exec", f"touch {marker}"]
     )
     ask = wait_for_pending(home, thread=thread, result=result)
+    assert ask.payload["requested_by"] == "agent://agentinbox-cli"
     answer(home, ask, decision="approve")
     thread.join(timeout=10)
 
@@ -106,7 +106,6 @@ def test_exec_runs_only_after_approval(
 def test_exec_never_runs_on_deny(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("agentinbox.cli.getpass.getuser", lambda: "requester")
     home = make_home(tmp_path)
     marker = tmp_path / "never"
 
@@ -124,7 +123,6 @@ def test_exec_never_runs_on_deny(
 def test_exec_is_not_run_when_the_ask_expires(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("agentinbox.cli.getpass.getuser", lambda: "requester")
     home = make_home(tmp_path)
     marker = tmp_path / "expired"
 
@@ -147,7 +145,6 @@ def test_exec_is_not_run_when_the_ask_expires(
 def test_ask_file_returns_the_resolve_outcome(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setattr("agentinbox.cli.getpass.getuser", lambda: "requester")
     home = make_home(tmp_path)
     now = utcnow()
     arguments = {"command": "echo file"}
@@ -180,7 +177,6 @@ def test_ask_publishes_while_a_daemon_owns_the_spool(
 ) -> None:
     from agentinbox.bus import SpoolBus
 
-    monkeypatch.setattr("agentinbox.cli.getpass.getuser", lambda: "requester")
     home = make_home(tmp_path)
     marker = tmp_path / "published"
     daemon_bus = SpoolBus(home / "spool")

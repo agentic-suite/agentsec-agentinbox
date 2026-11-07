@@ -43,7 +43,7 @@ class IngestAPI:
 
     url: str
     token: str
-    _server: ThreadingHTTPServer
+    _server: _ApiServer
     _thread: threading.Thread
     _waiters: dict[str, threading.Event]
     _lock: threading.Lock
@@ -53,6 +53,14 @@ class IngestAPI:
             event = self._waiters.get(ask_id)
         if event is not None:
             event.set()
+
+    def update_config(
+        self, config: Config, *, flood_guard: FloodGuard | None = None
+    ) -> None:
+        """Apply a last-good reload to the running server (no rebind, same token)."""
+        self._server.config = config
+        if flood_guard is not None:
+            self._server.flood_guard = flood_guard
 
     def stop(self) -> None:
         self._server.shutdown()

@@ -145,6 +145,10 @@ class AnswerVerifier:
             raise AnswerRejected("off_roster", "principal is not authorized for this ask")
 
         requested_by = str(ask.payload.get("requested_by", ""))
+        producer = ask.payload.get("_producer") or {}
+        if producer.get("authenticated") and producer.get("principal"):
+            # A signed adapter's principal is verified; it outranks the self-reported field.
+            requested_by = str(producer["principal"])
         if request.principal == requested_by and ask_class.self_review != "allow":
             self._reject(ask, request, now, "self_review", "requester cannot decide their own ask")
             raise AnswerRejected("self_review", "self-review is not allowed for this class")

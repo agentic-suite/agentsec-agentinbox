@@ -103,6 +103,13 @@ def test_prior_asks_and_credential_class_render(store) -> None:  # type: ignore[
     assert "credential class: prod-deploy" in rendered
 
 
+def test_the_card_sets_the_warning_flag_only_in_the_window(store) -> None:  # type: ignore[no-untyped-def]
+    ask = make_ask(store)
+
+    assert build_card(ask, now=NOW).warning is False
+    assert build_card(ask, now=NOW + timedelta(seconds=240)).warning is True
+
+
 def test_absent_prior_asks_and_escalations_render_none() -> None:
     rendered = build_card(make_ask(), now=NOW).render("text")
 

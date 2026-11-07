@@ -69,6 +69,7 @@ _CLASS_KEYS = frozenset(
         "flood_burst",
         "flood_rate_per_min",
         "rescope_hint",
+        "require_signed_producer",
     }
 )
 _THROTTLE_KEYS = frozenset({"per_agent_burst", "per_agent_rate_per_min", "flood_window_seconds"})
@@ -103,6 +104,8 @@ class ClassConfig:
     flood_rate_per_min: int | None = None
     #: Advisory text echoed to the agent on expiry/deny (never policy).
     rescope_hint: str | None = None
+    #: When true, unsigned producers cannot create asks of this class (self-review anchor).
+    require_signed_producer: bool = False
 
 
 def default_ladder_delays(count: int, ttl_seconds: int) -> tuple[int, ...]:
@@ -333,6 +336,10 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
         flood_burst = _optional_positive_int(table, "flood_burst", key_path)
         flood_rate = _optional_positive_int(table, "flood_rate_per_min", key_path)
 
+        require_signed = table.get("require_signed_producer", False)
+        if not isinstance(require_signed, bool):
+            raise ConfigError(f"{key_path}.require_signed_producer: must be a boolean")
+
         rescope_hint = table.get("rescope_hint")
         if rescope_hint is not None:
             if not isinstance(rescope_hint, str) or not rescope_hint.strip():
@@ -352,6 +359,7 @@ def _parse_classes(value: dict[str, Any]) -> dict[str, ClassConfig]:
             flood_burst=flood_burst,
             flood_rate_per_min=flood_rate,
             rescope_hint=rescope_hint,
+            require_signed_producer=require_signed,
         )
     return classes
 
@@ -646,6 +654,7 @@ warn_seconds = 60
 self_review = "deny"
 require_reason_on_deny = true
 ladder = []
+require_signed_producer = false
 
 [roster.tier-1]
 terminal = ["alice"]

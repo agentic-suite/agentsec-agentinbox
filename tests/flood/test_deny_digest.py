@@ -45,8 +45,9 @@ def test_a_flood_produces_n_denies_one_event_one_digest(store) -> None:  # type:
 
     allowed = [result for result in results if result.ask.status is AskStatus.PENDING]
     denied = [result for result in results if result.ask.status is AskStatus.FLOOD_DENIED]
-    assert len(allowed) == 20
-    assert len(denied) == 180
+    # PRD R7 reconciled: the key's burst capacity is allowed, the remainder denied.
+    assert len(allowed) == config().throttle.per_agent_burst
+    assert len(denied) == 200 - len(allowed)
 
     # One ask-flood event for the window (on the first ask).
     events = [

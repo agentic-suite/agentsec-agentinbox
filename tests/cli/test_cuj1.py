@@ -24,7 +24,6 @@ PROMISE_SECONDS = 300
 def test_init_to_first_approval_is_well_under_the_promise(
     tmp_path: Path, monkeypatch
 ) -> None:  # type: ignore[no-untyped-def]
-    monkeypatch.setattr("agentinbox.cli.getpass.getuser", lambda: "requester")
     started = time.monotonic()
 
     home = tmp_path / "home"

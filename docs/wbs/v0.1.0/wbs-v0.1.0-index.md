@@ -223,8 +223,10 @@ A milestone is **closed** only when all of these hold:
   warning delivery; escalation wording; delivery-error redaction; lock-free producer publishing; claim
   `action_identity` binding (schema v5); `serve` starting the loopback API with a `0600` token; read-only
   `verify-log` (no migration); a persisted event-sink delivery cursor; `requested_by` in the signed trusted
-  profile. Noted and documented: PRD-05 vs PRD-18 claim-entropy wording, the 200/30 s flood-pack arithmetic,
-  unsigned `requested_by` trust limits, reload scope. Details in the
+  profile. Reconciled the PRD wording: claim entropy is 128-bit in PRD 05 and PRD 18; the 200/30 s flood verdict
+  records the burst capacity + denied remainder (PRD 05 R7, PRD 17 SC-13, WBS 12.3). Added
+  `require_signed_producer` (self-review enforceable), an in-place SIGHUP reload (channels/retention/API), and
+  the not-verified claims table. Details in the
   [review log](codereview-log.md#prd-conformance-review-m0m20-2026-11-08).
 
 ## PRD coverage matrix (every doc 00–30)
