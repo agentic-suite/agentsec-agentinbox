@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+from agentinbox.channels.desktop import desktop_availability
 from agentinbox.config import Config, ConfigError, load_config
 
 OK = "ok"
@@ -54,6 +55,7 @@ def run_checks(home: Path, config_path: Path) -> Report:
         _platform(),
         _home(home),
         config_check,
+        _desktop(config),
         _store_path(home),
         _schema(home / "inbox.db"),
         _clock(),
@@ -81,6 +83,24 @@ def _home(home: Path) -> Check:
     if mode & 0o077:
         return Check("home", WARN, f"{home}: mode {mode:o}, expected 700")
     return Check("home", OK, f"{home} (mode {mode:o})")
+
+
+def _desktop(config: Config | None) -> Check:
+    """Enabled desktop channel must be reachable; unusable is a finding, never silent."""
+    if config is None:
+        return Check("desktop", OK, "no valid config; channel state unknown")
+    channel = config.channels.get("desktop")
+    if channel is None or not channel.enabled:
+        return Check("desktop", OK, "disabled")
+    available, detail = desktop_availability()
+    if not available:
+        return Check(
+            "desktop",
+            FAIL,
+            f"{detail}; run the desktop channel on a GUI session or set "
+            "[channels.desktop] enabled = false (asks stay pending either way)",
+        )
+    return Check("desktop", OK, detail)
 
 
 def _store_path(home: Path) -> Check:

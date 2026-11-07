@@ -142,6 +142,11 @@ A milestone is **closed** only when all of these hold:
   once with a marker, concurrent schedulers cannot double-expire, backwards jumps cannot postpone, and the
   zero-allow-on-expiry counter stays 0. `doctor` warns when persisted evidence is ahead of the clock.
   Next: **M5** (`5.D0` decision card).
+- **2026-11-08 — M8 Desktop notification channel closed.** Issues #192–#202. **Gate:** 397 tests pass ·
+  coverage **95.69%** · `ruff` clean · `mypy --strict` clean · DCO signed. Notifications carry class +
+  fingerprint + TTL + tier only; `authenticate()` never returns a principal (no answer path); once-per-tier
+  and single-digest fixtures green; `doctor` reports `desktop` and fails closed when enabled-but-headless.
+  Next: **M9** (`9.D0` bus design).
 
 ## PRD coverage matrix (every doc 00–30)
 
