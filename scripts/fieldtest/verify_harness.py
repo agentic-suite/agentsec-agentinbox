@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
-"""Verify the verifier: the grounding gate must catch a shallow pass and the
-leak gate must catch a planted secret. A run whose gate cannot fail is not green.
+"""Verify the verifier: the deep-validation gates must reject bad input.
+
+If these gates cannot fail, a green field-test run is meaningless. This checks:
+
+  1. an ungrounded PASS is rejected,
+  2. a PASS with a failed assertion is rejected,
+  3. a PASS whose counts disagree with assertions.ndjson is rejected,
+  4. a grounded, all-green PASS is accepted,
+  5. a BLOCKED case without limitation/gate is rejected,
+  6. the leak gate catches a planted AWS key.
 
 Usage:
     python3 verify_harness.py
@@ -8,7 +16,6 @@ Usage:
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import sys
 import tempfile
@@ -17,72 +24,102 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 
 
+def _verdict(case_dir: Path, verdict: dict[str, object], rows: list[dict[str, object]]) -> None:
+    case_dir.mkdir(parents=True, exist_ok=True)
+    (case_dir / "verdict.json").write_text(json.dumps(verdict), encoding="utf-8")
+    (case_dir / "assertions.ndjson").write_text(
+        "\n".join(json.dumps(row) for row in rows) + ("\n" if rows else ""),
+        encoding="utf-8",
+    )
+
+
+def _run(script: str, root: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(HERE / script), str(root)],
+        capture_output=True,
+        text=True,
+    )
+
+
 def main() -> int:
     failures: list[str] = []
     with tempfile.TemporaryDirectory(prefix="ft-verify-") as temp:
         root = Path(temp)
+        case = root / "suite" / "cases" / "FT-FAKE"
 
-        # 1) An ungrounded PASS must be rejected.
-        case_dir = root / "suite" / "cases" / "FT-FAKE"
-        case_dir.mkdir(parents=True)
-        (case_dir / "verdict.json").write_text(
-            json.dumps(
-                {
-                    "id": "FT-FAKE",
-                    "status": "pass",
-                    "grounded": False,
-                    "assertions_total": 1,
-                    "assertions_grounded": 0,
-                }
-            ),
-            encoding="utf-8",
+        _verdict(
+            case,
+            {
+                "id": "FT-FAKE",
+                "status": "pass",
+                "grounded": False,
+                "assertions_total": 1,
+                "assertions_grounded": 0,
+            },
+            [{"name": "a", "ok": True, "grounded": False}],
         )
-        proc = subprocess.run(
-            [sys.executable, str(HERE / "check_grounding.py"), str(root)],
-            capture_output=True,
-            text=True,
-        )
-        if proc.returncode == 0:
+        if _run("check_grounding.py", root).returncode == 0:
             failures.append("check_grounding accepted an ungrounded PASS")
 
-        # 2) A grounded PASS must be accepted.
-        (case_dir / "verdict.json").write_text(
-            json.dumps(
-                {
-                    "id": "FT-FAKE",
-                    "status": "pass",
-                    "grounded": True,
-                    "assertions_total": 1,
-                    "assertions_grounded": 1,
-                }
-            ),
-            encoding="utf-8",
+        _verdict(
+            case,
+            {
+                "id": "FT-FAKE",
+                "status": "pass",
+                "grounded": True,
+                "assertions_total": 1,
+                "assertions_grounded": 1,
+            },
+            [{"name": "a", "ok": False, "grounded": True}],
         )
-        proc = subprocess.run(
-            [sys.executable, str(HERE / "check_grounding.py"), str(root)],
-            capture_output=True,
-            text=True,
-        )
-        if proc.returncode != 0:
-            failures.append("check_grounding rejected a grounded PASS")
+        if _run("check_grounding.py", root).returncode == 0:
+            failures.append("check_grounding accepted a PASS with a failed assertion")
 
-        # 3) The leak gate must catch a planted secret.
-        (root / "leak.txt").write_text(
-            "token=AKIA" + "A" * 16 + "\n", encoding="utf-8"
+        _verdict(
+            case,
+            {
+                "id": "FT-FAKE",
+                "status": "pass",
+                "grounded": True,
+                "assertions_total": 2,
+                "assertions_grounded": 2,
+            },
+            [{"name": "a", "ok": True, "grounded": True}],
         )
-        proc = subprocess.run(
-            [sys.executable, str(HERE / "scan_results.py"), str(root), "--quiet"],
-            capture_output=True,
-            text=True,
+        if _run("check_grounding.py", root).returncode == 0:
+            failures.append("check_grounding accepted a count mismatch")
+
+        _verdict(
+            case,
+            {
+                "id": "FT-FAKE",
+                "status": "pass",
+                "grounded": True,
+                "assertions_total": 1,
+                "assertions_grounded": 1,
+            },
+            [{"name": "a", "ok": True, "grounded": True}],
         )
-        if proc.returncode == 0:
+        if _run("check_grounding.py", root).returncode != 0:
+            failures.append("check_grounding rejected a grounded, all-green PASS")
+
+        _verdict(
+            case,
+            {"id": "FT-FAKE", "status": "blocked", "class": "P/F|B"},
+            [{"name": "blocked", "ok": True, "blocked": True}],
+        )
+        if _run("check_grounding.py", root).returncode == 0:
+            failures.append("check_grounding accepted BLOCKED without limitation/gate")
+
+        (root / "leak.txt").write_text("token=AKIA" + "A" * 16 + "\n", encoding="utf-8")
+        if _run("scan_results.py", root).returncode == 0:
             failures.append("scan_results missed a planted AWS key")
 
     if failures:
         for failure in failures:
             print(f"verify-harness: FAIL — {failure}", file=sys.stderr)
         return 1
-    print("verify-harness: OK (grounding + leak gates both reject a bad input)")
+    print("verify-harness: OK (grounding, assertion, blocked and leak gates all reject bad input)")
     return 0
 
 

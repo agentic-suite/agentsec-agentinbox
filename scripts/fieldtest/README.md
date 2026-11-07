@@ -47,9 +47,14 @@ logs under `results/_setup/`.
   case with a named environment limitation (study participants, real Claude
   Code / Codex CLI). `run-all.sh` exits non-zero while any case is BLOCKED
   (`FT_STRICT_BLOCKED=1`).
-- **No shallow PASS.** `run_pytest.py` fails on skip / no-tests; every case must
-  record at least one grounded assertion. `check_grounding.py` re-checks from
-  disk; `verify_harness.py` proves the gate can fail.
+- **No shallow PASS / deep validation.** `run_pytest.py` fails on skip or
+  no-tests. Every case records `assertions.ndjson`; `ft_finalize` requires at
+  least one grounded assertion. `check_grounding.py` re-reads every verdict from
+  disk and rejects: an ungrounded PASS, a PASS containing any failed assertion,
+  a count mismatch between `verdict.json` and `assertions.ndjson`, a PASS marked
+  blocked, and a BLOCKED case without limitation + release-gate item.
+  `verify_harness.py` proves every one of those gates can fail (and that the
+  leak gate catches a planted AWS key) before a run is trusted.
 - **No leaks.** `scan_results.py` refuses unmasked secrets before results are
   committed.
 - **No automation writes the report.** The report carries a
