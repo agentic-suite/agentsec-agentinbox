@@ -61,6 +61,12 @@ requirement → CUJ → scenario → test table); this register holds the summar
 | R37–R47 | Standing approvals governed, quorum variants, provenance tiers, identity plugins, rule simulation, packs, templates, hooks, SDKs, CI/Git surfaces, risk-tier drivers | [PRD 27](27-governance-identity-extensibility.md) | SC-33, SC-37, SC-38, SC-40 |
 | R48–R58, E15 | Review loop (needs_changes, clarifications, resolution summaries), session grants, approval windows, incident suppression, class routing, parallel notify, trust profiles, env overlays, change calendars | [PRD 28](28-review-loops-and-orchestration.md) | SC-41, SC-42, SC-43, SC-44, SC-45 |
 | R59–R67, E16 | Rollback-required approvals, confidence labels, deny taxonomy, signed rationale, attestations, writeback, correlation, training mode, drill pack | [PRD 29](29-trust-maturity-writeback-performance.md) | SC-46, SC-47, SC-48, SC-49, SC-50, SC-51, SC-52, SC-53 |
+| R78–R86 | Decision quality & ask readiness | [PRD 32](32-decision-quality-and-ask-readiness.md) | SC-68, SC-69, SC-70 |
+| R87–R93 | Constrained allows & denial repair | [PRD 33](33-constrained-allows-and-denial-repair.md) | SC-71, SC-72, SC-73, SC-74 |
+| R94–R100 | Operation bundles, handoff & incident review | [PRD 34](34-operation-bundles-handoff-and-incident-review.md) | SC-75, SC-76, SC-77, SC-78 |
+| R101–R107 | Outcome closure & execution proof | [PRD 35](35-outcome-closure-and-execution-proof.md) | SC-79, SC-80, SC-81, SC-82 |
+| R108–R114 | Repetitive approvals, grants & compression | [PRD 36](36-repetitive-approvals-grants-and-compression.md) | SC-83, SC-84, SC-85, SC-86 |
+| R115–R122 | Policy learning & governance insights | [PRD 37](37-policy-learning-and-governance-insights.md) | SC-87, SC-88, SC-89, SC-90 |
 | R68–R77, E17–E21 | Precedence lattice, formal state machine, review-loop limits, scope-escape protection, shared-machine provenance, no-advisory-allows, revocation, corpus governance, web-UI security, dead-man detection | [PRD 30](30-correctness-conflict-abuse-hardening.md) | SC-54, SC-55, SC-56, SC-57, SC-58, SC-59, SC-60, SC-61, SC-62, SC-63, SC-64, SC-65, SC-66, SC-67 |
 
 ## Consolidated-PRD coverage check (Appendix A → this PRD set)

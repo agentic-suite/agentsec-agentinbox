@@ -6,13 +6,15 @@ and idempotent ingest, the durable store + crash-safe scheduler (**timeout = den
 desktop-notification + CI-checkpoint + signed-webhook channels (**no chat platform required**), the
 filesystem-spool bus (movement ≠ truth), escalation ladders, flood protection, the hash-chained audit log +
 agentwatch event set, the agentpolicy resolve bridge, and the producer adapters (agentpolicy reference,
-generic CLI/HTTP, LangGraph `interrupt()`, `--exec`). **Twenty-six milestones (M0–M25)** across **thirteen
-detail files**; **field tests (M24) and release readiness (M25) are last.**
+generic CLI/HTTP, LangGraph `interrupt()`, `--exec`). **Thirty-four milestones (M0–M33)** across **seventeen
+detail files**; **the final two milestones are field tests (M32) and release readiness (M33)** — M24/M25 are
+the core field-test pass and release rehearsal, both re-executed at M32/M33 after the 0.1.0 expansion.
 
 > **Milestone ranges by intent:** **M0–M9** = the core engine (store → contract → lifecycle → scheduler →
 > card → claims → terminal → desktop → bus) · **M10–M14** = reach (CI, escalation, flood, webhook, multi-channel
 > truth) · **M15–M19** = evidence + producers (audit chain, agentwatch, resolve bridge, adapters,
-> conformance) · **M20–M23** = hardening + ops + docs · **M24–M25** = field tests + release. The WBS builds the
+> conformance) · **M20–M23** = hardening + ops + docs · **M24–M25** = core field tests + release rehearsal ·
+> **M26–M31** = 0.1.0 expansion features (PRDs 31–37) · **M32–M33** = **final** field tests + release. The WBS builds the
 > whole set to one release; nothing in the forward slate (PRDs 24–30) is in scope — v0.1.0 is the
 > [PRD 05](../../prd/05-features.md) §A/§B P0 set only (R1–R7 + E1–E12).
 
@@ -48,7 +50,9 @@ A milestone is **closed** only when all of these hold:
 4. **Tracking issue closed** — or explicitly commented with status.
 5. **Docs updated** — the milestone's design/reference docs updated and linked from this WBS.
 6. **Checkpoint recorded** — a dated line appended to the Progress section (commit refs + gate result).
-7. **Field tests (M24) and release readiness (M25) are the final milestones** — **M25 tags `v0.1.0`**.
+7. **The final two milestones are field tests (M32) and release readiness (M33)** — **M33 tags `v0.1.0`**.
+   M24 (core field tests, SC-01–SC-26) and M25 (release rehearsal) are re-executed there for the expanded scope;
+   nothing follows M33.
 
 > **One ticket at a time:** per work item, write the test first (RED) → implement (GREEN) → next. Do **not** run
 > the full suite between tickets; run it at milestone end only.
@@ -81,8 +85,11 @@ A milestone is **closed** only when all of these hold:
 | M21 | Ops: service units, backup/restore, migrations, `report` (E10, PRD 22/13) | [Part 11](wbs-v0.1.0-part11-failclosed-ops.md) |
 | M22 | Security hardening sweep + evidence scanner (PRD 06/18) | [Part 12](wbs-v0.1.0-part12-security-docs.md) |
 | M23 | Docs completion: reference, quickstart, runbooks, recipes | [Part 12](wbs-v0.1.0-part12-security-docs.md) |
-| **M24** | **Field tests** (SC-01–SC-26 + the 15-second study) | [Part 13](wbs-v0.1.0-part13-fieldtest-release.md) |
-| **M25** | **Release readiness** (last; tags `v0.1.0`) | [Part 13](wbs-v0.1.0-part13-fieldtest-release.md) |
+| **M24** | **Core field tests** (SC-01–SC-26 + the 15-second study; re-run at M32) | [Part 13](wbs-v0.1.0-part13-fieldtest-release.md) |
+| **M25** | **Core release rehearsal** (tag deferred to M33) | [Part 13](wbs-v0.1.0-part13-fieldtest-release.md) |
+| **M26–M31** | **0.1.0 expansion features** (PRDs 31–37) | [Parts 14–16](wbs-v0.1.0-part14-quality-constraints.md) |
+| **M32** | **Field tests — FINAL** (SC-01–SC-90; 15-second study) | [Part 17](wbs-v0.1.0-part17-expansion-fieldtest-release.md) |
+| **M33** | **Release readiness — FINAL** (tags `v0.1.0`) | [Part 17](wbs-v0.1.0-part17-expansion-fieldtest-release.md) |
 
 ## Issues & milestones (GitHub)
 
@@ -103,8 +110,8 @@ A milestone is **closed** only when all of these hold:
 | M8 | Desktop notification channel (R2) | #192–#202 (11) | M21 | Ops: service units, backup/restore, migrations, `report` (E10, PRD 22) | #62–#73 (12) |
 | M9 | AskBus: contract + in-proc + filesystem spool (E12) | #203–#214 (12) | M22 | Security hardening sweep + evidence scanner (PRD 06/18) | #74–#85 (12) |
 | M10 | CI checkpoint (R6) | #215–#226 (12) | M23 | Docs completion (reference, quickstart, runbooks, recipes) | #86–#97 (12) |
-| M11 | Escalation ladder (R4) | #227–#237 (11) | M24 | Field tests (SC-01–SC-26 + the 15-second study) | #98–#110 (13) |
-| M12 | Flood guard (R7) | #238–#248 (11) | M25 | Release readiness (tags `v0.1.0`) | #111–#123 (13) |
+| M11 | Escalation ladder (R4) | #227–#237 (11) | M24 | Core field tests (re-run at M32) | #98–#110 (13) |
+| M12 | Flood guard (R7) | #238–#248 (11) | M25 | Core release rehearsal (tag at M33) | #111–#123 (13) |
 
 ## Progress
 
@@ -171,6 +178,13 @@ A milestone is **closed** only when all of these hold:
 | **PRD 28** | Review loops & operational orchestration | deferred — v0.1.0 out of scope ([PRD 14](../prd/14-non-goals.md)); forward-slate WBS written at v0.1.x |
 | **PRD 29** | Trust maturity, writeback & human performance | deferred — v0.1.0 out of scope ([PRD 14](../prd/14-non-goals.md)); forward-slate WBS written at v0.1.x |
 | **PRD 30** | Correctness, conflict & abuse hardening | deferred — v0.1.0 out of scope ([PRD 14](../prd/14-non-goals.md)); forward-slate WBS written at v0.1.x |
+| **PRD 31** | CUJ & feature gaps (0.1.0 expansion) | M49 |
+| **PRD 32** | decision quality & ask readiness | M50 |
+| **PRD 33** | constrained allows & denial repair | M51 |
+| **PRD 34** | operation bundles, handoff & incident review | M52 |
+| **PRD 35** | outcome closure & execution proof | M53 |
+| **PRD 36** | repetitive approvals, grants & compression | M54 |
+| **PRD 37** | policy learning & governance insights | M55 |
 
 ## Requirements → milestone (v0.1.0: R1–R7, E1–E12)
 
@@ -270,3 +284,67 @@ D-13/D-14 (queue moves, store decides; filesystem bus, one box) → M9.
   [PRD 20 §G](../../prd/20-standards-and-claims.md) vocabulary
 
 Review log: [codereview-log.md](codereview-log.md).
+
+## 0.1.0 expansion (M26–M33 · PRDs 31–37)
+
+> **All of this is v0.1.0 work.** PRDs 31–37 extend the 0.1.0 program; they are appended as M26–M33 so the
+> already-built core (M0–M25) is untouched. **M32 (field tests) and M33 (release readiness) are the final two
+> milestones** — M24/M25 are re-executed there, and **nothing follows M33**; M33 tags `v0.1.0`.
+
+| M | Name | Detail file |
+|---|---|---|
+| **M26** | **Ask readiness & decision quality** (PRD 32) | [Part 14](wbs-v0.1.0-part14-quality-constraints.md) |
+| **M27** | **Constrained allows & denial repair** (PRD 33) | [Part 14](wbs-v0.1.0-part14-quality-constraints.md) |
+| **M28** | **Operation bundles, handoff & incident review** (PRD 34) | [Part 15](wbs-v0.1.0-part15-operations-outcomes.md) |
+| **M29** | **Outcome closure & execution proof** (PRD 35) | [Part 15](wbs-v0.1.0-part15-operations-outcomes.md) |
+| **M30** | **Repetitive approvals, grants & compression** (PRD 36) | [Part 16](wbs-v0.1.0-part16-grants-learning.md) |
+| **M31** | **Policy learning & governance insights** (PRD 37) | [Part 16](wbs-v0.1.0-part16-grants-learning.md) |
+| **M32** | **Field tests — FINAL (SC-01–SC-90)** (PRD 31) | [Part 17](wbs-v0.1.0-part17-expansion-fieldtest-release.md) |
+| **M33** | **Release readiness — FINAL (tags `v0.1.0`)** (PRD 31) | [Part 17](wbs-v0.1.0-part17-expansion-fieldtest-release.md) |
+
+### Issues
+
+| M | Milestone | Issues |
+|---|---|---|
+| M26 | Ask readiness & decision quality | #306–#317 (12) |
+| M27 | Constrained allows & denial repair | #318–#328 (11) |
+| M28 | Operation bundles, handoff & incident review | #329–#340 (12) |
+| M29 | Outcome closure & execution proof | #341–#352 (12) |
+| M30 | Repetitive approvals, grants & compression | #353–#364 (12) |
+| M31 | Policy learning & governance insights | #365–#378 (14) |
+| M32 | Field tests — FINAL (SC-01–SC-90) | #379–#390, #401 (13) |
+| M33 | Release readiness (expanded v0.1.0) | #391–#400 (10) |
+
+### CUJ → milestone (expansion)
+
+| CUJ | Journey | Milestone |
+|---|---|---|
+| **CUJ-15..18** | constrained allows / repair / operations review / decision narrative | **M26–M28** |
+| **CUJ-19** | which asks should never reach a human | **M31** |
+| **CUJ-20–21** | incident mode / shift handoff | **M28** |
+| **CUJ-22** | approve one, not ten | **M30** |
+| **CUJ-23–28** | ask readiness / quality / contradictions | **M26** |
+| **CUJ-29–32** | safe subsets / deny-repair / machine-shaped fixes | **M27** |
+| **CUJ-33–36** | operation bundles / handoff / blocked view | **M28** |
+| **CUJ-37–40** | approved==executed / closure / packets / drift | **M29** |
+| **CUJ-41–44** | compression / windows / burn-down | **M30** |
+| **CUJ-45–48** | never-needed-a-human / noisy policy / calibration / hotspots | **M31** |
+
+### Scenario → milestone (expansion)
+
+| Scenario | What it proves | Authored | Executed |
+|---|---|---|---|
+| **SC-68–SC-70** | readiness rejection, contradictions, class-dependent scoring | M26 | **M32** |
+| **SC-71–SC-74** | constrained allow, repair round-trip, edits, unbindable advice | M27 | **M32** |
+| **SC-75–SC-78** | bundles, handoff, incident mode, narrative | M28 | **M32** |
+| **SC-79–SC-82** | closure, divergence, packet-only reconstruction | M29 | **M32** |
+| **SC-83–SC-86** | compression, window expiry, revocation, repeated denies | M30 | **M32** |
+| **SC-87–SC-90** | insights, calibration access, tuning proposals | M31 | **M32** |
+| **SC-01–SC-26** | core catalog re-run on the expanded build (M24 baseline) | M1–M23 | **M32** (final gate) |
+
+### Expansion milestone exit criteria
+
+Every expansion milestone applies the standard gates (`.D0` design first, `.T` tests, `.C` coverage ≥95%, `.L`
+ruff + `mypy --strict`, `.CR` review log, `.D` docs, `.CI` commit, `.W` checkpoint) and preserves the five
+invariants plus the enforcement honesty clause: **the inbox records/returns, the enforcer enforces; insights,
+suggestions, and grants never act on their own.**

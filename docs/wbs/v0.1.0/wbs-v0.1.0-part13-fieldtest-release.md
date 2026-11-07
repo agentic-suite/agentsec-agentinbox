@@ -1,4 +1,4 @@
-# WBS v0.1.0 — Part 13: Field Tests & Release (M24–M25)
+# WBS v0.1.0 — Part 13: Core Field Tests & Release Rehearsal (M24–M25)
 
 **BLUF:** **M24 proves it on the field-test box**: the plan authored first, then all **26 v0.1.0 scenarios**
 (SC-01–SC-26) executed with per-scenario verdicts, the **zero-context 15-second study** (Method B) run with
@@ -9,10 +9,14 @@ vocabulary, release notes + the honest compatibility matrix, SBOM + Sigstore/SLS
 the `v0.1.0` tag + PyPI publish.
 
 > **Standard exit criteria + closure** — see the [index](wbs-v0.1.0-index.md).
+>
+> **Ordering:** M24/M25 are the **core** field-test pass and release rehearsal. After the 0.1.0 expansion
+> (M26–M31), the **final two milestones are M32 (field tests, SC-01–SC-90) and M33 (release readiness)**;
+> M33 tags `v0.1.0`. Nothing follows M33.
 
 ---
 
-## Milestone M24 — Field tests (SC-01–SC-26 + the 15-second study)
+## Milestone M24 — Core field tests (SC-01–SC-26 + the 15-second study)
 
 **Goal:** execute [PRD 17](../../prd/17-scenarios.md)'s v0.1.0 catalog on real hardware with real harnesses:
 lifecycle (SC-01–06), expiry (09–10), cross-channel truth (07/18/19), escalation (11/12), flood (13/14), CI
