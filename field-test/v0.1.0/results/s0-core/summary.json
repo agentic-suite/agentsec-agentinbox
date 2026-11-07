@@ -159,16 +159,16 @@
     {
       "assertions": [
         {
-          "cmd": "bash -c \n  test \"$(/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/python <<EOF\nimport json, pathlib\nrows = [json.loads(l) for l in pathlib.Path(\"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s0-core/cases/FT-SC-10-LIVE/live/export.jsonl\").read_text().splitlines() if l.strip()]\nexpired = [r for r in rows if r.get(\"kind\") == \"expired\"]\nassert len(expired) == 1, expired\nprint(\"EXPIRED-ONCE\")\nEOF\n)\" = \"EXPIRED-ONCE\"",
+          "cmd": "/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/python - /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s0-core/cases/FT-SC-10-LIVE/live/export.jsonl",
           "grounded": true,
           "name": "sc10-expired-exactly-once",
-          "ok": false
+          "ok": true
         },
         {
-          "cmd": "bash -c \n  ASK_ID=\"$(grep -o \"ask_[a-f0-9]*\" \"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s0-core/cases/FT-SC-10-LIVE/live/export.jsonl\" | head -1)\"\n  OUT=$(\"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/agentinbox --home \"/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s0-core/cases/FT-SC-10-LIVE/live/home\" gate --ask \"$ASK_ID\" --timeout 2 2>/dev/null || true)\"\n  echo \"$OUT\" | grep -q \"human_gate_timeout\" && echo DENY-TIMEOUT",
-          "grounded": false,
+          "cmd": "/Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/.venv/bin/python - /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s0-core/cases/FT-SC-10-LIVE/live/home /Users/deghosal/Desktop/code/github/agentic-suite/agentinbox/field-test/v0.1.0/results/s0-core/cases/FT-SC-10-LIVE/live/export.jsonl",
+          "grounded": true,
           "name": "sc10-resolve-deny-timeout",
-          "ok": false
+          "ok": true
         },
         {
           "cmd": "scan artifacts for secrets",
@@ -177,7 +177,7 @@
           "ok": true
         }
       ],
-      "assertions_grounded": 2,
+      "assertions_grounded": 3,
       "assertions_total": 3,
       "blocked": false,
       "class": "P/F",
@@ -186,7 +186,7 @@
       "llm_captured": false,
       "llm_required": false,
       "run_id": "s0-core",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "assertions": [
@@ -251,13 +251,13 @@
     "run_id": "s0-core",
     "version": "v0.1.0"
   },
-  "generated_at": "2026-11-07T19:03:40.017862+00:00",
-  "green": false,
+  "generated_at": "2026-11-07T19:07:05.379687+00:00",
+  "green": true,
   "run_id": "s0-core",
   "totals": {
     "blocked": 0,
-    "fail": 1,
+    "fail": 0,
     "over_claimed": 0,
-    "pass": 8
+    "pass": 9
   }
 }

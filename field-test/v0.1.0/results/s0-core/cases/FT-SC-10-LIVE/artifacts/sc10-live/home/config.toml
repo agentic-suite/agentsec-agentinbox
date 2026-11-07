@@ -1,15 +1,9 @@
-# agentinbox configuration — v0.1.0
-#
-# This file is security-relevant: TTLs, rosters, ladders, and thresholds are policy.
-# Review changes like code. Secrets are references only (env:NAME or file:/absolute/path).
-
 [classes.irreversible]
-ttl_seconds = 300
-warn_seconds = 60
+ttl_seconds = 8
+warn_seconds = 3
 self_review = "deny"
 require_reason_on_deny = true
 ladder = []
-require_signed_producer = false
 
 [roster.tier-1]
 terminal = ["alice"]
@@ -33,23 +27,3 @@ driver = "filesystem"
 
 [store]
 driver = "sqlite"
-
-[limits]
-max_hold_rounds = 2
-max_evidence_revisions = 4
-max_thread_entries = 20
-
-[webui]
-enabled = false
-bind = "127.0.0.1:8377"
-
-[audit]
-retention = "never"
-
-[classes.irreversible]
-ttl_seconds = 8
-warn_seconds = 3
-
-[channels.terminal]
-enabled = true
-allow_as = true
