@@ -187,6 +187,11 @@ A milestone is **closed** only when all of these hold:
   markers append chained entries; `verify-log` names the first bad seq; `export --session/--ask --format
   jsonl|csv [--out]` emits ordered asks/transitions/deliveries/chain (0600, audited); retention prunes
   detail with a chain marker; no import authority exists (negative test). Next: **M8–M15 complete**.
+- **2026-11-08 — M16 agentwatch event set + sink closed.** Issues #282–#292. **Gate:** 572 tests pass ·
+  coverage **95.39%** · `ruff` clean · `mypy --strict` clean · DCO signed. Ten event types projected from the audit chain (audit schema v4
+  carries the payload), schema fixtures with payload allow-lists, join keys + producer `traceparent`,
+  frozen rejection-cause map, buffered sink with flush + `event-gap` markers, and a no-untrusted-text
+  fixture. Next: **M17** (`17.D0` resolve bridge).
 
 ## PRD coverage matrix (every doc 00–30)
 

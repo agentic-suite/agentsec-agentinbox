@@ -30,6 +30,7 @@ from agentinbox.store.base import (
     chain_hash,
     payload_digest,
     to_iso,
+    transition_payload,
     verify_audit_chain,
 )
 
@@ -237,6 +238,7 @@ class MemoryStore:
                     ask_id=ask_id,
                     from_status=AskStatus.PENDING,
                     to_status=AskStatus.PENDING,
+                    detail={**dict(transition.detail), "revoked_claims": revoked},
                     seq=0,
                 )
             )
@@ -363,7 +365,7 @@ class MemoryStore:
         stored = replace(transition, seq=seq)
         existing.append(stored)
         return self._append_audit(
-            "transition", stored.ask_id, stored.at, dict(stored.detail)
+            "transition", stored.ask_id, stored.at, transition_payload(stored)
         )
 
     def _append_audit(
@@ -389,6 +391,7 @@ class MemoryStore:
             ref_id=ref_id,
             at=at,
             payload_digest=digest,
+            payload=dict(detail),
         )
         self._audit.append(entry)
         return entry

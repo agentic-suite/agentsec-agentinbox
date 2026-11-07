@@ -40,6 +40,7 @@ from agentinbox.config import (
 from agentinbox.config_audit import record_config_change
 from agentinbox.doctor import render_explain, render_human, run_checks
 from agentinbox.escalation import Escalator
+from agentinbox.events import BufferedEventSink, EventTracer, JsonlEventSink
 from agentinbox.exit_codes import ExitCode
 from agentinbox.gate import gate
 from agentinbox.scheduler import Scheduler
@@ -304,21 +305,41 @@ def _serve(args: argparse.Namespace) -> int:
 
     wiring = DeliveryWiring(store, channels, on_digest=on_digest)
     scheduler = Scheduler(store, escalator=Escalator(store, config, bus=bus))
+    tracer = EventTracer(
+        store,
+        sink=BufferedEventSink(
+            JsonlEventSink(home / "logs" / "events.jsonl")
+        ),
+    )
     try:
         if args.once:
             scheduler.tick()
             bus.consume(wiring.handle)
+            tracer.drain()
+            tracer.sink.flush()
             return int(ExitCode.APPROVED)
 
         stop = threading.Event()
         thread, scheduler_stop = scheduler.start()
+        trace_stop = threading.Event()
+
+        def trace_loop() -> None:
+            while not trace_stop.is_set():
+                tracer.drain()
+                tracer.sink.flush()
+                trace_stop.wait(1.0)
+
+        trace_thread = threading.Thread(target=trace_loop, daemon=True)
+        trace_thread.start()
         try:
             bus.run(wiring.handle, stop)
         except KeyboardInterrupt:
             pass
         finally:
             scheduler_stop.set()
+            trace_stop.set()
             thread.join(timeout=2)
+            trace_thread.join(timeout=2)
         return int(ExitCode.APPROVED)
     finally:
         bus.close()

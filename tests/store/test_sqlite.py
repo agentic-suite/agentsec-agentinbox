@@ -347,7 +347,18 @@ def test_audit_entry_time_is_utc(store: SqliteStore) -> None:
 
     assert entry.at.tzinfo is not None
     assert parse_iso(to_iso(entry.at)) == entry.at
-    assert entry.payload_digest == payload_digest({"why": "created"})
+    expected = {
+        "kind": "created",
+        "from_status": None,
+        "to_status": "pending",
+        "principal": None,
+        "channel": None,
+        "claim_id": None,
+        "reason": None,
+        "detail": {"why": "created"},
+    }
+    assert entry.payload == expected
+    assert entry.payload_digest == payload_digest(expected)
 
 
 def test_chain_verification_helper_detects_tampering(store: SqliteStore) -> None:

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import ClassVar
 
@@ -10,7 +11,12 @@ import pytest
 
 from agentinbox.bus import JobKind, SpoolBus, new_job
 from agentinbox.cli import main
-from agentinbox.config import init_home, resolve_config_path
+from agentinbox.config import init_home, load_config, resolve_config_path
+from agentinbox.ingest import ingest
+from agentinbox.store import utcnow
+from agentinbox.store.loader import load_store
+from agentinbox.trust import ProducerIdentity
+from tests.ask.conftest import payload
 
 
 def make_home(tmp_path: Path, *, desktop: bool = False) -> Path:
@@ -139,6 +145,37 @@ def test_serve_loop_stops_on_a_keyboard_interrupt(
 
     monkeypatch.setattr("agentinbox.cli.load_bus", lambda *a, **k: FakeBus())
     assert main(["--home", str(home), "serve"]) == 0
+
+
+def test_serve_once_writes_the_agentwatch_events(tmp_path: Path) -> None:
+    home = make_home(tmp_path)
+    config = load_config(resolve_config_path(home))
+    now = utcnow()
+    store = load_store("sqlite", home=home)
+    try:
+        ingest(
+            payload(
+                expires_at=(now + timedelta(minutes=5))
+                .isoformat(timespec="microseconds")
+                .replace("+00:00", "Z"),
+            ),
+            store=store,
+            config=config,
+            producer=ProducerIdentity.unauthenticated(),
+            now=now,
+        )
+    finally:
+        store.close()
+
+    assert main(["--home", str(home), "serve", "--once"]) == 0
+    events = [
+        json.loads(line)
+        for line in (home / "logs" / "events.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert len(events) == 1
+    assert events[0]["event_type"] == "ask-raised"
+    assert events[0]["emitter"] == "agentinbox"
+    assert events[0]["session_id"]
 
 
 def test_serve_fails_closed_without_a_config(

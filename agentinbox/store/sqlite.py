@@ -39,10 +39,11 @@ from agentinbox.store.base import (
     parse_iso,
     payload_digest,
     to_iso,
+    transition_payload,
     verify_audit_chain,
 )
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 #: from_version -> statements that take the store to ``from_version + 1``.
 MIGRATIONS: dict[int, tuple[str, ...]] = {
@@ -139,6 +140,7 @@ MIGRATIONS: dict[int, tuple[str, ...]] = {
         "ALTER TABLE asks ADD COLUMN escalate_at TEXT",
         "ALTER TABLE asks ADD COLUMN tier TEXT",
     ),
+    3: ("ALTER TABLE audit ADD COLUMN payload TEXT NOT NULL DEFAULT '{}'",),
 }
 
 
@@ -477,6 +479,7 @@ class SqliteStore:
                     ask_id=ask_id,
                     from_status=AskStatus.PENDING,
                     to_status=AskStatus.PENDING,
+                    detail={**dict(transition.detail), "revoked_claims": revoked},
                     seq=0,
                 )
             )
@@ -605,6 +608,7 @@ class SqliteStore:
                 ref_id=row["ref_id"],
                 at=parse_iso(row["at"]),
                 payload_digest=row["payload_digest"],
+                payload=json.loads(row["payload"]),
             )
             for row in rows
         ]
@@ -647,7 +651,7 @@ class SqliteStore:
         ).fetchone()
         seq = int(row[0])
 
-        detail = dict(transition.detail)
+        detail = transition_payload(transition)
         self._conn.execute(
             "INSERT INTO transitions (ask_id, seq, at, kind, from_status, to_status,"
             " principal, channel, claim_id, reason, detail)"
@@ -690,9 +694,18 @@ class SqliteStore:
             digest=digest,
         )
         self._conn.execute(
-            "INSERT INTO audit (seq, prev_hash, entry_hash, kind, ref_id, at, payload_digest)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (audit_seq, prev_hash, entry_hash, kind, ref_id, at_text, digest),
+            "INSERT INTO audit (seq, prev_hash, entry_hash, kind, ref_id, at,"
+            " payload_digest, payload) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                audit_seq,
+                prev_hash,
+                entry_hash,
+                kind,
+                ref_id,
+                at_text,
+                digest,
+                canonical_json(detail),
+            ),
         )
         return AuditEntry(
             seq=audit_seq,
@@ -702,6 +715,7 @@ class SqliteStore:
             ref_id=ref_id,
             at=at,
             payload_digest=digest,
+            payload=detail,
         )
 
 

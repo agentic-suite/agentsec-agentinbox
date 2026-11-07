@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-suite.dev/schemas/agentwatch/security-event-0.2.0.json",
+  "title": "agentwatch security-event (agentinbox emitter, event_version 0.2.0)",
+  "description": "Additive extension of the agentwatch security-event schema. New optional fields only; event_version bumps are governed by agentwatch's stewardship process.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_version",
+    "event_type",
+    "emitter",
+    "event_id",
+    "at",
+    "ask_id",
+    "session_id",
+    "agent_id",
+    "action_identity",
+    "payload"
+  ],
+  "properties": {
+    "event_version": { "const": "0.2.0" },
+    "event_type": {
+      "enum": [
+        "ask-raised",
+        "ask-delivered",
+        "ask-delivery-failed",
+        "ask-warned",
+        "ask-escalated",
+        "ask-answered",
+        "ask-expired",
+        "ask-cancelled",
+        "ask-flood",
+        "answer-rejected"
+      ]
+    },
+    "emitter": { "const": "agentinbox" },
+    "event_id": { "type": "string", "minLength": 1 },
+    "at": { "type": "string", "minLength": 1 },
+    "ask_id": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string" },
+    "agent_id": { "type": "string" },
+    "action_identity": { "type": "string" },
+    "traceparent": { "type": ["string", "null"] },
+    "payload": { "type": "object" }
+  },
+  "x-payload-requirements": {
+    "ask-raised": ["class", "criticality", "expires_at", "requested_by"],
+    "ask-delivered": ["channel", "attempt"],
+    "ask-delivery-failed": ["channel", "attempt", "error"],
+    "ask-warned": ["remaining_s"],
+    "ask-escalated": ["tier", "targets_count", "revoked_claims"],
+    "ask-answered": ["outcome", "principal", "channel"],
+    "ask-expired": ["ttl_s"],
+    "ask-cancelled": ["by"],
+    "ask-flood": ["window", "denied_count", "first_ask_id"],
+    "answer-rejected": ["cause"]
+  },
+  "x-payload-allowed": {
+    "ask-raised": ["class", "criticality", "expires_at", "requested_by"],
+    "ask-delivered": ["channel", "attempt", "error"],
+    "ask-delivery-failed": ["channel", "attempt", "error"],
+    "ask-warned": ["remaining_s"],
+    "ask-escalated": ["tier", "targets_count", "revoked_claims"],
+    "ask-answered": ["outcome", "principal", "channel", "reason"],
+    "ask-expired": ["ttl_s"],
+    "ask-cancelled": ["by"],
+    "ask-flood": ["window", "denied_count", "first_ask_id"],
+    "answer-rejected": ["cause", "cause_detail"]
+  }
+}

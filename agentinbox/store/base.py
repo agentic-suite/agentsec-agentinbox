@@ -165,7 +165,7 @@ class FloodRecord:
 
 @dataclass(frozen=True, slots=True)
 class AuditEntry:
-    """The hash-chained evidence row."""
+    """The hash-chained evidence row. ``payload`` is the canonical evidence body."""
 
     seq: int
     prev_hash: str
@@ -174,6 +174,7 @@ class AuditEntry:
     ref_id: str
     at: datetime
     payload_digest: str
+    payload: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -307,6 +308,22 @@ def canonical_json(value: Any) -> str:
     return json.dumps(
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str
     )
+
+
+def transition_payload(transition: TransitionRecord) -> dict[str, Any]:
+    """The canonical audit/event payload for a transition (no untrusted text)."""
+    return {
+        "kind": transition.kind,
+        "from_status": (
+            None if transition.from_status is None else transition.from_status.value
+        ),
+        "to_status": transition.to_status.value,
+        "principal": transition.principal,
+        "channel": transition.channel,
+        "claim_id": transition.claim_id,
+        "reason": transition.reason,
+        "detail": dict(transition.detail),
+    }
 
 
 def payload_digest(value: Any) -> str:
