@@ -67,6 +67,7 @@ from agentinbox.flood import FloodGuard
 from agentinbox.gate import gate
 from agentinbox.ingest import ingest
 from agentinbox.logsafe import sanitize_log_line
+from agentinbox.operations import handoff_for
 from agentinbox.ops import (
     OpsError,
     backup_home,
@@ -474,6 +475,7 @@ def _gate(args: argparse.Namespace) -> int:
             prior_asks=prior_asks(store, ask),
             similar_cases=similar_cases(store, ask),
             prior_objections=prior_objections(store, ask),
+            handoff=handoff_for(store.transitions_for(ask.ask_id)),
         )
         sys.stdout.write(card.render("ci"))
     if result.code is ExitCode.UNAVAILABLE:

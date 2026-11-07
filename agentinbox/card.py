@@ -82,6 +82,7 @@ def build_card(
     prior_asks: Sequence[AskRecord] = (),
     similar_cases: Sequence[Mapping[str, Any]] = (),
     prior_objections: Sequence[Mapping[str, Any]] = (),
+    handoff: Mapping[str, Any] | None = None,
 ) -> Card:
     payload: Mapping[str, Any] = ask.payload
     trust = payload.get("_trust") or {}
@@ -169,6 +170,7 @@ def build_card(
         blocks=_with_choices(
             ask,
             (
+                *(() if handoff is None else (Block("HANDOFF", _handoff_fields(handoff)),)),
                 Block("ACTION", action_fields),
                 Block("POLICY", policy_fields),
                 Block("BLAST RADIUS", blast_fields),
@@ -243,6 +245,12 @@ def _surface_footer(surface: str, card: Card) -> list[str]:
 
 
 # --------------------------------------------------------------------------- helpers
+
+
+def _handoff_fields(handoff: Mapping[str, Any]) -> tuple[Field, ...]:
+    from agentinbox.operations import handoff_fields
+
+    return handoff_fields(handoff)
 
 
 def _with_choices(

@@ -43,12 +43,12 @@ _TOP_LEVEL = frozenset(
         "webui",
         "audit",
         "producers",
+        "incident",
     }
 )
 _FORWARD_SLATE = frozenset(
     {
         "quiet_hours",
-        "incident",
         "hooks",
         "standing_rules",
         "calendars",
@@ -193,6 +193,17 @@ class ProducerConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class IncidentConfig:
+    """Bounded incident-mode overlay (M28): faster routing, same accountability."""
+
+    enabled: bool = False
+    owner: str | None = None
+    reason: str | None = None
+    ttl_scale: float = 1.0
+    classes: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class Config:
     classes: Mapping[str, ClassConfig] = field(default_factory=dict)
     roster: Mapping[str, Mapping[str, tuple[str, ...]]] = field(default_factory=dict)
@@ -204,6 +215,7 @@ class Config:
     webui: WebuiConfig = field(default_factory=WebuiConfig)
     audit: AuditConfig = field(default_factory=AuditConfig)
     producers: Mapping[str, ProducerConfig] = field(default_factory=dict)
+    incident: IncidentConfig = field(default_factory=IncidentConfig)
 
 
 # --------------------------------------------------------------------------- home paths
@@ -280,6 +292,7 @@ def _parse(data: dict[str, Any], path: Path) -> Config:
         webui=_parse_webui(_table(data.get("webui", {}), "webui")),
         audit=_parse_audit(_table(data.get("audit", {}), "audit")),
         producers=_parse_producers(_table(data.get("producers", {}), "producers")),
+        incident=_parse_incident(_table(data.get("incident", {}), "incident")),
     )
 
 
@@ -635,6 +648,43 @@ def _parse_webui(value: dict[str, Any]) -> WebuiConfig:
 
 
 _RETENTION = re.compile(r"^(never|1y|[1-9][0-9]*d)$")
+
+
+def _parse_incident(value: dict[str, Any]) -> IncidentConfig:
+    _reject_unknown(
+        value,
+        frozenset({"enabled", "owner", "reason", "ttl_scale", "classes"}),
+        "incident",
+    )
+    enabled = value.get("enabled", False)
+    if not isinstance(enabled, bool):
+        raise ConfigError("[incident].enabled: must be a boolean")
+    owner = value.get("owner")
+    reason = value.get("reason")
+    for label, item in (("owner", owner), ("reason", reason)):
+        if item is not None and (not isinstance(item, str) or not item.strip()):
+            raise ConfigError(f"[incident].{label}: must be a non-empty string")
+    scale = value.get("ttl_scale", 1.0)
+    if (
+        not isinstance(scale, (int, float))
+        or isinstance(scale, bool)
+        or not 0.0 < float(scale) <= 1.0
+    ):
+        raise ConfigError("[incident].ttl_scale: must be in (0, 1]; TTLs never extend")
+    classes = value.get("classes", [])
+    if not isinstance(classes, list) or not all(
+        isinstance(item, str) and item for item in classes
+    ):
+        raise ConfigError("[incident].classes: must be a list of class names")
+    if enabled and (not owner or not reason):
+        raise ConfigError("[incident].owner and .reason are required when enabled")
+    return IncidentConfig(
+        enabled=enabled,
+        owner=owner,
+        reason=reason,
+        ttl_scale=float(scale),
+        classes=tuple(classes),
+    )
 
 
 def _parse_audit(value: dict[str, Any]) -> AuditConfig:

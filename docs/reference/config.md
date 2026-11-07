@@ -177,6 +177,18 @@ error, never a silent fallback.
 
 Positive integers; enforcement arrives in M20+.
 
+### `[incident]` — bounded incident overlay (M28)
+
+| Key | Values | Default | Meaning |
+|---|---|---|---|
+| `enabled` | bool | `false` | Turn the overlay on (audited as `incident-on`/`incident-off`) |
+| `owner` | string | — | Accountable incident owner (required when enabled) |
+| `reason` | string | — | Why the overlay is active (required when enabled) |
+| `ttl_scale` | `(0, 1]` | `1.0` | Review-window scale; never above `1.0` (no TTL extension) |
+| `classes` | list[str] | `[]` | Class scope for the overlay |
+
+The overlay never converts a deny to an allow; every state is recorded as a chained audit event.
+
 ### `[webui]`
 
 | Key | Default | v0.1.0 |

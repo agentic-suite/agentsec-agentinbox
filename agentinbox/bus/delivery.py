@@ -11,6 +11,7 @@ from agentinbox.alternatives import prior_objections
 from agentinbox.bus.base import Job, JobKind
 from agentinbox.card import build_card
 from agentinbox.lifecycle import IllegalTransition, UnknownAsk, observe
+from agentinbox.operations import handoff_for
 from agentinbox.parity import prior_asks
 from agentinbox.readiness import similar_cases
 from agentinbox.redaction import redact_value
@@ -63,6 +64,7 @@ class DeliveryWiring:
             transitions=self.store.transitions_for(ask.ask_id),
             prior_asks=prior_asks(self.store, ask),
             similar_cases=similar_cases(self.store, ask),
+            handoff=handoff_for(self.store.transitions_for(ask.ask_id)),
             prior_objections=prior_objections(self.store, ask),
         )
         for channel in self.channels:

@@ -58,6 +58,7 @@ def surface_outcome(
     if ask is None:
         raise KeyError(f"unknown ask: {ask_id}")
     from agentinbox.alternatives import prior_objections
+    from agentinbox.operations import handoff_for
     from agentinbox.readiness import similar_cases
 
     card = build_card(
@@ -67,6 +68,7 @@ def surface_outcome(
         prior_asks=prior_asks(store, ask),
         similar_cases=similar_cases(store, ask),
         prior_objections=prior_objections(store, ask),
+        handoff=handoff_for(store.transitions_for(ask.ask_id)),
     )
     return card.render(surface)
 

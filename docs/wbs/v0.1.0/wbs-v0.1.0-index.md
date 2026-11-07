@@ -322,6 +322,16 @@ every M26–M31 milestone carries its own gate. The 32.7 regression baseline bec
   stays allow/deny for old clients; `decision`/`constraints`/`edits`/`repair` are additive. Next: **M28**
   (`28.D0` bundles/handoff design).
 
+- **2026-11-07 — M28 Operation bundles, handoff & incident review closed.** Issues #329–#340. Commit `TBD`.
+  **Gate:** 881 tests pass · coverage **95.13%** · `ruff` clean · `mypy --strict` clean.
+  Bundles are derived-on-read by declared `operation_id` (or labelled session+window), with counts,
+  environments, phases, and the earliest-expiry critical path; no bundle-level decision exists.
+  Claim/assign are routing-only observations. Handoff notes carry remaining TTL, prior context, open
+  questions, evidence, and both principals, rendered before the card. `[incident]` is a bounded,
+  config-declared overlay audited as chained `incident-on/off`; denials never flip and TTLs never
+  extend. Narratives reconstruct the decision from stored transitions; timelines export with the
+  bundle (`bundle/1.0`). Next: **M29** (`29.D0` outcome-closure design).
+
 ## PRD coverage matrix (every doc 00–30)
 
 | PRD | Topic | Milestone(s) |

@@ -21,6 +21,7 @@ from agentinbox.channels.base import ChannelError
 from agentinbox.claims import mint_claim
 from agentinbox.config import Config
 from agentinbox.exit_codes import ExitCode
+from agentinbox.operations import handoff_for
 from agentinbox.parity import prior_asks
 from agentinbox.readiness import similar_cases
 from agentinbox.resolve import resolve
@@ -85,6 +86,7 @@ class TerminalChannel:
             transitions=store.transitions_for(ask.ask_id),
             prior_asks=prior_asks(store, ask),
             similar_cases=similar_cases(store, ask),
+            handoff=handoff_for(store.transitions_for(ask.ask_id)),
             prior_objections=prior_objections(store, ask),
         )
         self.deliver(ask, card)

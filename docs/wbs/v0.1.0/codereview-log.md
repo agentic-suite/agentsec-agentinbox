@@ -233,3 +233,15 @@ regression test):
 | 2026-11-07 | M27 | 27.4 | Edits on a deny or both choice types at once | Medium | Mutually exclusive; refused with `conflicting_choice` |
 | 2026-11-07 | M27 | 27.5 | Extending `status` would break old clients | High | `status` stays allow/deny/pending; `decision`/`constraints`/`edits`/`repair` are additive |
 | 2026-11-07 | M27 | 27.5 | Recall could recommend an outcome | Medium | Prior denials render as `prior objection … denied once`, evidence only |
+
+## M28 operation bundles review (2026-11-07)
+
+| Date | M | Item | Finding | Severity | Resolution |
+|---|---|---|---|---|---|
+| 2026-11-07 | M28 | 28.1 | A bundle could become a back door to batch approval | High | Bundles are derived-on-read; no bundle-level decision method exists and every ask answers individually |
+| 2026-11-07 | M28 | 28.1 | A heuristic group presented as producer truth | Medium | Explicit `operation_id` vs `(derived)` label; session+window groups always carry the label |
+| 2026-11-07 | M28 | 28.2 | Claim/assign silently altering status or TTL | High | Observations only (`routing_only`), status/expiry/eligibility unchanged (test) |
+| 2026-11-07 | M28 | 28.3 | Handoff losing urgency or evidence | High | Note carries remaining TTL, questions, evidence, and both principals; rendered before ACTION |
+| 2026-11-07 | M28 | 28.4 | Incident mode becoming an unbounded bypass | High | Config-declared owner/reason, scale capped at 1.0, chained `incident-on/off`, denies still deny |
+| 2026-11-07 | M28 | 28.5 | A narrative drifting from the stored chain | Medium | Built only from transitions + `_readiness`; no recomputation of the decision |
+| 2026-11-07 | M28 | 28.6 | Timeline order diverging from seqs | Medium | Ordered by `(at, ask_id, seq)` and exported with the bundle (test) |

@@ -91,6 +91,15 @@ today** (they run in CI), not planned:
 | **R90/R91** | edit schema, re-fingerprinted approval, provenance | `tests/constraints/test_edits.py` |
 | **R92** | repair recall on resubmission; additive resolve vocabulary | `tests/constraints/test_recall.py`, `test_resolve_vocab.py` |
 
+## M28 operation bundles, handoff & incident review (shipped tests, v0.1.0)
+
+| Req | What M28 ships | Acceptance test |
+|---|---|---|
+| **R94/R95** | derived-on-read bundles, phases, environments, critical path, no approve-all | `tests/bundles/test_operations.py` |
+| **R96/R97** | claim/assign routing observations; handoff note with TTL and questions | `tests/bundles/test_operations.py` |
+| **R98** | bounded config overlay, chained `incident-on/off`, denies unchanged | `tests/bundles/test_operations.py` |
+| **R99/R100** | narrative from stored transitions; ordered exportable timeline | `tests/bundles/test_operations.py` |
+
 ## Forward slate traceability (R13–R47, PRDs 24–27)
 
 The product-depth requirements are traced **inside their own PRDs** (each carries a
