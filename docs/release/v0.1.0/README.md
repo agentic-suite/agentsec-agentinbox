@@ -18,7 +18,7 @@ honest compatibility matrix, the field evidence, and the operational runbooks.
 | Harness LLM captures (11 pairs) | [evidence/harness/](evidence/harness/README.md) | committed; not field-tested |
 | Expansion runbooks | [RUNBOOKS.md](RUNBOOKS.md) | published |
 | Security audit + risk re-grade | [SECURITY_AUDIT.md](SECURITY_AUDIT.md) | published |
-| Release notes + gap list | `RELEASE_NOTES.md` | pending M33 #114 |
+| Release notes + gap list | [RELEASE_NOTES.md](RELEASE_NOTES.md) | published |
 | Wave-0 demo evidence | [demo/](demo/transcript.txt) | published |
 | SBOM, signatures, provenance, Scorecard | release artifacts | pending M33 #395 |
 
