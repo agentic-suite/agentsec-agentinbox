@@ -240,6 +240,17 @@ A milestone is **closed** only when all of these hold:
   expiries, escalations, floods, rejected causes, deny rate by class). Doctor adds `offline`; the SC-26
   offline day runs with non-loopback sockets blocked. Benches record N-1..N-7. Next: **M22** (`22.D0` security sweep).
 
+- **2026-11-07 — M22 Security hardening sweep + evidence scanner closed.** Issues #74–#85. Commit
+  `TBD`. **Gate:** 793 tests pass · coverage **95.19%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  The evidence scanner shares the redaction pattern set and scans store dumps (read-only), rendered
+  terminal/desktop/CI/webhook payloads, audit exports, and backup archives; a seeded leak fails and CI runs
+  the self-test. Spoof/replay/forge, injection, and flood packs are release-blocking (`python -m
+  agentinbox.packs`), and a broken gate fixture turns the spoof pack red. Invariants I-1..I-5 each have a
+  negative fixture; credential failures collapse to the public cause `bad_claim`; claim/token/HMAC compares
+  are constant-time; logs strip control/ANSI; creation paths force 0700/0600 under `umask 000`; there is no
+  `--yes`. Own-posture checks prove zero runtime dependencies/no ML, emit a CycloneDX SBOM dry run, and
+  validate the committed `security.txt` (SLA in `SECURITY.md`). Next: **M23** (`23.D0` docs plan).
+
 ## PRD coverage matrix (every doc 00–30)
 
 | PRD | Topic | Milestone(s) |

@@ -61,3 +61,10 @@ def test_dco_workflow_exists_and_checks_signoff() -> None:
 
 def test_scorecard_workflow_is_present() -> None:
     assert (WORKFLOWS / "scorecard.yml").is_file()
+
+
+def test_ci_runs_the_release_blocking_security_gates(ci: str) -> None:
+    assert "python -m agentinbox.packs" in ci
+    assert "python -m agentinbox.scanner --self-test" in ci
+    assert "python -m pytest tests/security" in ci
+    assert "python -m agentinbox.posture manifest" in ci

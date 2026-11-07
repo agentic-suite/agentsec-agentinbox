@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import io
 import json
+import os
+import signal
 import sqlite3
 import tarfile
+import time
 from datetime import timedelta
 from pathlib import Path
 
@@ -310,3 +313,77 @@ def test_report_human_output(tmp_path: Path, capsys: pytest.CaptureFixture[str])
     assert "asks: 1" in out
     assert "response p50/p99" in out
     assert "deny rate" in out or "expiries" in out
+
+
+class _HupBus:
+    def __init__(self, mutate) -> None:  # type: ignore[no-untyped-def]
+        self.mutate = mutate
+
+    def run(self, handler, stop) -> None:  # type: ignore[no-untyped-def]
+        self.mutate()
+        os.kill(os.getpid(), signal.SIGHUP)
+        time.sleep(0.2)
+        raise KeyboardInterrupt
+
+    def consume(self, handler) -> int:  # type: ignore[no-untyped-def]
+        return 0
+
+    def close(self) -> None:
+        return None
+
+
+def test_serve_applies_a_valid_sighup_reload(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    home = make_home(tmp_path)
+    config_path = resolve_config_path(home)
+
+    def mutate() -> None:
+        config_path.write_text(
+            config_path.read_text(encoding="utf-8").replace(
+                "ttl_seconds = 300", "ttl_seconds = 240"
+            ),
+            encoding="utf-8",
+        )
+
+    monkeypatch.setattr("agentinbox.cli.load_bus", lambda *a, **k: _HupBus(mutate))
+    assert main(["--home", str(home), "serve", "--no-api"]) == 0
+    assert "config reloaded" in capsys.readouterr().out
+
+
+def test_serve_refuses_an_invalid_sighup_reload(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    home = make_home(tmp_path)
+    config_path = resolve_config_path(home)
+
+    def mutate() -> None:
+        config_path.write_text("[classes.x]\nttl_seconds = 0\n", encoding="utf-8")
+
+    monkeypatch.setattr("agentinbox.cli.load_bus", lambda *a, **k: _HupBus(mutate))
+    assert main(["--home", str(home), "serve", "--no-api"]) == 0
+    assert "config reload refused" in capsys.readouterr().err
+
+
+def test_serve_survives_unavailable_config_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    home = make_home(tmp_path)
+
+    def explode(*_args: object, **_kwargs: object) -> None:
+        raise OSError("no space left")
+
+    class _StopBus:
+        def run(self, handler, stop) -> None:  # type: ignore[no-untyped-def]
+            raise KeyboardInterrupt
+
+        def consume(self, handler) -> int:  # type: ignore[no-untyped-def]
+            return 0
+
+        def close(self) -> None:
+            return None
+
+    monkeypatch.setattr("agentinbox.cli.record_config_change", explode)
+    monkeypatch.setattr("agentinbox.cli.load_bus", lambda *a, **k: _StopBus())
+    assert main(["--home", str(home), "serve", "--no-api"]) == 0
+    assert "config-change evidence unavailable" in capsys.readouterr().err

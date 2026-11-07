@@ -8,7 +8,7 @@ PYTHON ?= python3
 PY := $(VIRTUAL_ENV)/bin/python
 PIP := $(VIRTUAL_ENV)/bin/pip
 
-.PHONY: setup lint typecheck test cov gate clean
+.PHONY: setup lint typecheck test cov gate clean packs scan sbom posture
 
 setup: $(VIRTUAL_ENV)/bin/python
 	$(PY) -m pip install --quiet --upgrade pip
@@ -32,6 +32,20 @@ cov:
 
 # Single milestone gate: the WBS runs these once at milestone end, never per ticket.
 gate: lint typecheck test cov
+
+# Release-blocking security checks (M22).
+packs:
+	$(PY) -m agentinbox.packs
+
+scan:
+	$(PY) -m agentinbox.scanner --self-test
+
+sbom:
+	$(PY) -m agentinbox.posture sbom
+
+posture:
+	$(PY) -m agentinbox.posture manifest
+	$(PY) -m agentinbox.posture security-txt
 
 clean:
 	rm -rf $(VIRTUAL_ENV) .pytest_cache .mypy_cache .ruff_cache .coverage htmlcov build dist

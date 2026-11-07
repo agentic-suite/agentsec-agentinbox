@@ -65,6 +65,7 @@ from agentinbox.exit_codes import ExitCode
 from agentinbox.flood import FloodGuard
 from agentinbox.gate import gate
 from agentinbox.ingest import ingest
+from agentinbox.logsafe import sanitize_log_line
 from agentinbox.ops import (
     OpsError,
     backup_home,
@@ -136,7 +137,7 @@ class CliParser(argparse.ArgumentParser):
 
     def error(self, message: str) -> NoReturn:
         self.print_usage(sys.stderr)
-        print(f"{PROG}: error: {message}", file=sys.stderr)
+        print(f"{PROG}: error: {sanitize_log_line(message)}", file=sys.stderr)
         raise SystemExit(1)
 
 
@@ -369,7 +370,10 @@ def _ask_impl(
             bus=publisher,
         )
     except ContractError as exc:
-        print(f"{PROG}: {exc.field}: {exc.message}", file=sys.stderr)
+        print(
+            f"{PROG}: {sanitize_log_line(exc.field)}: {sanitize_log_line(exc.message)}",
+            file=sys.stderr,
+        )
         return int(ExitCode.UNAVAILABLE)
     except StoreError as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)

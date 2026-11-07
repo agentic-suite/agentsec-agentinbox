@@ -49,6 +49,29 @@ jobs:
             --cov-report=term-missing \
             --cov-fail-under=95
 
+  security:
+    name: security (packs + evidence scanner)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (standalone, no runtime dependencies)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Attack packs (release-blocking)
+        run: python -m agentinbox.packs
+      - name: Evidence scanner self-test (seeded leak must fail)
+        run: python -m agentinbox.scanner --self-test
+      - name: Invariants, timing, hardening, posture
+        run: python -m pytest tests/security -q
+      - name: Own posture (no-ML manifest + security.txt)
+        run: |
+          python -m agentinbox.posture manifest
+          python -m agentinbox.posture security-txt
+
   install-smoke:
     name: install smoke (console script + python -m)
     runs-on: ubuntu-latest

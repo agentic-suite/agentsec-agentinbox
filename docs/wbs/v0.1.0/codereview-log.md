@@ -174,3 +174,21 @@ regression test):
 | 2026-11-07 | M21 | 21.4 | `report` could write evidence or call out | High | `report` is read-only (test asserts the audit length is unchanged) and opens no socket; `local_only: true` is part of the contract |
 | 2026-11-07 | M21 | 21.5 | "Offline" could be asserted without proof | Medium | Doctor adds an `offline` check and the SC-26 fixture blocks non-loopback `connect`/`connect_ex` while running terminal, CI, audit, export, report, and doctor |
 | 2026-11-07 | M21 | 21.6 | Bench floors could be measured on a different path than production | Medium | Benches call the real `ingest`, card renderer, resolve, spool bus, scheduler, webhook channel, and startup/doctor paths; the 10k load uses the admitted in-memory driver to isolate algorithmic cost |
+
+## M22 security close-out review (2026-11-07)
+
+| Date | M | Item | Finding | Severity | Resolution |
+|---|---|---|---|---|---|
+| 2026-11-07 | M22 | 22.1 | A scanner that shares no rules with redaction would drift and miss the classes the product actually redacts | High | The scanner imports `redaction.SENSITIVE_PATTERNS` (one source of truth); findings name rule/artifact/line, never the value |
+| 2026-11-07 | M22 | 22.1 | Scanning the live store through the driver would migrate/write an old store | High | `store_artifacts_from_db` opens `mode=ro` and skips missing tables; a test asserts the mtime is unchanged |
+| 2026-11-07 | M22 | 22.1 | Scanning an untrusted archive could extract members to disk | High | `scan_archive` reads member streams only; a non-tar archive is a no-op, never an exception or an extraction |
+| 2026-11-07 | M22 | 22.2 | Packs that only pass in the happy case could hide a broken gate | High | A mutation fixture (`secret_matches` always true) turns `spoof-replay-forge` red; the CI job runs the packs |
+| 2026-11-07 | M22 | 22.2 | The flood pack could count a digest per denied ask | High | Flood pack asserts one `ask-flood` event and one digest job for 200 asks (burst allowed, remainder denied) |
+| 2026-11-07 | M22 | 22.3 | Invariant tests without a negative fixture can silently test nothing | High | Each invariant has a bad store/fixture that the shared checker detects (`agentinbox.invariants`) |
+| 2026-11-07 | M22 | 22.4 | Distinct credential errors could become an oracle | High | Public causes collapse to `bad_claim`; internal causes stay in `answer-rejected` evidence; lockout is `guessing` |
+| 2026-11-07 | M22 | 22.4 | Comparing secrets with `==` would leak timing | High | Claim hash, API token, and adapter HMAC all use `hmac.compare_digest`; a test asserts the call |
+| 2026-11-07 | M22 | 22.5 | Caller-supplied error text could forge a log line | Medium | `sanitize_log_line` strips ANSI/control/newlines and caps length; the CLI parser and contract errors use it |
+| 2026-11-07 | M22 | 22.5 | A permissive umask could create world-readable evidence | High | Creation paths force `0700`/`0600`; a test sets `umask 000` and checks home/config/store/unit modes |
+| 2026-11-07 | M22 | 22.5 | A scripted approval shortcut would defeat the human gate | High | No `--yes`; only `init`/`doctor --restore` accept `--force`; a surface test pins the list |
+| 2026-11-07 | M22 | 22.6 | "No ML" and SBOM claims could be marketing | Medium | The manifest reads `pyproject.toml` (runtime deps must be empty and non-ML); the SBOM is a dry run, signing deferred to M25 |
+| 2026-11-07 | M22 | 22.6 | `security.txt` could ship expired | Medium | The source file is validated (Contact/Policy/Expires in the future); publishing at the domain is an explicit M25 step |

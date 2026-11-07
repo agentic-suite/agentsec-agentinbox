@@ -59,6 +59,17 @@ today** (they run in CI), not planned:
 | **N-27** (doctor completion) | added `offline`; backup/restore keep chain/schema/keys checks central | `tests/ops/test_offline.py`, `tests/cli/test_doctor_m20.py` |
 | **PRD 22 §B/§E** (lifecycle + backup/restore) | user-scoped units, SIGTERM flush/close, daemon lock, WAL-safe backup, chain-verified restore | `tests/ops/test_units.py`, `tests/ops/test_backup.py` |
 
+## M22 security close-out (shipped tests, v0.1.0)
+
+| Req / invariant | What M22 ships | Acceptance test |
+|---|---|---|
+| **PRD 06 I-1..I-5** | store-level invariant checks shared by packs and negative fixtures | `tests/security/test_invariants.py` |
+| **E6 / EV-9** (no secrets in evidence) | evidence scanner over store dumps, renders, audit exports, backup archives; seeded leak fails | `tests/security/test_scanner.py` |
+| **E3/E4/E5/R7** (attack packs) | spoof/replay/forge, injection, and flood packs; a broken gate fixture fails | `tests/security/test_packs.py`, `tests/ci/test_workflows.py` |
+| **E3/E4** (timing + uniform errors) | constant-time comparisons, collapsed public causes, guessing lockout | `tests/security/test_timing.py` |
+| **N-22..N-25** (input/log/permission) | log sanitization, caps, forced private modes, no approval shortcut | `tests/security/test_hardening.py` |
+| **PRD 20 §D** (own posture) | zero-runtime-dependency/no-ML manifest, CycloneDX SBOM dry run, RFC 9116 security.txt | `tests/security/test_posture.py` |
+
 ## Forward slate traceability (R13–R47, PRDs 24–27)
 
 The product-depth requirements are traced **inside their own PRDs** (each carries a

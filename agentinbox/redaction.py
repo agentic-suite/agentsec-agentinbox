@@ -99,6 +99,10 @@ def _redact_text(text: str, path: str, counts: dict[tuple[str, str], int]) -> st
     return redacted
 
 
+#: The secret-shape rules, shared with the evidence scanner (one source of truth).
+SENSITIVE_PATTERNS = _PATTERNS
+
+
 __all__ = [
     "CONNECTION_STRING",
     "EMAIL",
@@ -106,6 +110,7 @@ __all__ = [
     "PRIVATE_KEY",
     "REPLACEMENT",
     "SECRET",
+    "SENSITIVE_PATTERNS",
     "RedactionReceipt",
     "redact_value",
 ]
