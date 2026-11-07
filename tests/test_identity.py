@@ -19,7 +19,10 @@ def test_readme_is_current_not_a_future_claim() -> None:
     readme = read("README.md")
 
     assert "code not started" not in readme
-    assert "in development" in readme.lower()
+    # v0.1.0 shipped; the README must say so and keep the known-issue caveat.
+    assert "released" in readme.lower()
+    assert "known issues" in readme.lower()
+    assert "47 pass / 6 fail" in readme.lower()
 
 
 def test_readme_documents_the_working_install() -> None:
