@@ -64,6 +64,17 @@ def test_recovery_flushes_the_buffer(store) -> None:  # type: ignore[no-untyped-
     assert sink.pending == 0
 
 
+def test_flush_while_still_down_keeps_the_buffer(store) -> None:  # type: ignore[no-untyped-def]
+    inner = FlakySink()
+    inner.down = True
+    sink = BufferedEventSink(inner, now=lambda: NOW)
+    sink.write({"event_id": 1})
+
+    assert sink.flush() == 0
+    assert sink.pending == 1
+    assert inner.records == []
+
+
 def test_overflow_is_marked_not_silent(store) -> None:  # type: ignore[no-untyped-def]
     inner = FlakySink()
     inner.down = True

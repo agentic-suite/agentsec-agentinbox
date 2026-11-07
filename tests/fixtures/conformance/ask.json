@@ -1,0 +1,25 @@
+{
+  "contract": "ask/1.0",
+  "action_identity": "sha256:3b7aaec506d8a385d27e8d035d100b227f71f277eeba9e075904c65952adff0e",
+  "tool": "shell",
+  "action": "run_command",
+  "arguments": {
+    "command": "psql prod -c 'DROP TABLE customers'",
+    "timeout_s": 30
+  },
+  "agent_id": "agent://conformance",
+  "session_id": "sess_conformance",
+  "environment": "conformance",
+  "data_class": "customer-pii",
+  "class": "irreversible",
+  "reason_code": "human_gate_required",
+  "policy_ref": {
+    "rule_id": "conformance-kit",
+    "policy_version": "v0.1.0",
+    "clause": "self-verify"
+  },
+  "criticality": "critical",
+  "requested_by": "conformance",
+  "expires_at": "2026-11-06T12:05:00.000000Z",
+  "context": {}
+}

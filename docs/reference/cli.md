@@ -63,6 +63,7 @@ integers so the contract cannot drift.
 | `channels` | **works** (M13) — configured channels and health |
 | `export`, `verify-log` | **works** (M15) — ordered evidence + chain verification; see [audit.md](audit.md) |
 | `ask` | **works** (M18) — `--file` / `--exec`; only executes on allow; see [producer-guide.md](../adapters/producer-guide.md) |
+| `conformance` | **works** (M19) — contract conformance kit; see [conformance.md](conformance.md) |
 | `report` | **stub** — prints `agentinbox: report is not implemented in v0.1.0 (scheduled: M21)` and exits `4` |
 
 Stub rules:
@@ -108,6 +109,16 @@ agentinbox --json doctor
 
 Overall exit: `0` when no check fails (warnings allowed), `4` when any check fails. `--explain`
 prints the effective config with secret **references** shown and never resolved.
+
+## `conformance`
+
+```sh
+agentinbox conformance
+agentinbox --json conformance
+```
+
+Runs the contract kit against a fresh in-memory store and exits `0` when every check passes, `4` otherwise. See
+[conformance.md](conformance.md).
 
 ## `serve`
 

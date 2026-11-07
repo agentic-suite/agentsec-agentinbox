@@ -43,6 +43,7 @@ from agentinbox.config import (
     resolve_home,
 )
 from agentinbox.config_audit import record_config_change
+from agentinbox.conformance import run_conformance
 from agentinbox.contract import ContractError, compute_action_identity
 from agentinbox.doctor import render_explain, render_human, run_checks
 from agentinbox.escalation import Escalator
@@ -81,6 +82,7 @@ COMMAND_MILESTONES: dict[str, str] = {
     "export": "M15",
     "verify-log": "M15",
     "report": "M21",
+    "conformance": "M19",
 }
 
 COMMAND_HELP: dict[str, str] = {
@@ -96,6 +98,7 @@ COMMAND_HELP: dict[str, str] = {
     "export": "export asks and the audit log",
     "verify-log": "verify the audit hash chain",
     "report": "print the success-metric report",
+    "conformance": "run the contract conformance kit",
 }
 
 Handler = Callable[[argparse.Namespace], int]
@@ -541,6 +544,30 @@ def _export(args: argparse.Namespace) -> int:
     return int(ExitCode.APPROVED)
 
 
+def _conformance(args: argparse.Namespace) -> int:
+    try:
+        home = resolve_home(args.home)
+        config = load_config(resolve_config_path(home, args.config))
+    except ConfigError as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    report = run_conformance(config)
+    if args.json:
+        print(
+            json.dumps(
+                [
+                    {"name": check.name, "ok": check.ok, "detail": check.detail}
+                    for check in report.checks
+                ]
+            )
+        )
+    else:
+        for check in report.checks:
+            print(f"{'ok' if check.ok else 'FAIL':4} {check.name}: {check.detail}")
+    return int(ExitCode.APPROVED if report.ok else ExitCode.UNAVAILABLE)
+
+
 def _channels(args: argparse.Namespace) -> int:
     try:
         home = resolve_home(args.home)
@@ -647,6 +674,8 @@ def build_parser() -> argparse.ArgumentParser:
             handler = _verify_log
         elif command == "export":
             handler = _export
+        elif command == "conformance":
+            handler = _conformance
         else:
             handler = _stub(command)
         sub.set_defaults(handler=handler)
@@ -733,6 +762,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "channels",
         "export",
         "verify-log",
+        "conformance",
     }:
         parser.print_usage(sys.stderr)
         print(f"{PROG}: error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)

@@ -21,6 +21,7 @@ COMMANDS = [
     "verify-log",
     "channels",
     "report",
+    "conformance",
     "doctor",
     "init",
     "version",
@@ -38,6 +39,7 @@ REAL = {
     "export",
     "verify-log",
     "ask",
+    "conformance",
 }
 STUBS = [command for command in COMMANDS if command not in REAL]
 

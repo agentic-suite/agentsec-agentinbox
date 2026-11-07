@@ -203,6 +203,12 @@ A milestone is **closed** only when all of these hold:
   signature) with a create→answer→allow round-trip; `ask --file`/`--exec` (executes only on allow); API
   token/adapter/uid/caps/flood hardening; concurrent store open/migration race fixed; CUJ-1 measured;
   producer guide. Next: **M19** (`19.D0` LangGraph + conformance kit).
+- **2026-11-08 — M19 LangGraph reference adapter + conformance kit closed.** Issues #40–#50. **Gate:** 625
+  tests pass · coverage **95.09%** · `ruff` clean · `mypy --strict` clean · DCO signed.
+  Framework-neutral interrupt/resume gate; durable
+  resume-by-id; `ExecutionJournal` makes tool execution at-most-once across crashes; the `conformance` kit
+  (9 checks against a fresh store) gates channels/producers/contract/redaction/idempotency/exit codes/events;
+  broken store fails red; example graph, adapter template, Claude Code/Codex recipes. Next: **M20**.
 
 ## PRD coverage matrix (every doc 00–30)
 
