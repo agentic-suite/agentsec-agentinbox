@@ -19,6 +19,7 @@ from pathlib import Path
 from agentinbox.audit import read_audit_entries
 from agentinbox.channels.desktop import desktop_availability
 from agentinbox.config import Config, ConfigError, effective_ladder_delays, load_config
+from agentinbox.ops import offline_posture
 from agentinbox.secrets import SecretError, resolve_ref
 from agentinbox.store import ChainHashMismatch, StoreError, verify_audit_chain
 from agentinbox.store.sqlite import SCHEMA_VERSION
@@ -60,6 +61,7 @@ def run_checks(home: Path, config_path: Path) -> Report:
         _home(home),
         config_check,
         _desktop(config),
+        _offline(config),
         _store_path(home),
         _schema(home / "inbox.db"),
         _chain(home / "inbox.db"),
@@ -108,6 +110,14 @@ def _desktop(config: Config | None) -> Check:
             "[channels.desktop] enabled = false (asks stay pending either way)",
         )
     return Check("desktop", OK, detail)
+
+
+def _offline(config: Config | None) -> Check:
+    """Offline posture is local-only: no probe, no telemetry, no network call."""
+    if config is None:
+        return Check("offline", WARN, "config is invalid; offline posture unknown")
+    posture = offline_posture(config)
+    return Check("offline", OK if posture.offline_complete else WARN, posture.detail)
 
 
 def _store_path(home: Path) -> Check:

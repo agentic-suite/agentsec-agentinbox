@@ -40,9 +40,8 @@ REAL = {
     "verify-log",
     "ask",
     "conformance",
+    "report",
 }
-STUBS = [command for command in COMMANDS if command not in REAL]
-
 
 def test_help_lists_every_command(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["--help"]) == 0
@@ -58,23 +57,11 @@ def test_every_command_has_help(command: str, capsys: pytest.CaptureFixture[str]
     assert command in capsys.readouterr().out
 
 
-@pytest.mark.parametrize("command", STUBS)
-def test_unimplemented_command_refuses_honestly(
-    command: str, capsys: pytest.CaptureFixture[str]
-) -> None:
-    assert main([command]) == 4
-    captured = capsys.readouterr()
-
-    assert captured.out == ""
-    assert "not implemented in v0.1.0" in captured.err
-    assert command in captured.err
-
-
-def test_stub_accepts_foreign_flags_and_still_refuses(
+def test_a_real_command_rejects_foreign_flags(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    assert main(["report", "--file", "ask.json", "--channel", "terminal"]) == 4
-    assert "not implemented in v0.1.0" in capsys.readouterr().err
+    assert main(["report", "--file", "ask.json", "--channel", "terminal"]) == 1
+    assert "unrecognized arguments" in capsys.readouterr().err
 
 
 def test_unknown_command_is_usage_error(capsys: pytest.CaptureFixture[str]) -> None:
@@ -106,3 +93,9 @@ def test_version_flag_is_real(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_global_flags_are_accepted_before_the_command() -> None:
     assert main(["--json", "--no-color", "version"]) == 0
+
+
+def test_every_command_records_the_milestone_that_made_it_real() -> None:
+    from agentinbox.cli import COMMAND_HELP, COMMAND_MILESTONES
+
+    assert set(COMMAND_HELP) == set(COMMAND_MILESTONES)

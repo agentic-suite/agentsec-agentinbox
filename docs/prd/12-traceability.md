@@ -48,6 +48,17 @@ today** (they run in CI), not planned:
 | **N-18** (loopback default) | loopback bind enforced in v0.1.0 | `tests/config/test_load.py` |
 | **N-36..N-39** (gates, DCO, in-repo fixtures, versioned docs) | CI runs ruff/mypy/pytest/coverage; DCO check; fixtures in-repo | `tests/ci/test_workflows.py`, `tests/test_identity.py` |
 
+## M21 operations (shipped tests, v0.1.0)
+
+| Req / NFR | What M21 ships | Acceptance test |
+|---|---|---|
+| **E10** (versioning + compatibility) | forward-only migrations, loud downgrade refusal, frozen contract/exit/event matrix | `tests/ops/test_compat.py`, `tests/store/test_migrations.py` |
+| **N-1..N-7** (performance) | executable floors for ingest, render, external, spool, resolve, scheduler, 10k load, startup/doctor | `tests/ops/test_bench.py` |
+| **N-19** (offline-complete) | external channels off; terminal/CI/audit/export/report/doctor run with non-loopback sockets blocked | `tests/ops/test_offline.py` |
+| **N-26 / N-28** (no telemetry; local report) | `report --json` from the owner's chain; no analytics module/endpoint; `local_only: true` | `tests/ops/test_report.py`, `tests/ops/test_offline.py` |
+| **N-27** (doctor completion) | added `offline`; backup/restore keep chain/schema/keys checks central | `tests/ops/test_offline.py`, `tests/cli/test_doctor_m20.py` |
+| **PRD 22 §B/§E** (lifecycle + backup/restore) | user-scoped units, SIGTERM flush/close, daemon lock, WAL-safe backup, chain-verified restore | `tests/ops/test_units.py`, `tests/ops/test_backup.py` |
+
 ## Forward slate traceability (R13–R47, PRDs 24–27)
 
 The product-depth requirements are traced **inside their own PRDs** (each carries a

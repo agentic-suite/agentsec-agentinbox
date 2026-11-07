@@ -65,8 +65,19 @@ from agentinbox.exit_codes import ExitCode
 from agentinbox.flood import FloodGuard
 from agentinbox.gate import gate
 from agentinbox.ingest import ingest
+from agentinbox.ops import (
+    OpsError,
+    backup_home,
+    clear_daemon_lock,
+    daemon_alive,
+    install_service,
+    read_daemon_lock,
+    restore_home,
+    write_daemon_lock,
+)
 from agentinbox.parity import prior_asks
 from agentinbox.reload import ConfigHolder
+from agentinbox.report import build_report
 from agentinbox.resolve import resolve
 from agentinbox.scheduler import Scheduler
 from agentinbox.secrets import SecretError, resolve_ref
@@ -129,19 +140,6 @@ class CliParser(argparse.ArgumentParser):
         raise SystemExit(1)
 
 
-def _stub(command: str) -> Handler:
-    milestone = COMMAND_MILESTONES[command]
-
-    def handler(_args: argparse.Namespace) -> int:
-        print(
-            f"{PROG}: {command} is not implemented in v0.1.0 (scheduled: {milestone})",
-            file=sys.stderr,
-        )
-        return int(ExitCode.UNAVAILABLE)
-
-    return handler
-
-
 def _init(args: argparse.Namespace) -> int:
     try:
         home = resolve_home(args.home)
@@ -161,6 +159,31 @@ def _doctor(args: argparse.Namespace) -> int:
     except ConfigError as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)
         return int(ExitCode.UNAVAILABLE)
+
+    if getattr(args, "backup", None):
+        try:
+            backup = backup_home(home, Path(args.backup), config_path=config_path)
+        except (ConfigError, OpsError) as exc:
+            print(f"{PROG}: backup failed: {exc}", file=sys.stderr)
+            return int(ExitCode.UNAVAILABLE)
+        print(
+            f"{PROG}: backup {backup.path} "
+            f"({backup.asks} asks, {backup.audit_entries} audit entries)"
+        )
+        return int(ExitCode.APPROVED)
+
+    if getattr(args, "restore", None):
+        try:
+            restored = restore_home(
+                Path(args.restore), home, force=bool(getattr(args, "force", False))
+            )
+        except OpsError as exc:
+            print(f"{PROG}: restore failed: {exc}", file=sys.stderr)
+            return int(ExitCode.UNAVAILABLE)
+        print(
+            f"{PROG}: restored {restored.home} "
+            f"({restored.asks} asks, {restored.expired} overdue expired)"
+        )
 
     report = run_checks(home, config_path)
     if args.json:
@@ -386,6 +409,7 @@ def _ask_impl(
 
 def _gate(args: argparse.Namespace) -> int:
     try:
+        home = resolve_home(args.home)
         _config, store = _runtime(args)
     except (ConfigError, StoreError) as exc:
         print(f"{PROG}: {exc}", file=sys.stderr)
@@ -402,6 +426,8 @@ def _gate(args: argparse.Namespace) -> int:
             # Not the main thread (tests embed main()) — cancellation is simply unavailable.
             previous.append((signum, signal.signal(signum, on_signal)))
 
+    # A lock left by a dead daemon is fail-closed: no decision can arrive while it is gone.
+    alive = (lambda: daemon_alive(home)) if read_daemon_lock(home) is not None else None
     try:
         result = gate(
             store,
@@ -410,6 +436,7 @@ def _gate(args: argparse.Namespace) -> int:
             timeout=args.timeout,
             cancel=cancel,
             principal=os.environ.get("USER"),
+            daemon_alive=alive,
         )
     except Exception as exc:  # any failure is fail-closed exit 4
         print(f"{PROG}: gate unavailable: {exc}", file=sys.stderr)
@@ -428,11 +455,25 @@ def _gate(args: argparse.Namespace) -> int:
             prior_asks=prior_asks(store, ask),
         )
         sys.stdout.write(card.render("ci"))
+    if result.code is ExitCode.UNAVAILABLE:
+        print(f"{PROG}: gate unavailable: {result.reason}", file=sys.stderr)
     print(f"{PROG}: ask {args.ask}: {result.status} ({result.reason})")
     return int(result.code)
 
 
 def _serve(args: argparse.Namespace) -> int:
+    if getattr(args, "install", False):
+        try:
+            home = resolve_home(args.home)
+            config_path = resolve_config_path(home, args.config)
+            load_config(config_path)  # never install a unit for an invalid config
+            unit = install_service(home, config_path)
+        except (ConfigError, OpsError) as exc:
+            print(f"{PROG}: {exc}", file=sys.stderr)
+            return int(ExitCode.UNAVAILABLE)
+        print(f"{PROG}: wrote {unit.path}")
+        return int(ExitCode.APPROVED)
+
     try:
         config, store = _runtime(args)
         home = resolve_home(args.home)
@@ -447,6 +488,8 @@ def _serve(args: argparse.Namespace) -> int:
         record_config_change(home, config)
     except OSError as exc:
         print(f"{PROG}: config-change evidence unavailable: {exc}", file=sys.stderr)
+
+    write_daemon_lock(home)
 
     def make_digest(
         desktop: DesktopChannel | None,
@@ -575,19 +618,35 @@ def _serve(args: argparse.Namespace) -> int:
 
         trace_thread = threading.Thread(target=trace_loop, daemon=True)
         trace_thread.start()
+
+        def on_stop(_signum: int, _frame: object) -> None:
+            # Stop accepting work; the finally block flushes and closes cleanly.
+            stop.set()
+
+        previous: list[tuple[int, Any]] = []
+        for signum in (signal.SIGTERM, signal.SIGINT):
+            with contextlib.suppress(ValueError, OSError):
+                previous.append((signum, signal.signal(signum, on_stop)))
+
         try:
             bus.run(handle, stop)
         except KeyboardInterrupt:
             pass
         finally:
+            for previous_signum, handler in previous:
+                with contextlib.suppress(ValueError, OSError, TypeError):
+                    signal.signal(previous_signum, handler)
             scheduler_stop.set()
             trace_stop.set()
             thread.join(timeout=2)
             trace_thread.join(timeout=2)
+            tracer.drain()
+            tracer.sink.flush()
             if api is not None:
                 api.stop()
         return int(ExitCode.APPROVED)
     finally:
+        clear_daemon_lock(home)
         bus.close()
         store.close()
 
@@ -648,6 +707,41 @@ def _export(args: argparse.Namespace) -> int:
         print(f"{PROG}: wrote {path}")
     else:
         sys.stdout.write(text)
+    return int(ExitCode.APPROVED)
+
+
+def _report(args: argparse.Namespace) -> int:
+    try:
+        _config, store = _runtime(args)
+    except (ConfigError, StoreError) as exc:
+        print(f"{PROG}: {exc}", file=sys.stderr)
+        return int(ExitCode.UNAVAILABLE)
+
+    try:
+        data = build_report(store).to_dict()
+    finally:
+        store.close()
+
+    if getattr(args, "json", False):
+        print(json.dumps(data, sort_keys=True))
+        return int(ExitCode.APPROVED)
+
+    response = data["response_time_s"]
+    print(f"asks: {data['total_asks']} (pending {data['pending']})")
+    print(
+        f"response p50/p99: {response['p50']}s / {response['p99']}s "
+        f"({response['samples']} samples)"
+    )
+    print(
+        f"expiries: {data['expiries']} · escalations: {data['escalation_firings']} · "
+        f"floods: {data['flood_events']}"
+    )
+    causes = data["answer_rejected_causes"]
+    if causes:
+        rendered = ", ".join(f"{cause}={count}" for cause, count in causes.items())
+        print(f"answer rejected: {rendered}")
+    for class_name, rate in data["deny_rate_by_class"].items():
+        print(f"deny rate {class_name}: {rate:.0%}")
     return int(ExitCode.APPROVED)
 
 
@@ -733,6 +827,23 @@ def _version(args: argparse.Namespace) -> int:
     return int(ExitCode.APPROVED)
 
 
+HANDLERS: dict[str, Handler] = {
+    "version": _version,
+    "init": _init,
+    "doctor": _doctor,
+    "answer": _answer,
+    "inbox": _inbox,
+    "ask": _ask,
+    "serve": _serve,
+    "gate": _gate,
+    "channels": _channels,
+    "verify-log": _verify_log,
+    "export": _export,
+    "conformance": _conformance,
+    "report": _report,
+}
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = CliParser(
         prog=PROG,
@@ -758,34 +869,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     for command, help_text in COMMAND_HELP.items():
         sub = subparsers.add_parser(command, help=help_text, description=help_text)
-        handler: Handler
-        if command == "version":
-            handler = _version
-        elif command == "init":
-            handler = _init
-        elif command == "doctor":
-            handler = _doctor
-        elif command == "answer":
-            handler = _answer
-        elif command == "inbox":
-            handler = _inbox
-        elif command == "ask":
-            handler = _ask
-        elif command == "serve":
-            handler = _serve
-        elif command == "gate":
-            handler = _gate
-        elif command == "channels":
-            handler = _channels
-        elif command == "verify-log":
-            handler = _verify_log
-        elif command == "export":
-            handler = _export
-        elif command == "conformance":
-            handler = _conformance
-        else:
-            handler = _stub(command)
-        sub.set_defaults(handler=handler)
+        sub.set_defaults(handler=HANDLERS[command])
         if command == "init":
             sub.add_argument(
                 "--force", action="store_true", help="overwrite an existing config file"
@@ -793,6 +877,16 @@ def build_parser() -> argparse.ArgumentParser:
         if command == "doctor":
             sub.add_argument(
                 "--explain", action="store_true", help="print the effective configuration"
+            )
+            operation = sub.add_mutually_exclusive_group()
+            operation.add_argument(
+                "--backup", metavar="PATH", help="write a WAL-safe backup archive"
+            )
+            operation.add_argument(
+                "--restore", metavar="PATH", help="restore a backup into this fresh home"
+            )
+            sub.add_argument(
+                "--force", action="store_true", help="replace a non-empty home on --restore"
             )
         if command == "answer":
             sub.add_argument("ask_id")
@@ -817,6 +911,11 @@ def build_parser() -> argparse.ArgumentParser:
         if command == "serve":
             sub.add_argument(
                 "--once", action="store_true", help="drain the bus once and exit (tests/cron)"
+            )
+            sub.add_argument(
+                "--install",
+                action="store_true",
+                help="write a user-scoped launchd/systemd unit and exit",
             )
             sub.add_argument(
                 "--api-port",
@@ -844,6 +943,10 @@ def build_parser() -> argparse.ArgumentParser:
                 default=None,
                 metavar="SECONDS",
                 help="CI wait budget (independent of the ask TTL)",
+            )
+        if command == "report":
+            sub.add_argument(
+                "--json", action="store_true", help="machine-readable metrics (local only)"
             )
 
     return parser
@@ -880,6 +983,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "export",
         "verify-log",
         "conformance",
+        "report",
     }:
         parser.print_usage(sys.stderr)
         print(f"{PROG}: error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)

@@ -32,9 +32,11 @@ def test_unavailable_is_fail_closed_not_usage() -> None:
     assert exit_codes.ExitCode.UNAVAILABLE != exit_codes.ExitCode.USAGE
 
 
-def test_stubs_use_the_contract_constant(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["report"]) == exit_codes.ExitCode.UNAVAILABLE
-    capsys.readouterr()
+def test_a_command_without_config_fails_closed(
+    tmp_path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["--home", str(tmp_path / "absent"), "report"]) == exit_codes.ExitCode.UNAVAILABLE
+    assert "config" in capsys.readouterr().err
 
 
 def test_usage_errors_never_use_the_denied_code(capsys: pytest.CaptureFixture[str]) -> None:

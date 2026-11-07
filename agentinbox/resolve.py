@@ -34,6 +34,8 @@ REASON_PENDING = DENY_ASK_PENDING
 REASON_UNKNOWN = DENY_ASK_UNKNOWN
 REASON_MISMATCH = DENY_ACTION_IDENTITY_MISMATCH
 
+RESOLVE_CONTRACT = "resolve/1.0"
+
 
 @dataclass(frozen=True, slots=True)
 class ResolveResult:
@@ -49,7 +51,7 @@ class ResolveResult:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "contract": "resolve/1.0",
+            "contract": RESOLVE_CONTRACT,
             "ask_id": self.ask_id,
             "status": self.status,
             "reason_code": self.reason_code,
@@ -219,6 +221,7 @@ __all__ = [
     "REASON_PENDING",
     "REASON_TIMEOUT",
     "REASON_UNKNOWN",
+    "RESOLVE_CONTRACT",
     "ResolveResult",
     "derived_status",
     "rescope_hint",

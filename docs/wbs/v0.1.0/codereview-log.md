@@ -156,3 +156,21 @@ regression test):
   release pipeline; they are listed as **not verified** in
   [`docs/compliance/claims-and-limitations.md`](../../compliance/claims-and-limitations.md) and are not claimed
   as done.
+
+## M21 operations review (2026-11-07)
+
+| Date | M | Item | Finding | Severity | Resolution |
+|---|---|---|---|---|---|
+| 2026-11-07 | M21 | 21.2 | A naive `cp` of `inbox.db` is not WAL-safe; a live daemon could produce a torn backup | High | `backup_home` uses the SQLite **online-backup** API into a staging DB, then verifies the chain before packaging |
+| 2026-11-07 | M21 | 21.2 | A backup could carry resolved signing secrets or the API token | High | The archive is an allow-list (`manifest`, `inbox.db`, `config.toml`, `keys/slots.json`); key slots hold **reference strings only**; `api-token`, `keys/`, spool, exports, logs are excluded; a test asserts the secret bytes are absent |
+| 2026-11-07 | M21 | 21.2 | Restore could resurrect an approval whose TTL lapsed while the backup sat on disk | High | Restore expires overdue **pending** asks once (scheduler recovery semantics) and never rewrites an approved/denied decision; a fixture restores an old backup and asserts `EXPIRED` |
+| 2026-11-07 | M21 | 21.2 | An archive is untrusted input; extraction could write outside the home | High | Members are an allow-list; absolute paths, `..`, symlinks, and unknown members are refused; extraction happens in a staging directory and only after chain verification is the tree installed |
+| 2026-11-07 | M21 | 21.2 | Restore could clobber a live home or leave a half-written one | High | A non-empty home requires `--force`; a chain mismatch aborts before any destination write |
+| 2026-11-07 | M21 | 21.1 | SIGTERM could leave a stale `serve.lock`, and a waiting `gate` could hang until its budget | Medium | The daemon writes/removes the lock; `gate` treats a lock whose PID is dead as **unavailable** (exit `4`) instead of waiting |
+| 2026-11-07 | M21 | 21.1 | Service units could depend on the caller's `PATH` or require root | Medium | Units are user-scoped and use the absolute interpreter + `-m agentinbox --home … --config … serve`; install validates the config first and never calls `sudo` |
+| 2026-11-07 | M21 | 21.1 | Unit paths with spaces would break the systemd `ExecStart` line | Low | `_systemd_join` quotes/escapes whitespace, quotes, and backslashes; a test renders a home with a space |
+| 2026-11-07 | M21 | 21.3 | Contract/exit/event drift could ship silently | High | `agentinbox/compat.py` freezes the surface and `additive_violations` fails on a removed event, changed exit code/contract, event-version change, or schema downgrade; every released schema version has a forward-migration fixture |
+| 2026-11-07 | M21 | 21.4 | A report could include answers without a delivery/creation bound or negative intervals | Medium | Response time uses the first successful delivery (falling back to `created_at`); unbounded and negative intervals are skipped; nearest-rank percentiles are pinned by a hand-computed corpus |
+| 2026-11-07 | M21 | 21.4 | `report` could write evidence or call out | High | `report` is read-only (test asserts the audit length is unchanged) and opens no socket; `local_only: true` is part of the contract |
+| 2026-11-07 | M21 | 21.5 | "Offline" could be asserted without proof | Medium | Doctor adds an `offline` check and the SC-26 fixture blocks non-loopback `connect`/`connect_ex` while running terminal, CI, audit, export, report, and doctor |
+| 2026-11-07 | M21 | 21.6 | Bench floors could be measured on a different path than production | Medium | Benches call the real `ingest`, card renderer, resolve, spool bus, scheduler, webhook channel, and startup/doctor paths; the 10k load uses the admitted in-memory driver to isolate algorithmic cost |

@@ -41,6 +41,7 @@ def gate(
     cancel: threading.Event | None = None,
     sleep: Callable[[float], None] = time.sleep,
     principal: str | None = None,
+    daemon_alive: Callable[[], bool] | None = None,
 ) -> GateResult:
     """Resolve ``ask_id`` into an exit code; never allows without an explicit approval."""
     if store.get(ask_id) is None:
@@ -50,6 +51,12 @@ def gate(
     while True:
         if cancel is not None and cancel.is_set():
             return _cancel(store, ask_id, now=now, principal=principal)
+
+        if daemon_alive is not None and not daemon_alive():
+            # A stopped daemon cannot answer; fail closed rather than hang (M21).
+            return GateResult(
+                ExitCode.UNAVAILABLE, "unavailable", "daemon unavailable", ask_id
+            )
 
         ask = store.get(ask_id)
         if ask is None:

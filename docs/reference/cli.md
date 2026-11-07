@@ -1,9 +1,8 @@
-# CLI reference (v0.1.0 · M0)
+# CLI reference (v0.1.0 · M0–M21)
 
 **BLUF:** `agentinbox` is one binary surface with two entry points (`agentinbox` and
-`python -m agentinbox`), one **reserved exit-code contract**, and twelve commands. In M0 only
-`init`, `doctor`, and `version` do work; the rest refuse honestly with exit `4` and name the
-milestone that will implement them. Nothing in the CLI can approve by default.
+`python -m agentinbox`), one **reserved exit-code contract**, and thirteen commands. Every command is
+implemented as of M21; nothing in the CLI can approve by default.
 
 - Design of record: [`docs/design/v0.1.0/foundation.md`](../design/v0.1.0/foundation.md)
 - Config reference: [config.md](config.md)
@@ -64,15 +63,11 @@ integers so the contract cannot drift.
 | `export`, `verify-log` | **works** (M15) — ordered evidence + chain verification; see [audit.md](audit.md) |
 | `ask` | **works** (M18) — `--file` / `--exec`; only executes on allow; see [producer-guide.md](../adapters/producer-guide.md) |
 | `conformance` | **works** (M19) — contract conformance kit; see [conformance.md](conformance.md) |
-| `report` | **stub** — prints `agentinbox: report is not implemented in v0.1.0 (scheduled: M21)` and exits `4` |
+| `report` | **works** (M21) — local PRD 07 metrics; `--json`; see [ops.md](ops.md) |
 
-Stub rules:
-
-- `--help` always exits `0` and never reads config or state.
-- A stub never exits `0` and never prints a decision-looking success.
-- A stub accepts the flags of the command it will become, then refuses — an unimplemented
-  invocation is never misreported as a usage error.
-- No TTY can produce only `4` (unavailable) or `5` (pending), never `0`.
+No command is a stub in v0.1.0. `--help` always exits `0` and never reads config or state; a command
+never exits `0` except for a real approval (or a successful non-decision operation such as
+`doctor`/`export`/`report`).
 
 ## `init`
 
@@ -94,6 +89,8 @@ unwritable location.
 ```sh
 agentinbox doctor
 agentinbox doctor --explain
+agentinbox doctor --backup /secure/backup.tar
+agentinbox doctor --restore /secure/backup.tar [--force]
 agentinbox --json doctor
 ```
 
@@ -106,12 +103,29 @@ agentinbox --json doctor
 | `schema` | `schema_version` is readable when a store exists | `unreadable schema version` |
 | `clock` | UTC clock and monotonic time are sane | `system clock unavailable` |
 | `desktop` | enabled desktop channel is reachable (disabled is `ok`) | `headless SSH session` |
+| `offline` | no external channel enabled (warning names one) | — |
 | `chain` | the audit hash chain verifies read-only | `audit seq 7: entry_hash does not verify` |
 | `spool` | pending/done/staging counts; missing lock or staging is a warning | — |
 | `keys` | producer/webhook references resolve | `env reference … is not set` |
 
 Overall exit: `0` when no check fails (warnings allowed), `4` when any check fails. `--explain`
 prints the effective config with secret **references** shown and never resolved.
+
+`--backup PATH` writes a WAL-safe archive (chain-verified, secrets as references only) and exits
+`0`/`4`. `--restore PATH` installs a backup into the current (fresh) home, verifies the chain, expires
+overdue pending asks once, then runs the checks. A non-empty home requires `--force`. See
+[ops.md](ops.md).
+
+## `report`
+
+```sh
+agentinbox report
+agentinbox report --json
+```
+
+Local PRD 07 metrics computed from your own audit chain: response-time p50/p99, expiries,
+escalation firings, flood events, `answer-rejected` causes, deny rate by class, pending/total.
+`local_only: true`; nothing leaves the machine. See [ops.md](ops.md).
 
 ## `conformance`
 
@@ -130,12 +144,15 @@ agentinbox serve                    # loopback API + scheduler + bus consumer
 agentinbox serve --once             # tick the scheduler, drain the bus, exit
 agentinbox serve --api-port 9000    # choose the loopback API port (default 8377)
 agentinbox serve --no-api           # consumer only
+agentinbox serve --install          # write a user-scoped launchd/systemd unit and exit
 ```
 
 The daemon starts the loopback ingest API (127.0.0.1) and writes its bearer token to `<home>/api-token` (mode
 `0600`); the token is never printed. `AGENTINBOX_API_TOKEN` overrides a generated token. Exit `0` on a clean
 drain/stop; `4` for a bad config, an unavailable store, an occupied API port, or a spool already owned by another
-daemon. See [bus.md](bus.md) and [producer-guide.md](../adapters/producer-guide.md).
+daemon. SIGTERM stops accepting work, flushes events, closes the store, and removes `<home>/serve.lock`; a
+waiting `gate` then exits `4`. See [bus.md](bus.md), [ops.md](ops.md), and
+[producer-guide.md](../adapters/producer-guide.md).
 
 ## Environment
 
